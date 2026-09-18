@@ -1,1 +1,3 @@
-export default function NewDevelopments() { return <div>NewDevelopments Page</div>; }
+import { CategoryListing } from '../../../components/property/CategoryListing';
+
+export default function NewDevelopments() { return <CategoryListing title="New Property Developments" query={{ newDevelopment: 'true' }} />; }

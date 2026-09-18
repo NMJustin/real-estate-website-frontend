@@ -1,5 +1,7 @@
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { MainLayout } from './components/layout/MainLayout';
+import { AdminLayout } from './components/layout/AdminLayout';
+import ProtectedRoute from './components/auth/ProtectedRoute';
 
 // Import all pages
 import Home from './pages/Home';
@@ -45,6 +47,10 @@ import ContactUs from './pages/ContactUs';
 import ListYourProperty from './pages/ListYourProperty';
 import RequestViewing from './pages/RequestViewing';
 import PropertyValuationRequest from './pages/PropertyValuationRequest';
+import CompareProperties from './pages/CustomerTools/CompareProperties';
+import MortgageCalculator from './pages/CustomerTools/MortgageCalculator';
+import RentalYieldCalculator from './pages/CustomerTools/RentalYieldCalculator';
+import Favorites from './pages/CustomerTools/Favorites';
 
 // Insights
 import Articles from './pages/Insights/Articles';
@@ -57,7 +63,7 @@ import TermsAndConditions from './pages/Legal/TermsAndConditions';
 import PropertyDisclaimer from './pages/Legal/PropertyDisclaimer';
 import CookiePolicy from './pages/Legal/CookiePolicy';
 
-// Admin
+// Admin pages
 import AdminLogin from './pages/Admin/Login';
 import AdminDashboard from './pages/Admin/Dashboard';
 import AdminProperties from './pages/Admin/Properties';
@@ -76,82 +82,105 @@ import AdminSettings from './pages/Admin/Settings';
 export default function App() {
   return (
     <Router>
-      <MainLayout>
-        <Routes>
-        <Route path="/" element={<Home />} />
-        
-        {/* About Us */}
-        <Route path="/about/our-company" element={<OurCompany />} />
-        <Route path="/about/mission" element={<Mission />} />
-        <Route path="/about/vision" element={<Vision />} />
-        <Route path="/about/core-values" element={<CoreValues />} />
-        <Route path="/about/why-choose-us" element={<WhyChooseUs />} />
-        
-        {/* Properties */}
-        <Route path="/properties" element={<Properties />} />
-        <Route path="/properties/for-sale" element={<ForSale />} />
-        <Route path="/properties/for-rent" element={<ForRent />} />
-        <Route path="/properties/for-lease" element={<ForLease />} />
-        <Route path="/properties/residential" element={<Residential />} />
-        <Route path="/properties/commercial" element={<Commercial />} />
-        <Route path="/properties/land" element={<Land />} />
-        <Route path="/properties/new-developments" element={<NewDevelopments />} />
-        <Route path="/properties/:propertySlug" element={<PropertyDetails />} />
-        
-        {/* Services */}
-        <Route path="/services" element={<Services />} />
-        <Route path="/services/property-sales" element={<PropertySales />} />
-        <Route path="/services/property-rentals" element={<PropertyRentals />} />
-        <Route path="/services/property-leasing" element={<PropertyLeasing />} />
-        <Route path="/services/property-management" element={<PropertyManagement />} />
-        <Route path="/services/property-valuation" element={<PropertyValuation />} />
-        <Route path="/services/property-marketing" element={<PropertyMarketing />} />
-        <Route path="/services/real-estate-advisory" element={<RealEstateAdvisory />} />
+      <Routes>
+        {/* ── Public site (uses MainLayout) ── */}
+        <Route
+          path="/*"
+          element={
+            <MainLayout>
+              <Routes>
+                <Route path="/" element={<Home />} />
 
-        {/* Agents */}
-        <Route path="/agents" element={<Agents />} />
-        <Route path="/agents/:agentName" element={<AgentProfile />} />
+                {/* About Us */}
+                <Route path="/about/our-company" element={<OurCompany />} />
+                <Route path="/about/mission" element={<Mission />} />
+                <Route path="/about/vision" element={<Vision />} />
+                <Route path="/about/core-values" element={<CoreValues />} />
+                <Route path="/about/why-choose-us" element={<WhyChooseUs />} />
 
-        {/* Other Pages */}
-        <Route path="/our-team" element={<OurTeam />} />
-        <Route path="/property-search" element={<PropertySearch />} />
-        <Route path="/faqs" element={<FAQs />} />
-        <Route path="/contact" element={<Contact />} />
-        <Route path="/contact-us" element={<ContactUs />} />
-        <Route path="/list-your-property" element={<ListYourProperty />} />
-        <Route path="/request-viewing" element={<RequestViewing />} />
-        <Route path="/property-valuation" element={<PropertyValuationRequest />} />
+                {/* Properties */}
+                <Route path="/properties" element={<Properties />} />
+                <Route path="/properties/for-sale" element={<ForSale />} />
+                <Route path="/properties/for-rent" element={<ForRent />} />
+                <Route path="/properties/for-lease" element={<ForLease />} />
+                <Route path="/properties/residential" element={<Residential />} />
+                <Route path="/properties/commercial" element={<Commercial />} />
+                <Route path="/properties/land" element={<Land />} />
+                <Route path="/properties/new-developments" element={<NewDevelopments />} />
+                <Route path="/properties/:propertySlug" element={<PropertyDetails />} />
 
-        {/* Insights */}
-        <Route path="/insights/articles" element={<Articles />} />
-        <Route path="/insights/news" element={<News />} />
-        <Route path="/insights/property-guides" element={<PropertyGuides />} />
-        
-        {/* Legal Pages */}
-        <Route path="/privacy-policy" element={<PrivacyPolicy />} />
-        <Route path="/terms-and-conditions" element={<TermsAndConditions />} />
-        <Route path="/property-disclaimer" element={<PropertyDisclaimer />} />
-        <Route path="/cookie-policy" element={<CookiePolicy />} />
+                {/* Services */}
+                <Route path="/services" element={<Services />} />
+                <Route path="/services/property-sales" element={<PropertySales />} />
+                <Route path="/services/property-rentals" element={<PropertyRentals />} />
+                <Route path="/services/property-leasing" element={<PropertyLeasing />} />
+                <Route path="/services/property-management" element={<PropertyManagement />} />
+                <Route path="/services/property-valuation" element={<PropertyValuation />} />
+                <Route path="/services/property-marketing" element={<PropertyMarketing />} />
+                <Route path="/services/real-estate-advisory" element={<RealEstateAdvisory />} />
 
-        {/* Admin Portal */}
+                {/* Agents */}
+                <Route path="/agents" element={<Agents />} />
+                <Route path="/agents/:agentName" element={<AgentProfile />} />
+
+                {/* Other */}
+                <Route path="/our-team" element={<OurTeam />} />
+                <Route path="/property-search" element={<PropertySearch />} />
+                <Route path="/faqs" element={<FAQs />} />
+                <Route path="/contact" element={<Contact />} />
+                <Route path="/contact-us" element={<ContactUs />} />
+                <Route path="/list-your-property" element={<ListYourProperty />} />
+                <Route path="/request-viewing" element={<RequestViewing />} />
+                <Route path="/property-valuation" element={<PropertyValuationRequest />} />
+                <Route path="/compare-properties" element={<CompareProperties />} />
+                <Route path="/mortgage-calculator" element={<MortgageCalculator />} />
+                <Route path="/rental-yield-calculator" element={<RentalYieldCalculator />} />
+                <Route path="/favorites" element={<Favorites />} />
+
+                {/* Insights */}
+                <Route path="/insights/articles" element={<Articles />} />
+                <Route path="/insights/news" element={<News />} />
+                <Route path="/insights/property-guides" element={<PropertyGuides />} />
+
+                {/* Legal */}
+                <Route path="/privacy-policy" element={<PrivacyPolicy />} />
+                <Route path="/terms-and-conditions" element={<TermsAndConditions />} />
+                <Route path="/property-disclaimer" element={<PropertyDisclaimer />} />
+                <Route path="/cookie-policy" element={<CookiePolicy />} />
+              </Routes>
+            </MainLayout>
+          }
+        />
+
+        {/* ── Admin login (no layout wrapping) ── */}
         <Route path="/admin" element={<AdminLogin />} />
-        <Route path="/admin/dashboard" element={<AdminDashboard />} />
-        <Route path="/admin/properties" element={<AdminProperties />} />
-        <Route path="/admin/properties/new" element={<AdminNewProperty />} />
-        <Route path="/admin/properties/:id/edit" element={<AdminEditProperty />} />
-        <Route path="/admin/categories" element={<AdminCategories />} />
-        <Route path="/admin/agents" element={<AdminAgents />} />
-        <Route path="/admin/inquiries" element={<AdminInquiries />} />
-        <Route path="/admin/viewings" element={<AdminViewings />} />
-        <Route path="/admin/articles" element={<AdminArticles />} />
-        <Route path="/admin/faqs" element={<AdminFAQs />} />
-        <Route path="/admin/testimonials" element={<AdminTestimonials />} />
-        <Route path="/admin/users" element={<AdminUsers />} />
-        <Route path="/admin/settings" element={<AdminSettings />} />
 
+        {/* ── Protected admin portal (uses AdminLayout) ── */}
+        <Route
+          path="/admin/*"
+          element={
+            <ProtectedRoute>
+              <AdminLayout>
+                <Routes>
+                  <Route path="dashboard" element={<AdminDashboard />} />
+                  <Route path="properties" element={<AdminProperties />} />
+                  <Route path="properties/new" element={<AdminNewProperty />} />
+                  <Route path="properties/:id/edit" element={<AdminEditProperty />} />
+                  <Route path="categories" element={<AdminCategories />} />
+                  <Route path="agents" element={<AdminAgents />} />
+                  <Route path="inquiries" element={<AdminInquiries />} />
+                  <Route path="viewings" element={<AdminViewings />} />
+                  <Route path="articles" element={<AdminArticles />} />
+                  <Route path="faqs" element={<AdminFAQs />} />
+                  <Route path="testimonials" element={<AdminTestimonials />} />
+                  <Route path="users" element={<AdminUsers />} />
+                  <Route path="settings" element={<AdminSettings />} />
+                </Routes>
+              </AdminLayout>
+            </ProtectedRoute>
+          }
+        />
       </Routes>
-      </MainLayout>
     </Router>
   );
 }
-

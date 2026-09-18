@@ -27,7 +27,7 @@ export function Button({
 
   return (
     <button 
-      className={$baseStyle $variants[variant]} $className}
+      className={`${baseStyle} ${variants[variant]} ${className}`}
       disabled={disabled || isLoading}
       {...props}
     >

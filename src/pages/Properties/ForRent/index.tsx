@@ -1,1 +1,3 @@
-export default function ForRent() { return <div>ForRent Page</div>; }
+import { CategoryListing } from '../../../components/property/CategoryListing';
+
+export default function ForRent() { return <CategoryListing title="Properties for Rent" query={{ transactionType: 'RENT' }} />; }

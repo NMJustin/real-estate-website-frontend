@@ -1,8 +1,13 @@
 @import "tailwindcss";
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+@config "../../tailwind.config.js";
 @layer base {
     body {
-        @apply bg-brand-background text-brand-charcoal font-sans antialiased;
+        background-color: #F8FAFC;
+        color: #334155;
+        font-family: Inter, sans-serif;
+        -webkit-font-smoothing: antialiased;
+        -moz-osx-font-smoothing: grayscale;
     }
     h1,
     h2,
@@ -10,6 +15,25 @@
     h4,
     h5,
     h6 {
-        @apply text-brand-navy font-bold tracking-tight;
+        color: #0F172A;
+        font-weight: 700;
+        letter-spacing: -0.025em;
+    }
+}
+
+@layer components {
+    .search-input {
+        margin-top: 0.25rem;
+        width: 100%;
+        border: 1px solid #cbd5e1;
+        border-radius: 0.5rem;
+        background-color: #fff;
+        padding: 0.625rem 0.75rem;
+        color: #334155;
+    }
+    .search-input:focus {
+        border-color: #10B981;
+        outline: none;
+        box-shadow: 0 0 0 2px rgb(16 185 129 / 30%);
     }
 }

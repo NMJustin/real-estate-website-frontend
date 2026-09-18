@@ -1,1 +1,1 @@
-export default function ContactUs() { return <div>ContactUs Page</div>; }
+export { default } from '../Contact';
