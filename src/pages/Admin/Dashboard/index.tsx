@@ -1,3 +1,36 @@
+import { useEffect, useState } from 'react';
+import { Link } from 'react-router-dom';
+import {
+  AlertCircle,
+  ArrowRight,
+  Calendar,
+  CheckCircle,
+  Clock,
+  Home,
+  MessageSquare,
+  Plus,
+  TrendingUp,
+  Users,
+} from 'lucide-react';
+import { adminApi } from '../../../services/api';
+
+interface DashboardStats {
+  totalProperties: number;
+  publishedProperties: number;
+  totalAgents: number;
+  totalUsers: number;
+  pendingInquiries: number;
+  totalInquiries: number;
+  pendingViewings: number;
+  totalViewings: number;
+  pendingValuations: number;
+}
+
+interface DashboardResponse {
+  success: boolean;
+  data: DashboardData;
+}
+
 interface RecentProperty {
   id: string;
   title: string;
@@ -61,8 +94,8 @@ export default function AdminDashboard() {
   useEffect(() => {
     adminApi
       .getDashboard()
-      .then((res: any) => setData(res.data))
-      .catch((err) => setError(err.message || 'Failed to load dashboard'))
+      .then((res) => setData((res as DashboardResponse).data))
+      .catch((err: unknown) => setError(err instanceof Error ? err.message : 'Failed to load dashboard'))
       .finally(() => setLoading(false));
   }, []);
 
@@ -86,12 +119,12 @@ export default function AdminDashboard() {
   const s = data!.stats;
 
   const statCards = [
-    { label: 'Total Properties', value: s.totalProperties, sub: `${s.publishedProperties} published`, icon: Home, color: 'bg-blue-500', light: 'bg-blue-50' },
-    { label: 'Active Agents', value: s.totalAgents, sub: 'Team members', icon: Users, color: 'bg-emerald-500', light: 'bg-emerald-50' },
-    { label: 'Pending Inquiries', value: s.pendingInquiries, sub: `${s.totalInquiries} total`, icon: MessageSquare, color: 'bg-amber-500', light: 'bg-amber-50' },
-    { label: 'Pending Viewings', value: s.pendingViewings, sub: `${s.totalViewings} total`, icon: Calendar, color: 'bg-purple-500', light: 'bg-purple-50' },
-    { label: 'Pending Valuations', value: s.pendingValuations, sub: 'Awaiting review', icon: TrendingUp, color: 'bg-rose-500', light: 'bg-rose-50' },
-    { label: 'Total Users', value: s.totalUsers, sub: 'Registered accounts', icon: CheckCircle, color: 'bg-teal-500', light: 'bg-teal-50' },
+    { label: 'Total Properties', value: s.totalProperties, sub: `${s.publishedProperties} published`, icon: Home, iconColor: 'text-blue-600', light: 'bg-blue-50' },
+    { label: 'Active Agents', value: s.totalAgents, sub: 'Team members', icon: Users, iconColor: 'text-emerald-600', light: 'bg-emerald-50' },
+    { label: 'Pending Inquiries', value: s.pendingInquiries, sub: `${s.totalInquiries} total`, icon: MessageSquare, iconColor: 'text-amber-600', light: 'bg-amber-50' },
+    { label: 'Pending Viewings', value: s.pendingViewings, sub: `${s.totalViewings} total`, icon: Calendar, iconColor: 'text-purple-600', light: 'bg-purple-50' },
+    { label: 'Pending Valuations', value: s.pendingValuations, sub: 'Awaiting review', icon: TrendingUp, iconColor: 'text-rose-600', light: 'bg-rose-50' },
+    { label: 'Total Users', value: s.totalUsers, sub: 'Registered accounts', icon: CheckCircle, iconColor: 'text-teal-600', light: 'bg-teal-50' },
   ];
 
   return (
@@ -122,7 +155,7 @@ export default function AdminDashboard() {
                 <p className="text-xs text-slate-400 mt-1">{card.sub}</p>
               </div>
               <div className={`w-11 h-11 ${card.light} rounded-xl flex items-center justify-center`}>
-                <card.icon className={`w-5 h-5 text-${card.color.split('-')[1]}-600`} />
+                <card.icon className={`w-5 h-5 ${card.iconColor}`} />
               </div>
             </div>
           </div>

@@ -112,7 +112,7 @@ export const Header: React.FC = () => {
           {/* Call to Action Buttons (Desktop) */}
           <div className="hidden lg:flex items-center space-x-4">
             <Link to="/admin" className="text-sm text-brand-charcoal hover:text-brand-emerald font-medium transition-colors">
-              Agent Login
+               Login
             </Link>
             <Link to="/list-your-property" className="bg-brand-emerald hover:bg-brand-emerald-hover text-brand-white px-4 py-2.5 rounded-md text-sm font-medium transition-colors duration-200 shadow-sm">
               List Property

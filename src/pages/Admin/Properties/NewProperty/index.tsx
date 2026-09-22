@@ -1,1 +1,5 @@
-export default function NewProperty() { return <div>NewProperty Page</div>; }
+import PropertyForm from '../PropertyForm';
+
+export default function NewProperty() {
+  return <PropertyForm />;
+}

@@ -78,6 +78,14 @@ export const adminApi = {
 		authRequest(`/admin/properties/${id}`, { method: 'PATCH', body: JSON.stringify(data) }),
 	deleteProperty: (id: string) =>
 		authRequest(`/admin/properties/${id}`, { method: 'DELETE' }),
+	getAdminProperties: (query?: Record<string, QueryValue>) =>
+		authRequest(`/admin/properties${buildQuery(query)}`),
+	createAdminProperty: (data: Record<string, unknown>) =>
+		authRequest('/admin/properties', { method: 'POST', body: JSON.stringify(data) }),
+	updateAdminProperty: (id: string, data: Record<string, unknown>) =>
+		authRequest(`/admin/properties/${id}`, { method: 'PATCH', body: JSON.stringify(data) }),
+	deleteAdminProperty: (id: string) =>
+		authRequest(`/admin/properties/${id}`, { method: 'DELETE' }),
 
 	// Categories
 	getCategories: () => authRequest('/admin/categories'),
