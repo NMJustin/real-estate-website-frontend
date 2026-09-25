@@ -59,7 +59,7 @@ export default function AdminLogin() {
           <div className="w-10 h-10 bg-emerald-500 rounded-lg flex items-center justify-center">
             <Building2 className="w-6 h-6 text-white" />
           </div>
-          <span className="text-white font-bold text-xl">Nihohange</span>
+          <span className="text-white font-bold text-xl">Ingata</span>
         </div>
 
         <div>
@@ -94,7 +94,7 @@ export default function AdminLogin() {
           <div className="w-10 h-10 bg-emerald-500 rounded-lg flex items-center justify-center">
             <Building2 className="w-6 h-6 text-white" />
           </div>
-          <span className="text-white font-bold text-xl">Nihohange Admin</span>
+          <span className="text-white font-bold text-xl">Ingata Admin</span>
         </div>
 
         <div className="w-full max-w-md">
@@ -121,7 +121,7 @@ export default function AdminLogin() {
                   type="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  placeholder="admin@nihohange.com"
+                  placeholder="admin@ingatatechnologiesltd@gmail.com"
                   autoComplete="email"
                   required
                   className="w-full pl-11 pr-4 py-3 bg-slate-800 border border-slate-600 rounded-xl text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition"

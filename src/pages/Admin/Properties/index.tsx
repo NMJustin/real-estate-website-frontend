@@ -83,7 +83,12 @@ const formatPrice = (
     return `${currency ?? ''} ${price}`.trim();
   }
 
-  return `${currency ?? ''} ${numericPrice.toLocaleString()}`.trim();
+  if (numericPrice >= 1000000) {
+    return `RWF ${(numericPrice / 1000000).toFixed(0)}M`;
+  } else if (numericPrice >= 1000) {
+    return `RWF ${(numericPrice / 1000).toFixed(0)}K`;
+  }
+  return `RWF ${numericPrice.toLocaleString()}`;
 };
 
 const formatDate = (date: string) => {
@@ -330,7 +335,12 @@ export default function Properties() {
             <option value="">All Types</option>
             <option value="RESIDENTIAL">Residential</option>
             <option value="COMMERCIAL">Commercial</option>
+            <option value="APARTMENTS">Apartments</option>
+            <option value="HOUSES">Houses</option>
             <option value="LAND">Land</option>
+            <option value="OFFICES">Offices</option>
+            <option value="WAREHOUSES">Warehouses</option>
+            <option value="NEW_DEVELOPMENTS">New Developments</option>
           </select>
 
           {/* Status */}

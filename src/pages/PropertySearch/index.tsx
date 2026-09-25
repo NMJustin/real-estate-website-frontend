@@ -1,5 +1,5 @@
-import { FormEvent, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { FormEvent, useState, useEffect } from 'react';
+import { Link, useSearchParams } from 'react-router-dom';
 import api from '../../services/api';
 
 type SearchForm = {
@@ -16,11 +16,53 @@ const initialForm: SearchForm = {
 type Property = { id: string; slug: string; title: string; location?: string; price?: string | number; bedrooms?: number; bathrooms?: number; size?: string | number };
 
 export default function PropertySearch() {
-  const [form, setForm] = useState(initialForm);
+  const [searchParams] = useSearchParams();
+
+  const [form, setForm] = useState<SearchForm>(() => {
+    const initial = { ...initialForm };
+    if (searchParams.has('location')) initial.location = searchParams.get('location') || '';
+    if (searchParams.has('propertyType')) initial.propertyType = searchParams.get('propertyType') || '';
+    
+    const urlTransaction = searchParams.get('transactionType');
+    if (urlTransaction) {
+      if (urlTransaction.toLowerCase() === 'buy') initial.transactionType = 'SALE';
+      else if (urlTransaction.toLowerCase() === 'rent') initial.transactionType = 'RENT';
+      else initial.transactionType = urlTransaction;
+    }
+    
+    const priceRange = searchParams.get('priceRange');
+    if (priceRange) {
+      const parts = priceRange.split('-');
+      if (parts.length === 2) {
+        initial.minPrice = parts[0];
+        initial.maxPrice = parts[1];
+      } else if (priceRange.endsWith('+')) {
+        initial.minPrice = priceRange.replace('+', '');
+      }
+    }
+    
+    if (searchParams.has('bedrooms')) {
+      initial.minBedrooms = searchParams.get('bedrooms') || '';
+    }
+    
+    return initial;
+  });
+
   const [properties, setProperties] = useState<Property[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const update = (name: keyof SearchForm, value: string) => setForm((current) => ({ ...current, [name]: value }));
+
+  useEffect(() => {
+    const fetchProperties = async () => {
+      setLoading(true); setError('');
+      const query = Object.fromEntries(Object.entries(form).filter(([, value]) => value.trim() !== ''));
+      try { const response = await api.getProperties(query) as { data: Property[] }; setProperties(response.data || []); }
+      catch (requestError) { setError(requestError instanceof Error ? requestError.message : 'Unable to search properties'); }
+      finally { setLoading(false); }
+    };
+    fetchProperties();
+  }, []);
 
   const handleSubmit = async (event: FormEvent) => {
     event.preventDefault(); setLoading(true); setError('');
@@ -40,7 +82,7 @@ export default function PropertySearch() {
       <p className="text-sm font-semibold uppercase tracking-wider text-brand-emerald">Property Search</p><h1 className="text-4xl font-bold text-brand-navy mt-2 mb-8">Find a property that fits</h1>
       <form onSubmit={handleSubmit} className="bg-brand-white rounded-xl shadow-sm border border-slate-200 p-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5">
         <label className="lg:col-span-2">Location<input value={form.location} onChange={(event) => update('location', event.target.value)} placeholder="City, district, or address" className="search-input" /></label>
-        <label>Property type<select value={form.propertyType} onChange={(event) => update('propertyType', event.target.value)} className="search-input"><option value="">Any type</option><option value="RESIDENTIAL">Residential</option><option value="COMMERCIAL">Commercial</option><option value="LAND">Land</option></select></label>
+        <label>Property type<select value={form.propertyType} onChange={(event) => update('propertyType', event.target.value)} className="search-input"><option value="">Any type</option><option value="RESIDENTIAL">Residential</option><option value="COMMERCIAL">Commercial</option><option value="APARTMENTS">Apartments</option><option value="HOUSES">Houses</option><option value="LAND">Land</option><option value="OFFICES">Offices</option><option value="WAREHOUSES">Warehouses</option><option value="NEW_DEVELOPMENTS">New Developments</option></select></label>
         <label>Purpose<select value={form.transactionType} onChange={(event) => update('transactionType', event.target.value)} className="search-input"><option value="">Any purpose</option><option value="SALE">Buy</option><option value="RENT">Rent</option><option value="LEASE">Lease</option></select></label>
         <label>Minimum price<input type="number" value={form.minPrice} onChange={(event) => update('minPrice', event.target.value)} className="search-input" /></label><label>Maximum price<input type="number" value={form.maxPrice} onChange={(event) => update('maxPrice', event.target.value)} className="search-input" /></label>
         <label>Minimum bedrooms<input type="number" min="0" value={form.minBedrooms} onChange={(event) => update('minBedrooms', event.target.value)} className="search-input" /></label><label>Minimum bathrooms<input type="number" min="0" value={form.minBathrooms} onChange={(event) => update('minBathrooms', event.target.value)} className="search-input" /></label>
@@ -51,7 +93,7 @@ export default function PropertySearch() {
         <div className="lg:col-span-4 flex flex-wrap gap-3 pt-2"><button type="submit" className="bg-brand-emerald hover:bg-brand-emerald-hover text-brand-white font-semibold rounded-lg px-6 py-3">{loading ? 'Searching...' : 'Search properties'}</button><button type="button" onClick={saveSearch} className="border border-brand-slate text-brand-navy rounded-lg px-6 py-3">Save this search</button></div>
       </form>
       {error && <p className="mt-5 text-red-600">{error}</p>}
-      <section className="mt-10 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">{properties.map((property) => <article key={property.id} className="bg-brand-white rounded-xl border border-slate-200 p-5"><h2 className="text-xl font-bold text-brand-navy">{property.title}</h2><p className="text-brand-charcoal mt-2">{property.location || 'Location unavailable'}</p><p className="text-brand-emerald font-semibold mt-4">{property.price ?? 'Price on request'}</p><p className="text-sm text-slate-600 mt-2">{property.bedrooms ?? 0} beds · {property.bathrooms ?? 0} baths · {property.size ?? 'Size unavailable'}</p><Link to={`/properties/${property.slug}`} className="inline-block mt-4 text-brand-emerald font-semibold">View property</Link></article>)}</section>
+      <section className="mt-10 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">{properties.map((property) => <article key={property.id} className="bg-brand-white rounded-xl border border-slate-200 p-5"><h2 className="text-xl font-bold text-brand-navy">{property.title}</h2><p className="text-brand-charcoal mt-2">{property.location || 'Location unavailable'}</p><p className="text-brand-emerald font-semibold mt-4">{property.price ? `RWF ${Number(property.price).toLocaleString()}` : 'Price on request'}</p><p className="text-sm text-slate-600 mt-2">{property.bedrooms ?? 0} beds · {property.bathrooms ?? 0} baths · {property.size ?? 'Size unavailable'}</p><Link to={`/properties/${property.slug}`} className="inline-block mt-4 text-brand-emerald font-semibold">View property</Link></article>)}</section>
     </div></main>
   );
 }

@@ -36,6 +36,16 @@ const authRequest = async <T>(path: string, options: RequestInit = {}): Promise<
 	});
 };
 
+const uploadPropertyMedia = async (file: File) => {
+	const token = getToken();
+	const formData = new FormData();
+	formData.append('file', file);
+	const response = await fetch(`${API_BASE_URL}/admin/properties/media`, { method: 'POST', headers: token ? { Authorization: `Bearer ${token}` } : {}, body: formData });
+	const body = await response.json().catch(() => ({}));
+	if (!response.ok) throw new Error(body.message || 'Media upload failed.');
+	return body as { data: { url: string; mediaType: 'IMAGE' | 'VIDEO' } };
+};
+
 // ─── Public API ───────────────────────────────────────────────────────────────
 export const api = {
 	getProperties: (query?: Record<string, QueryValue>) => request(`/properties${buildQuery(query)}`),
@@ -51,6 +61,7 @@ export const api = {
 	getServices: () => request('/services'),
 	getArticles: (category: string) => request(`/articles${buildQuery({ category })}`),
 	getFaqs: () => request('/faqs'),
+	getCategories: () => request('/categories'),
 	createContact: (data: unknown) => request('/contact', { method: 'POST', body: JSON.stringify(data) }),
 	createInquiry: (data: unknown) => request('/inquiries', { method: 'POST', body: JSON.stringify(data) }),
 	createListing: (data: unknown) => request('/listings', { method: 'POST', body: JSON.stringify(data) }),
@@ -67,6 +78,7 @@ export const adminApi = {
 
 	// Dashboard
 	getDashboard: () => authRequest('/admin/dashboard'),
+	uploadPropertyMedia,
 
 	// Properties
 	getProperties: (query?: Record<string, QueryValue>) =>
@@ -142,6 +154,11 @@ export const adminApi = {
 	// Users
 	getUsers: (query?: Record<string, QueryValue>) =>
 		authRequest(`/admin/users${buildQuery(query)}`),
+	updateUserMediaPermission: (id: string, canUploadPropertyMedia: boolean) =>
+		authRequest(`/admin/users/${id}/media-permission`, {
+			method: 'PATCH',
+			body: JSON.stringify({ canUploadPropertyMedia }),
+		}),
 
 	// Settings
 	getSettings: () => authRequest('/admin/settings'),

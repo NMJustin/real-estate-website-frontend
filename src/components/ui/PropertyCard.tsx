@@ -7,6 +7,7 @@ export interface PropertyProps {
   id: string;
   slug: string;
   image: string;
+  title: string;
   status: 'For Sale' | 'For Rent' | 'Pending' | 'Sold';
   type: string;
   price: string;
@@ -15,6 +16,8 @@ export interface PropertyProps {
   bathrooms: number;
   size: string;
   features: string[];
+  hasVideo?: boolean;
+  isFeatured?: boolean;
 }
 
 export function PropertyCard({ property }: { property: PropertyProps }) {
@@ -34,12 +37,22 @@ export function PropertyCard({ property }: { property: PropertyProps }) {
           className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
         />
         <div className="absolute top-4 left-4 flex gap-2">
+          {property.isFeatured && (
+            <span className="px-3 py-1 text-xs font-bold rounded-full bg-amber-500 text-white">
+              Featured
+            </span>
+          )}
           <span className={`px-3 py-1 text-xs font-bold rounded-full ${statusColors[property.status]}`}>
             {property.status}
           </span>
           <span className="px-3 py-1 text-xs font-bold rounded-full bg-black/50 text-white backdrop-blur-sm">
             {property.type}
           </span>
+          {property.hasVideo && (
+            <span className="px-3 py-1 text-xs font-bold rounded-full bg-purple-500/80 text-white backdrop-blur-sm">
+              Video
+            </span>
+          )}
         </div>
         <button type="button" aria-label="Save property" className="absolute top-4 right-4 w-8 h-8 bg-white/80 hover:bg-white backdrop-blur-sm rounded-full flex items-center justify-center text-brand-charcoal transition-colors">
           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"></path></svg>
@@ -47,8 +60,9 @@ export function PropertyCard({ property }: { property: PropertyProps }) {
       </div>
       
       <CardBody className="flex-1 flex flex-col">
-        <h3 className="text-2xl font-bold text-brand-navy mb-2">{property.price}</h3>
-        <p className="text-brand-charcoal mb-4 flex-1">{property.location}</p>
+        <h3 className="text-lg font-bold text-brand-navy mb-1">{property.title}</h3>
+        <p className="text-brand-charcoal text-sm mb-2">{property.type} • {property.location}</p>
+        <h4 className="text-2xl font-bold text-brand-emerald mb-4">{property.price}</h4>
         
         <div className="flex items-center gap-4 text-sm text-brand-charcoal mb-4 border-b border-slate-100 pb-4">
           <div className="flex items-center gap-1">

@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import api from '../../services/api';
 
-type Property = { id: string; slug: string; title: string; location?: string; price?: string | number; bedrooms?: number; bathrooms?: number; size?: string | number };
+type Property = { id: string; slug: string; title: string; location?: string; price?: string | number; bedrooms?: number; bathrooms?: number; size?: string | number; sizeUnit?: string; propertyImages?: { imageUrl: string; isPrimary?: boolean; mediaType?: 'IMAGE' | 'VIDEO' }[] };
 
 type CategoryListingProps = { title: string; query: Record<string, string> };
 
@@ -27,8 +27,20 @@ export function CategoryListing({ title, query }: CategoryListingProps) {
             <article key={property.id} className="bg-brand-white rounded-xl border border-slate-200 p-5">
               <h2 className="text-xl font-bold text-brand-navy">{property.title}</h2>
               <p className="text-brand-charcoal mt-2">{property.location || 'Location unavailable'}</p>
-              <p className="text-brand-emerald font-semibold mt-4">{property.price ?? 'Price on request'}</p>
-              <p className="text-sm text-slate-600 mt-2">{property.bedrooms ?? 0} beds · {property.bathrooms ?? 0} baths · {property.size ?? 'Size unavailable'}</p>
+              <p className="text-brand-emerald font-semibold mt-4">{property.price ? (() => {
+                const price = Number(property.price);
+                if (price >= 1000000) {
+                  return `RWF ${(price / 1000000).toFixed(0)}M`;
+                } else if (price >= 1000) {
+                  return `RWF ${(price / 1000).toFixed(0)}K`;
+                }
+                return `RWF ${price.toLocaleString()}`;
+              })() : 'Price on request'}</p>
+              <p className="text-sm text-slate-600 mt-2">{property.bedrooms ?? 0} beds · {property.bathrooms ?? 0} baths · {property.size ? (() => {
+                const unit = property.sizeUnit || 'sqm';
+                const unitDisplay = unit === 'sqm' ? 'm²' : unit === 'sqft' ? 'ft²' : unit === 'acres' ? 'acres' : unit === 'hectares' ? 'hectares' : unit;
+                return `${property.size} ${unitDisplay}`;
+              })() : 'Size unavailable'}</p>
               <Link to={`/properties/${property.slug}`} className="inline-block mt-4 text-brand-emerald font-semibold">View property</Link>
             </article>
           ))}

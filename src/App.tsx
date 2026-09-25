@@ -21,7 +21,11 @@ import ForRent from './pages/Properties/ForRent';
 import ForLease from './pages/Properties/ForLease';
 import Residential from './pages/Properties/Residential';
 import Commercial from './pages/Properties/Commercial';
+import Apartments from './pages/Properties/Apartments';
+import Houses from './pages/Properties/Houses';
 import Land from './pages/Properties/Land';
+import Offices from './pages/Properties/Offices';
+import Warehouses from './pages/Properties/Warehouses';
 import NewDevelopments from './pages/Properties/NewDevelopments';
 
 // Services
@@ -33,6 +37,9 @@ import PropertyManagement from './pages/Services/PropertyManagement';
 import PropertyValuation from './pages/Services/PropertyValuation';
 import PropertyMarketing from './pages/Services/PropertyMarketing';
 import RealEstateAdvisory from './pages/Services/RealEstateAdvisory';
+import PropertySearchServices from './pages/Services/PropertySearchServices';
+import PropertyDevelopmentMarketing from './pages/Services/PropertyDevelopmentMarketing';
+import RealEstateConsultancy from './pages/Services/RealEstateConsultancy';
 
 // Agents
 import Agents from './pages/Agents';
@@ -105,7 +112,11 @@ export default function App() {
                 <Route path="/properties/for-lease" element={<ForLease />} />
                 <Route path="/properties/residential" element={<Residential />} />
                 <Route path="/properties/commercial" element={<Commercial />} />
+                <Route path="/properties/apartments" element={<Apartments />} />
+                <Route path="/properties/houses" element={<Houses />} />
                 <Route path="/properties/land" element={<Land />} />
+                <Route path="/properties/offices" element={<Offices />} />
+                <Route path="/properties/warehouses" element={<Warehouses />} />
                 <Route path="/properties/new-developments" element={<NewDevelopments />} />
                 <Route path="/properties/:propertySlug" element={<PropertyDetails />} />
 
@@ -118,6 +129,9 @@ export default function App() {
                 <Route path="/services/property-valuation" element={<PropertyValuation />} />
                 <Route path="/services/property-marketing" element={<PropertyMarketing />} />
                 <Route path="/services/real-estate-advisory" element={<RealEstateAdvisory />} />
+                <Route path="/services/property-search-services" element={<PropertySearchServices />} />
+                <Route path="/services/property-development-marketing" element={<PropertyDevelopmentMarketing />} />
+                <Route path="/services/real-estate-consultancy" element={<RealEstateConsultancy />} />
 
                 {/* Agents */}
                 <Route path="/agents" element={<Agents />} />

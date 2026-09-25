@@ -51,7 +51,7 @@ function Sidebar({ onClose }: { onClose?: () => void }) {
           <div className="w-8 h-8 bg-emerald-500 rounded-lg flex items-center justify-center">
             <Building2 className="w-4.5 h-4.5 text-white" />
           </div>
-          <span className="font-bold text-white text-base">Nihohange</span>
+          <span className="font-bold text-white text-base">Ingata</span>
         </div>
         {onClose && (
           <button onClick={onClose} className="lg:hidden p-1 rounded-lg hover:bg-slate-800 transition">
@@ -154,7 +154,7 @@ export function AdminLayout({ children }: AdminLayoutProps) {
           <div className="flex items-center gap-3">
             <div className="hidden sm:block text-right">
               <p className="text-sm font-medium text-slate-800">Admin Portal</p>
-              <p className="text-xs text-slate-400">Nihohange Real Estate</p>
+              <p className="text-xs text-slate-400">Ingata Real Estate</p>
             </div>
             <div className="w-9 h-9 bg-emerald-500/15 rounded-full flex items-center justify-center">
               <User className="w-4.5 h-4.5 text-emerald-600" />

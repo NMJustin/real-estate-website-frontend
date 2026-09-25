@@ -83,7 +83,12 @@ const statusBadge = (status: string) => {
 const formatPrice = (price: string | null, currency: string | null) => {
   if (!price) return '—';
   const num = parseFloat(price);
-  return `${currency || 'KES'} ${num.toLocaleString()}`;
+  if (num >= 1000000) {
+    return `RWF ${(num / 1000000).toFixed(0)}M`;
+  } else if (num >= 1000) {
+    return `RWF ${(num / 1000).toFixed(0)}K`;
+  }
+  return `RWF ${num.toLocaleString()}`;
 };
 
 export default function AdminDashboard() {
