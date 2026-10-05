@@ -1,5 +1,5 @@
-import React from 'react';
-import { Link } from 'react-router-dom';
+﻿import React from 'react';
+import { Link } from '@/navigation/legacy-router';
 import { Card, CardBody, CardFooter } from './Card';
 import { Button } from './Button';
 
@@ -61,7 +61,7 @@ export function PropertyCard({ property }: { property: PropertyProps }) {
       
       <CardBody className="flex-1 flex flex-col">
         <h3 className="text-lg font-bold text-brand-navy mb-1">{property.title}</h3>
-        <p className="text-brand-charcoal text-sm mb-2">{property.type} • {property.location}</p>
+        <p className="text-brand-charcoal text-sm mb-2">{property.type} · {property.location}</p>
         <h4 className="text-2xl font-bold text-brand-emerald mb-4">{property.price}</h4>
         
         <div className="flex items-center gap-4 text-sm text-brand-charcoal mb-4 border-b border-slate-100 pb-4">

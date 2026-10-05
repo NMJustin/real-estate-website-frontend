@@ -1,4 +1,7 @@
-import { Navigate, useLocation } from 'react-router-dom';
+'use client'
+
+import { usePathname } from 'next/navigation';
+import { Navigate } from '@/navigation/legacy-router';
 import { useAuth } from '../../context/AuthContext';
 
 interface ProtectedRouteProps {
@@ -7,7 +10,7 @@ interface ProtectedRouteProps {
 
 export default function ProtectedRoute({ children }: ProtectedRouteProps) {
   const { isAuthenticated, isLoading } = useAuth();
-  const location = useLocation();
+  const pathname = usePathname();
 
   if (isLoading) {
     return (
@@ -21,7 +24,7 @@ export default function ProtectedRoute({ children }: ProtectedRouteProps) {
   }
 
   if (!isAuthenticated) {
-    return <Navigate to="/admin" state={{ from: location }} replace />;
+    return <Navigate to={`/admin?from=${encodeURIComponent(pathname)}`} replace />;
   }
 
   return <>{children}</>;

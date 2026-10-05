@@ -1,4 +1,4 @@
-export const rwandaDistricts = {
+export const rwandaDistricts: Record<string, Record<string, string[]>> = {
   "Kigali City": {
     "Gasabo": ["Jali", "Kinyinya", "Ndera", "Rusheshe", "Rutunga", "Bumbogo", "Gikomero", "Gisozi", "Jabana", "Kanombe", "Kimiromko", "Remera", "Rwimbogo", "Gatagara", "Gikoro", "Gishuri", "Kacyiru", "Gatenga", "Kigali"],
     "Kicukiro": ["Gatenga", "Gatumba", "Gikondo", "Kanobwe", "Kicukiro", "Kigarama", "Masaka", "Matsinda", "Mubano", "Muyumbu", "Ndego", "Ngeruka", "Nyagatovu", "Nyarugunga", "Rwampara"],
@@ -29,7 +29,6 @@ export const rwandaDistricts = {
   },
   "Western Province": {
     "Karongi": ["Bwishyura", "Gatitu", "Gishyita", "Gitesi", "Kibuye", "Kigoma", "Kiziba", "Makindye", "Murambi", "Mutuntu", "Rwankuba", "Rwankumbi", "Rwamatamu", "Rwimpari", "Rwintare"],
-    "Ngororero": ["Bwira", "Gatongo", "Gihinga", "Gikombo", "Gishyita", "Kageyo", "Kavumu", "Kibumbwe", "Kigeyo", "Mubuga", "Muhanda", "Muhororo", "Mukingo", "Murundi", "Muyange", "Ndaro", "Nkora", "Ntagara", "Ntyazo", "Nyamigabe", "Nyamugari", "Nyiraguru", "Ruganda", "Rurangwa", "Rusira", "Rusebeya", "Rwantozi", "Rwezamenyo"],
     "Ngororero": ["Bwira", "Gatongo", "Gihinga", "Gikombo", "Gishyita", "Kageyo", "Kavumu", "Kibumbwe", "Kigeyo", "Mubuga", "Muhanda", "Muhororo", "Mukingo", "Murundi", "Muyange", "Ndaro", "Nkora", "Ntagara", "Ntyazo", "Nyamigabe", "Nyamugari", "Nyiraguru", "Ruganda", "Rurangwa", "Rusira", "Rusebeya", "Rwantozi", "Rwezamenyo"],
     "Nyabihu": ["Biguhu", "Bwisige", "Gatonde", "Gatumba", "Gishambwira", "Gishari", "Jomba", "Kabatwa", "Karongi", "Kintobo", "Kora", "Murera", "Muringa", "Mukamira", "Rambura", "Ruganda", "Rugera", "Rugendabari", "Rusengya", "Rwankwegye", "Rwankeri", "Rwezamenyo", "Rwimbogo"],
     "Nyamasheke": ["Birembo", "Bushenge", "Cyimbabure", "Gihombo", "Gisunzu", "Kabare", "Kagano", "Karambi", "Kigoma", "Kintobo", "Mahembe", "Mikumbi", "Muninda", "Muringa", "Nyabitekeri", "Rangiro", "Ruharambuga", "Rwanda", "Rwengero", "Rwimbogo", "Rwisabi"],

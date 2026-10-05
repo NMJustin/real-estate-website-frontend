@@ -1,5 +1,7 @@
+﻿'use client'
+
 import { useEffect, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link } from '@/navigation/legacy-router';
 import api from '../../services/api';
 
 type Property = { id: string; slug: string; title: string; location?: string; price?: string | number; bedrooms?: number; bathrooms?: number; size?: string | number; sizeUnit?: string; propertyImages?: { imageUrl: string; isPrimary?: boolean; mediaType?: 'IMAGE' | 'VIDEO' }[] };

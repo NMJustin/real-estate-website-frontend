@@ -1,5 +1,5 @@
-import React from 'react';
-import { Link } from 'react-router-dom';
+﻿import React from 'react';
+import { Link } from '@/navigation/legacy-router';
 import { Card, CardBody, CardFooter } from './Card';
 import { Button } from './Button';
 
@@ -13,7 +13,7 @@ export interface CategoryProps {
 }
 
 export function CategoryCard({ category }: { category: CategoryProps }) {
-  const defaultImage = '/images/category-placeholder.jpg';
+  const defaultImage = '/images/OIP (1).webp';
   const imageSrc = category.imageUrl || defaultImage;
 
   return (

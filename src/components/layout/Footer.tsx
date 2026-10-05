@@ -1,4 +1,4 @@
-import { Link } from 'react-router-dom';
+import Link from 'next/link';
 
 export function Footer() {
   return (
@@ -32,10 +32,10 @@ export function Footer() {
           <div>
             <h4 className="text-white font-semibold mb-4">Company</h4>
             <ul className="space-y-2 text-sm">
-              <li><Link className="hover:text-white transition-colors" to="/about/our-company">About Us</Link></li>
-              <li><Link className="hover:text-white transition-colors" to="/about/our-team">Our Team</Link></li>
-              <li><Link className="hover:text-white transition-colors" to="/about/why-choose-us">Why Choose Us</Link></li>
-              <li><Link className="hover:text-white transition-colors" to="/contact">Contact Us</Link></li>
+              <li><Link className="hover:text-white transition-colors" href="/about/our-company">About Us</Link></li>
+              <li><Link className="hover:text-white transition-colors" href="/our-team">Our Team</Link></li>
+              <li><Link className="hover:text-white transition-colors" href="/about/why-choose-us">Why Choose Us</Link></li>
+              <li><Link className="hover:text-white transition-colors" href="/contact">Contact Us</Link></li>
             </ul>
           </div>
 
@@ -43,12 +43,12 @@ export function Footer() {
           <div>
             <h4 className="text-white font-semibold mb-4">Properties</h4>
             <ul className="space-y-2 text-sm">
-              <li><Link className="hover:text-white transition-colors" to="/properties?transactionType=SALE">Properties for Sale</Link></li>
-              <li><Link className="hover:text-white transition-colors" to="/properties?transactionType=RENT">Properties for Rent</Link></li>
-              <li><Link className="hover:text-white transition-colors" to="/properties?propertyType=RESIDENTIAL">Residential</Link></li>
-              <li><Link className="hover:text-white transition-colors" to="/properties?propertyType=COMMERCIAL">Commercial</Link></li>
-              <li><Link className="hover:text-white transition-colors" to="/properties?propertyType=LAND">Land</Link></li>
-              <li><Link className="hover:text-white transition-colors" to="/properties?isNewDevelopment=true">New Developments</Link></li>
+              <li><Link className="hover:text-white transition-colors" href="/properties?transactionType=SALE">Properties for Sale</Link></li>
+              <li><Link className="hover:text-white transition-colors" href="/properties?transactionType=RENT">Properties for Rent</Link></li>
+              <li><Link className="hover:text-white transition-colors" href="/properties?propertyType=RESIDENTIAL">Residential</Link></li>
+              <li><Link className="hover:text-white transition-colors" href="/properties?propertyType=COMMERCIAL">Commercial</Link></li>
+              <li><Link className="hover:text-white transition-colors" href="/properties?propertyType=LAND">Land</Link></li>
+              <li><Link className="hover:text-white transition-colors" href="/properties?isNewDevelopment=true">New Developments</Link></li>
             </ul>
           </div>
 
@@ -56,12 +56,12 @@ export function Footer() {
           <div>
             <h4 className="text-white font-semibold mb-4">Services</h4>
             <ul className="space-y-2 text-sm">
-              <li><Link className="hover:text-white transition-colors" to="/services/property-sales">Property Sales</Link></li>
-              <li><Link className="hover:text-white transition-colors" to="/services/property-rentals">Property Rentals</Link></li>
-              <li><Link className="hover:text-white transition-colors" to="/services/property-management">Property Management</Link></li>
-              <li><Link className="hover:text-white transition-colors" to="/services/property-marketing">Property Marketing</Link></li>
-              <li><Link className="hover:text-white transition-colors" to="/services/property-valuation">Property Valuation</Link></li>
-              <li><Link className="hover:text-white transition-colors" to="/services/real-estate-advisory">Real Estate Advisory</Link></li>
+              <li><Link className="hover:text-white transition-colors" href="/services/property-sales">Property Sales</Link></li>
+              <li><Link className="hover:text-white transition-colors" href="/services/property-rentals">Property Rentals</Link></li>
+              <li><Link className="hover:text-white transition-colors" href="/services/property-management">Property Management</Link></li>
+              <li><Link className="hover:text-white transition-colors" href="/services/property-marketing">Property Marketing</Link></li>
+              <li><Link className="hover:text-white transition-colors" href="/services/property-valuation">Property Valuation</Link></li>
+              <li><Link className="hover:text-white transition-colors" href="/services/real-estate-advisory">Real Estate Advisory</Link></li>
             </ul>
           </div>
 
@@ -69,10 +69,10 @@ export function Footer() {
           <div>
             <h4 className="text-white font-semibold mb-4">Resources</h4>
             <ul className="space-y-2 text-sm">
-              <li><Link className="hover:text-white transition-colors" to="/faqs">FAQs</Link></li>
-              <li><Link className="hover:text-white transition-colors" to="/insights/articles">Articles</Link></li>
-              <li><Link className="hover:text-white transition-colors" to="/insights/news">Property Guides</Link></li>
-              <li><Link className="hover:text-white transition-colors" to="/insights/news">News</Link></li>
+              <li><Link className="hover:text-white transition-colors" href="/faqs">FAQs</Link></li>
+              <li><Link className="hover:text-white transition-colors" href="/insights/articles">Articles</Link></li>
+              <li><Link className="hover:text-white transition-colors" href="/insights/property-guides">Property Guides</Link></li>
+              <li><Link className="hover:text-white transition-colors" href="/insights/news">News</Link></li>
             </ul>
           </div>
 
@@ -80,10 +80,10 @@ export function Footer() {
           <div>
             <h4 className="text-white font-semibold mb-4">Legal</h4>
             <ul className="space-y-2 text-sm">
-              <li><Link className="hover:text-white transition-colors" to="/legal/privacy-policy">Privacy Policy</Link></li>
-              <li><Link className="hover:text-white transition-colors" to="/legal/terms-and-conditions">Terms & Conditions</Link></li>
-              <li><Link className="hover:text-white transition-colors" to="/legal/property-listing-disclaimer">Property Listing Disclaimer</Link></li>
-              <li><Link className="hover:text-white transition-colors" to="/legal/cookie-policy">Cookie Policy</Link></li>
+              <li><Link className="hover:text-white transition-colors" href="/legal/privacy-policy">Privacy Policy</Link></li>
+              <li><Link className="hover:text-white transition-colors" href="/legal/terms-and-conditions">Terms & Conditions</Link></li>
+              <li><Link className="hover:text-white transition-colors" href="/legal/property-listing-disclaimer">Property Listing Disclaimer</Link></li>
+              <li><Link className="hover:text-white transition-colors" href="/legal/cookie-policy">Cookie Policy</Link></li>
             </ul>
           </div>
         </div>
@@ -135,9 +135,9 @@ export function Footer() {
               © {new Date().getFullYear()} Ingata Real Estate. All rights reserved.
             </p>
             <div className="flex gap-6 text-sm text-slate-500">
-              <Link to="/legal/privacy-policy" className="hover:text-white transition-colors">Privacy</Link>
-              <Link to="/legal/terms-and-conditions" className="hover:text-white transition-colors">Terms</Link>
-              <Link to="/legal/cookie-policy" className="hover:text-white transition-colors">Cookies</Link>
+              <Link href="/legal/privacy-policy" className="hover:text-white transition-colors">Privacy</Link>
+              <Link href="/legal/terms-and-conditions" className="hover:text-white transition-colors">Terms</Link>
+              <Link href="/legal/cookie-policy" className="hover:text-white transition-colors">Cookies</Link>
             </div>
           </div>
         </div>
