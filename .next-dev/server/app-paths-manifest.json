@@ -1,9 +1,1 @@
-{
-  "/admin/[...segments]/page": "app/admin/[...segments]/page.js",
-  "/properties/[propertySlug]/page": "app/properties/[propertySlug]/page.js",
-  "/property-search/page": "app/property-search/page.js",
-  "/page": "app/page.js",
-  "/our-team/page": "app/our-team/page.js",
-  "/list-your-property/page": "app/list-your-property/page.js",
-  "/properties/page": "app/properties/page.js"
-}
+{}

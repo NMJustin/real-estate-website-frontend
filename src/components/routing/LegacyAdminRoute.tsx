@@ -2,9 +2,6 @@ import type { ComponentType } from 'react'
 import { notFound } from 'next/navigation'
 import { AdminLayout } from '@/components/layout/AdminLayout'
 import ProtectedRoute from '@/components/auth/ProtectedRoute'
-import Agents from '@/legacy-pages/Admin/Agents'
-import NewAgent from '@/legacy-pages/Admin/Agents/NewAgent'
-import EditAgent from '@/legacy-pages/Admin/Agents/EditAgent'
 import Articles from '@/legacy-pages/Admin/Articles'
 import NewArticle from '@/legacy-pages/Admin/Articles/NewArticle'
 import EditArticle from '@/legacy-pages/Admin/Articles/EditArticle'
@@ -32,7 +29,6 @@ import Settings from '@/legacy-pages/Admin/Settings'
 import { RouteParamsProvider } from '@/navigation/legacy-router'
 
 const staticRoutes: Record<string, ComponentType> = {
-  agents: Agents,
   articles: Articles,
   categories: Categories,
   faqs: FAQs,
@@ -48,7 +44,6 @@ const staticRoutes: Record<string, ComponentType> = {
 }
 
 const createRoutes: Record<string, ComponentType> = {
-  'agents/new': NewAgent,
   'articles/new': NewArticle,
   'categories/new': NewCategory,
   'properties/new': NewProperty,
@@ -58,7 +53,6 @@ const createRoutes: Record<string, ComponentType> = {
 }
 
 const editRoutes: Record<string, ComponentType> = {
-  agents: EditAgent,
   articles: EditArticle,
   categories: EditCategory,
   properties: EditProperty,

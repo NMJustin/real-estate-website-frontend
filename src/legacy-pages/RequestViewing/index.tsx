@@ -13,8 +13,8 @@ export default function RequestViewing() {
 		name: '', 
 		email: '', 
 		phone: '', 
-		preferredDate: '', 
-		preferredTime: '', 
+		preferredViewingDate: '', 
+		preferredContactTime: '', 
 		numberOfVisitors: '', 
 		message: '' 
 	});
@@ -28,8 +28,8 @@ export default function RequestViewing() {
 		if (!form.email.trim()) return 'Email is required';
 		if (!form.phone.trim()) return 'Phone number is required';
 		if (!form.propertyId.trim()) return 'Property reference is required';
-		if (!form.preferredDate) return 'Preferred date is required';
-		if (!form.preferredTime) return 'Preferred time is required';
+		if (!form.preferredViewingDate) return 'Preferred viewing date is required';
+		if (!form.preferredContactTime) return 'Preferred contact time is required';
 		if (!form.numberOfVisitors) return 'Number of visitors is required';
 		const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 		if (!emailRegex.test(form.email)) return 'Please enter a valid email address';
@@ -176,46 +176,41 @@ export default function RequestViewing() {
 
 						<div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
 							<div>
-								<label htmlFor="preferredDate" className="block text-sm font-medium text-slate-700 mb-2">
-									Preferred Date *
+								<label htmlFor="preferredViewingDate" className="block text-sm font-medium text-slate-700 mb-2">
+									Preferred Viewing Date (Optional)
 								</label>
 								<div className="relative">
 									<input
-										id="preferredDate"
-										name="preferredDate"
+										id="preferredViewingDate"
+										name="preferredViewingDate"
 										type="date"
-										required
 										min={new Date().toISOString().split('T')[0]}
-										value={form.preferredDate}
-										onChange={(event) => setForm({ ...form, preferredDate: event.target.value })}
-										className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
+										value={form.preferredViewingDate}
+										onChange={(event) => setForm({ ...form, preferredViewingDate: event.target.value })}
+										className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:outline-none focus:border-emerald-500"
 									/>
-									<svg className="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+									<svg className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 										<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
 									</svg>
 								</div>
-								<p className="text-xs text-slate-500 mt-1">Click to open calendar and select date</p>
 							</div>
-
 							<div>
-								<label htmlFor="preferredTime" className="block text-sm font-medium text-slate-700 mb-2">
-									Preferred Time *
+								<label htmlFor="preferredContactTime" className="block text-sm font-medium text-slate-700 mb-2">
+									Preferred Contact Time (Optional)
 								</label>
 								<div className="relative">
 									<input
-										id="preferredTime"
-										name="preferredTime"
+										id="preferredContactTime"
+										name="preferredContactTime"
 										type="time"
-										required
-										value={form.preferredTime}
-										onChange={(event) => setForm({ ...form, preferredTime: event.target.value })}
-										className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
+										value={form.preferredContactTime}
+										onChange={(event) => setForm({ ...form, preferredContactTime: event.target.value })}
+										className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:outline-none focus:border-emerald-500"
 									/>
-									<svg className="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+									<svg className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 										<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
 									</svg>
 								</div>
-								<p className="text-xs text-slate-500 mt-1">Click to select hour and minutes</p>
 							</div>
 						</div>
 

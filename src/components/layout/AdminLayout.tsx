@@ -28,7 +28,6 @@ const navItems = [
   { to: '/admin/dashboard', icon: LayoutDashboard, label: 'Dashboard' },
   { to: '/admin/properties', icon: Home, label: 'Properties' },
   { to: '/admin/categories', icon: Tag, label: 'Categories' },
-  { to: '/admin/agents', icon: Users, label: 'Agents' },
   { to: '/admin/listings', icon: ClipboardList, label: 'Property Requests' },
   { to: '/admin/inquiries', icon: MessageSquare, label: 'Inquiries' },
   { to: '/admin/viewings', icon: Calendar, label: 'Viewings' },

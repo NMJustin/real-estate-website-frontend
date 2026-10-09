@@ -9,7 +9,7 @@ interface ProtectedRouteProps {
 }
 
 export default function ProtectedRoute({ children }: ProtectedRouteProps) {
-  const { isAuthenticated, isLoading } = useAuth();
+  const { isAuthenticated, isLoading, user } = useAuth();
   const pathname = usePathname();
 
   if (isLoading) {
@@ -25,6 +25,10 @@ export default function ProtectedRoute({ children }: ProtectedRouteProps) {
 
   if (!isAuthenticated) {
     return <Navigate to={`/admin?from=${encodeURIComponent(pathname)}`} replace />;
+  }
+
+  if (user?.role.toLowerCase() !== 'admin') {
+    return <Navigate to="/portal/dashboard" replace />;
   }
 
   return <>{children}</>;

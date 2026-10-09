@@ -135,6 +135,60 @@ type LayoutConfig<Route extends LayoutRoutes = LayoutRoutes> = {
   type __Unused = __Check
 }
 
+// Validate ../../app/portal/[...segments]/page.tsx
+{
+  type __IsExpected<Specific extends AppPageConfig<"/portal/[...segments]">> = Specific
+  const handler = {} as typeof import("../../app/portal/[...segments]/page.js")
+  type __Check = __IsExpected<typeof handler>
+  // @ts-ignore
+  type __Unused = __Check
+}
+
+// Validate ../../app/portal/dashboard/page.tsx
+{
+  type __IsExpected<Specific extends AppPageConfig<"/portal/dashboard">> = Specific
+  const handler = {} as typeof import("../../app/portal/dashboard/page.js")
+  type __Check = __IsExpected<typeof handler>
+  // @ts-ignore
+  type __Unused = __Check
+}
+
+// Validate ../../app/portal/forgot-password/page.tsx
+{
+  type __IsExpected<Specific extends AppPageConfig<"/portal/forgot-password">> = Specific
+  const handler = {} as typeof import("../../app/portal/forgot-password/page.js")
+  type __Check = __IsExpected<typeof handler>
+  // @ts-ignore
+  type __Unused = __Check
+}
+
+// Validate ../../app/portal/login/page.tsx
+{
+  type __IsExpected<Specific extends AppPageConfig<"/portal/login">> = Specific
+  const handler = {} as typeof import("../../app/portal/login/page.js")
+  type __Check = __IsExpected<typeof handler>
+  // @ts-ignore
+  type __Unused = __Check
+}
+
+// Validate ../../app/portal/page.tsx
+{
+  type __IsExpected<Specific extends AppPageConfig<"/portal">> = Specific
+  const handler = {} as typeof import("../../app/portal/page.js")
+  type __Check = __IsExpected<typeof handler>
+  // @ts-ignore
+  type __Unused = __Check
+}
+
+// Validate ../../app/portal/reset-password/page.tsx
+{
+  type __IsExpected<Specific extends AppPageConfig<"/portal/reset-password">> = Specific
+  const handler = {} as typeof import("../../app/portal/reset-password/page.js")
+  type __Check = __IsExpected<typeof handler>
+  // @ts-ignore
+  type __Unused = __Check
+}
+
 // Validate ../../app/properties/[propertySlug]/page.tsx
 {
   type __IsExpected<Specific extends AppPageConfig<"/properties/[propertySlug]">> = Specific

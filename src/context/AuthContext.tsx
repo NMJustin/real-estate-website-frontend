@@ -8,6 +8,7 @@ interface AdminUser {
   name: string | null;
   email: string;
   role: string;
+  phone?: string | null;
 }
 
 interface AuthContextValue {
@@ -16,8 +17,9 @@ interface AuthContextValue {
   isAuthenticated: boolean;
   isLoading: boolean;
   login: (email: string, password: string) => Promise<void>;
-  userLogin: (email: string, password: string) => Promise<void>;
+  userLogin: (email: string, password: string) => Promise<AdminUser>;
   userRegister: (name: string, email: string, password: string) => Promise<void>;
+  updateProfile: (name: string, phone: string) => Promise<void>;
   logout: () => void;
 }
 
@@ -56,6 +58,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           name: u.name,
           email: u.email,
           role: u.role?.name ?? u.role,
+          phone: u.phone ?? null,
         });
         setToken(storedToken);
       })
@@ -83,7 +86,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setUser(userData);
   }, []);
 
-  const userLogin = useCallback(async (email: string, password: string) => {
+  const userLogin = useCallback(async (email: string, password: string): Promise<AdminUser> => {
     const res = await fetch(`${API_BASE}/auth/login`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -96,7 +99,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       localStorage.setItem(TOKEN_KEY, jwt);
     }
     setToken(jwt);
-    setUser(userData);
+    const authenticatedUser: AdminUser = {
+      ...userData,
+      role: userData.role?.name ?? userData.role,
+      phone: userData.phone ?? null,
+    };
+    setUser(authenticatedUser);
+    return authenticatedUser;
   }, []);
 
   const userRegister = useCallback(async (name: string, email: string, password: string) => {
@@ -114,6 +123,23 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setToken(jwt);
     setUser(userData);
   }, []);
+
+  const updateProfile = useCallback(async (name: string, phone: string) => {
+    const currentToken = token || (typeof window !== 'undefined' ? localStorage.getItem(TOKEN_KEY) : null);
+    if (!currentToken) throw new Error('You must be signed in to update your profile.');
+    const response = await fetch(`${API_BASE}/auth/profile`, {
+      method: 'PATCH',
+      headers: {
+        Authorization: `Bearer ${currentToken}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ name, phone }),
+    });
+    const body = await response.json().catch(() => ({}));
+    if (!response.ok) throw new Error(body.message || 'Unable to update your profile.');
+    const profile = body.data as { name?: string | null; phone?: string | null };
+    setUser((current) => current ? { ...current, name: profile.name ?? current.name, phone: profile.phone ?? null } : current);
+  }, [token]);
 
   const logout = useCallback(() => {
     if (typeof window !== 'undefined') {
@@ -133,6 +159,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         login,
         userLogin,
         userRegister,
+        updateProfile,
         logout,
       }}
     >

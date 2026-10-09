@@ -4,6 +4,7 @@ import { FormEvent, useState, useEffect } from 'react';
 import { Link, useSearchParams } from '@/navigation/legacy-router';
 import api from '../../services/api';
 import { rwandaDistricts, getSectors } from '../../data/rwandaDistricts';
+import { TestPropertyBadge, TestPropertyNotice } from '../../components/property/TestPropertyBadge';
 
 type SearchForm = {
   location: string; district: string; sector: string;
@@ -293,7 +294,21 @@ export default function PropertySearch() {
           Property not found
         </p>
       )}
-      <section className="mt-10 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">{properties.map((property) => <article key={property.id} className="bg-brand-white rounded-xl border border-slate-200 p-5"><h2 className="text-xl font-bold text-brand-navy">{property.title}</h2><p className="text-brand-charcoal mt-2">{property.location || 'Location unavailable'}</p><p className="text-brand-emerald font-semibold mt-4">{property.price ? `RWF ${Number(property.price).toLocaleString()}` : 'Price on request'}</p><p className="text-sm text-slate-600 mt-2">{property.bedrooms ?? 0} beds · {property.bathrooms ?? 0} baths · {property.size ? `${property.size} ${property.sizeUnit === 'sqm' ? 'm²' : property.sizeUnit === 'sqft' ? 'ft²' : property.sizeUnit === 'acres' ? 'acres' : property.sizeUnit === 'hectares' ? 'hectares' : property.sizeUnit || 'sqm'}` : 'Size unavailable'}</p><Link to={`/properties/${property.slug}`} className="inline-block mt-4 text-brand-emerald font-semibold">View property</Link></article>)}</section>
+      <TestPropertyNotice className="mt-8" />
+      <section className="mt-10 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {properties.map((property) => (
+          <article key={property.id} className="rounded-xl border border-slate-200 bg-brand-white p-5">
+            <div className="mb-3"><TestPropertyBadge /></div>
+            <h2 className="text-xl font-bold text-brand-navy">{property.title}</h2>
+            <p className="mt-2 text-brand-charcoal">{property.location || 'Location unavailable'}</p>
+            <p className="mt-4 font-semibold text-brand-emerald">{property.price ? `RWF ${Number(property.price).toLocaleString()}` : 'Price on request'}</p>
+            <p className="mt-2 text-sm text-slate-600">
+              {property.bedrooms ?? 0} beds · {property.bathrooms ?? 0} baths · {property.size ? `${property.size} ${property.sizeUnit === 'sqm' ? 'm²' : property.sizeUnit === 'sqft' ? 'ft²' : property.sizeUnit === 'acres' ? 'acres' : property.sizeUnit === 'hectares' ? 'hectares' : property.sizeUnit || 'sqm'}` : 'Size unavailable'}
+            </p>
+            <Link to={`/properties/${property.slug}`} className="mt-4 inline-block font-semibold text-brand-emerald">View property</Link>
+          </article>
+        ))}
+      </section>
     </div></main>
   );
 }

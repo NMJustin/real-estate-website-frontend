@@ -1,12 +1,13 @@
 ﻿'use client'
 
 import { useState, useEffect } from 'react';
+import Link from 'next/link';
 import { useNavigate, useSearchParams } from '@/navigation/legacy-router';
 import { Building2, Eye, EyeOff, Lock, Mail, AlertCircle } from 'lucide-react';
 import { useAuth } from '../../../context/AuthContext';
 
 export default function AdminLogin() {
-  const { login, isAuthenticated, isLoading } = useAuth();
+  const { login, isAuthenticated, isLoading, user, logout } = useAuth();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
 
@@ -18,12 +19,12 @@ export default function AdminLogin() {
 
   const from = searchParams.get('from') || '/admin/dashboard';
 
-  // If already authenticated, redirect immediately
+  // Only an existing administrator session should bypass the admin login form.
   useEffect(() => {
-    if (!isLoading && isAuthenticated) {
+    if (!isLoading && isAuthenticated && user?.role.toLowerCase() === 'admin') {
       navigate(from, { replace: true });
     }
-  }, [isAuthenticated, isLoading, navigate, from]);
+  }, [isAuthenticated, isLoading, navigate, from, user]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -106,6 +107,12 @@ export default function AdminLogin() {
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-5">
+            {isAuthenticated && user && user.role.toLowerCase() !== 'admin' && (
+              <div className="flex items-center justify-between gap-3 rounded-xl border border-amber-500/30 bg-amber-500/10 p-4 text-sm text-amber-200">
+                <span>Currently signed in as {user.email} ({user.role.replaceAll('_', ' ')}). Sign out to switch accounts.</span>
+                <button type="button" onClick={logout} className="shrink-0 font-semibold underline">Sign out</button>
+              </div>
+            )}
             {/* Error message */}
             {error && (
               <div className="flex items-start gap-3 p-4 bg-red-500/10 border border-red-500/30 rounded-xl">
@@ -175,6 +182,11 @@ export default function AdminLogin() {
 
           <p className="mt-8 text-center text-slate-500 text-sm">
             This area is restricted to authorized administrators only.
+          </p>
+          <p className="mt-3 text-center text-sm">
+            <Link href="/portal/login" className="text-emerald-400 hover:text-emerald-300">Staff and agent sign in</Link>
+            <span className="px-2 text-slate-600">·</span>
+            <Link href="/portal/forgot-password" className="text-emerald-400 hover:text-emerald-300">Forgot password?</Link>
           </p>
         </div>
       </div>

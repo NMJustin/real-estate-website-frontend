@@ -28,6 +28,81 @@ type ApiProperty = {
   propertyFeatures?: { feature?: { name: string } }[];
 };
 
+const categories: CategoryProps[] = [
+  {
+    id: 'residential',
+    name: 'Residential',
+    slug: 'residential',
+    description: 'Homes and residential properties for every stage of life.',
+    imageUrl: '/images/images (2).jpeg',
+    propertyType: 'RESIDENTIAL',
+  },
+  {
+    id: 'apartments',
+    name: 'Apartments',
+    slug: 'apartments',
+    description: 'Modern apartments and flats in sought-after locations.',
+    imageUrl: '/images/images (3).jpeg',
+    propertyType: 'APARTMENTS',
+  },
+  {
+    id: 'houses',
+    name: 'Houses',
+    slug: 'houses',
+    description: 'Detached and semi-detached houses for sale or rent.',
+    imageUrl: '/images/images (1).jpeg',
+    propertyType: 'HOUSES',
+  },
+  {
+    id: 'villas',
+    name: 'Villas',
+    slug: 'villas',
+    description: 'Explore spacious villas with room to make your own.',
+    imageUrl: '/images/images (15).jpeg',
+    propertyType: 'VILLA',
+  },
+  {
+    id: 'land-plots',
+    name: 'Land & Plots',
+    slug: 'land',
+    description: 'Find land and plots for your next home or investment.',
+    imageUrl: '/images/images (9).jpeg',
+    propertyType: 'LAND',
+  },
+  {
+    id: 'commercial',
+    name: 'Commercial',
+    slug: 'commercial',
+    description: 'Commercial spaces for businesses and investors.',
+    imageUrl: '/images/images (14).jpeg',
+    propertyType: 'COMMERCIAL',
+  },
+  {
+    id: 'offices',
+    name: 'Offices',
+    slug: 'offices',
+    description: 'Professional office spaces for teams of every size.',
+    imageUrl: '/images/images (16).jpeg',
+    propertyType: 'OFFICES',
+  },
+  {
+    id: 'warehouses',
+    name: 'Warehouses',
+    slug: 'warehouses',
+    description: 'Practical warehouse and storage spaces.',
+    imageUrl: '/images/images (17).jpeg',
+    propertyType: 'WAREHOUSES',
+  },
+  {
+    id: 'new-developments',
+    name: 'New Developments',
+    slug: 'new-developments',
+    description: 'Discover new-build homes and upcoming projects.',
+    imageUrl: '/images/images (18).jpeg',
+    isNewDevelopment: true,
+  },
+];
+
 const formatStatus = (property: ApiProperty): PropertyProps['status'] => {
   if (property.status === 'SOLD') return 'Sold';
   if (property.transactionType === 'RENT') return 'For Rent';
@@ -72,16 +147,11 @@ export default function Home() {
   const router = useRouter();
   const [searchParams, setSearchParams] = useState({ transactionType: 'buy', location: '', propertyType: '', priceRange: '', bedrooms: '' });
   const [featuredProperties, setFeaturedProperties] = useState<PropertyProps[]>([]);
-  const [categories, setCategories] = useState<CategoryProps[]>([]);
 
   useEffect(() => {
     api.getProperties({ featured: true, limit: 3 })
       .then((response) => setFeaturedProperties(((response as { data: ApiProperty[] }).data || []).map(toCard)))
       .catch(() => setFeaturedProperties([]));
-    
-    api.getCategories()
-      .then((response) => setCategories((response as { data: CategoryProps[] }).data || []))
-      .catch(() => setCategories([]));
   }, []);
 
   const handleSearch = (event: FormEvent) => {
@@ -115,11 +185,26 @@ export default function Home() {
             </div>
             <form onSubmit={handleSearch} className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-5 gap-4">
               <label className="text-xs font-bold text-brand-charcoal uppercase tracking-wider flex flex-col">Location<input value={searchParams.location} onChange={(event) => setSearchParams({ ...searchParams, location: event.target.value })} placeholder="City or area" className="search-input mt-1 p-2 border rounded-md" /></label>
-              <label className="text-xs font-bold text-brand-charcoal uppercase tracking-wider flex flex-col">Property Type<select value={searchParams.propertyType} onChange={(event) => setSearchParams({ ...searchParams, propertyType: event.target.value })} className="search-input mt-1 p-2 border rounded-md"><option value="">All types</option><option value="RESIDENTIAL">Residential</option><option value="COMMERCIAL">Commercial</option><option value="APARTMENTS">Apartments</option><option value="HOUSES">Houses</option><option value="LAND">Land</option><option value="OFFICES">Offices</option><option value="WAREHOUSES">Warehouses</option><option value="NEW_DEVELOPMENTS">New Developments</option></select></label>
+              <label className="text-xs font-bold text-brand-charcoal uppercase tracking-wider flex flex-col">Property Type<select value={searchParams.propertyType} onChange={(event) => setSearchParams({ ...searchParams, propertyType: event.target.value })} className="search-input mt-1 p-2 border rounded-md"><option value="">All types</option><option value="RESIDENTIAL">Residential</option><option value="COMMERCIAL">Commercial</option><option value="APARTMENTS">Apartments</option><option value="HOUSES">Houses</option><option value="VILLA">Villa</option><option value="LAND">Land &amp; plots</option><option value="OFFICES">Offices</option><option value="WAREHOUSES">Warehouses</option><option value="NEW_DEVELOPMENTS">New Developments</option></select></label>
               <label className="text-xs font-bold text-brand-charcoal uppercase tracking-wider flex flex-col">Price Range<select value={searchParams.priceRange} onChange={(event) => setSearchParams({ ...searchParams, priceRange: event.target.value })} className="search-input mt-1 p-2 border rounded-md"><option value="">Any price</option><option value="0-50000000">RWF Under 50M</option><option value="50000000-100000000">RWF 50M - 100M</option><option value="100000000-500000000">RWF 100M - 500M</option><option value="500000000+">RWF 500M+</option></select></label>
               <label className="text-xs font-bold text-brand-charcoal uppercase tracking-wider flex flex-col">Bedrooms<select value={searchParams.bedrooms} onChange={(event) => setSearchParams({ ...searchParams, bedrooms: event.target.value })} className="search-input mt-1 p-2 border rounded-md"><option value="">Any</option><option value="1">1+</option><option value="2">2+</option><option value="3">3+</option><option value="4">4+</option></select></label>
               <button type="submit" className="self-end bg-brand-navy hover:bg-slate-800 text-brand-white font-bold rounded-md px-4 py-2 h-[42px] mt-1 md:mt-0 transition-colors">Search</button>
             </form>
+          </div>
+        </div>
+      </section>
+      {/* Property categories */}
+      <section className="w-full bg-slate-50 py-16 md:py-20">
+        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+          <div className="mb-10 text-center">
+            <span className="text-sm font-semibold uppercase tracking-wider text-brand-emerald">Explore by type</span>
+            <h2 className="mt-2 text-3xl font-bold text-brand-navy md:text-4xl">Find the right property for you</h2>
+            <p className="mx-auto mt-3 max-w-2xl text-brand-charcoal">Browse homes, business spaces, land and new developments across Rwanda.</p>
+          </div>
+          <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
+            {categories.map((category) => (
+              <CategoryCard key={category.id} category={category} />
+            ))}
           </div>
         </div>
       </section>
@@ -131,22 +216,6 @@ export default function Home() {
       </section>
       <section className="bg-brand-navy/95 backdrop-blur-md py-16 text-center"><h2 className="text-3xl font-bold text-brand-white mb-4">Need help choosing?</h2><p className="text-slate-300 mb-8">Search, compare, calculate, and request a viewing from one place.</p><div className="flex flex-wrap justify-center gap-3"><Link href="/compare-properties" className="bg-brand-emerald text-brand-white rounded-lg px-5 py-3">Compare properties</Link><Link href="/property-valuation" className="border border-white text-white rounded-lg px-5 py-3">Request valuation</Link></div></section>
       
-      {/* Property categories */}
-      <section className="py-16 w-full bg-white/95 backdrop-blur-md">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-10"><h2 className="text-3xl font-bold text-brand-navy">Property Categories</h2><p className="text-brand-charcoal mt-2">Find exactly what you are looking for by category.</p></div>
-          {categories.length > 0 ? (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-              {categories.map((category) => (
-                <CategoryCard key={category.id} category={category} />
-              ))}
-            </div>
-          ) : (
-            <p className="text-center text-brand-charcoal">Categories will appear here soon.</p>
-          )}
-        </div>
-      </section>
-
       {/* About the company */}
       <section className="py-16 bg-white/95 backdrop-blur-md w-full border-t border-slate-100/20">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 grid grid-cols-1 md:grid-cols-2 gap-10 items-center">

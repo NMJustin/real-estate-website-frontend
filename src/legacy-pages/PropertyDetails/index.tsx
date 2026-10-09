@@ -6,6 +6,7 @@ import { useSearchParams } from 'next/navigation';
 import { BedDouble, Bath, MapPin, Ruler, ArrowLeft, Maximize2, Share2, Phone, Mail, Calendar, Check, Video, Home, Shield, Wifi, Car, Droplets, Zap, Flame } from 'lucide-react';
 import api from '../../services/api';
 import { ImageViewer } from '../../components/ImageViewer';
+import { TestPropertyNotice } from '../../components/property/TestPropertyBadge';
 
 type InquiryForm = {
   name: string;
@@ -18,6 +19,13 @@ type InquiryForm = {
 };
 
 type Media = { id: string; imageUrl: string; mediaType?: 'IMAGE' | 'VIDEO'; caption?: string };
+type ViewingRequestForm = {
+  name: string;
+  email: string;
+  phone: string;
+  preferredDate: string;
+  preferredTime: string;
+};
 type Property = { 
   id: string;
   slug?: string;
@@ -60,6 +68,28 @@ type Property = {
   listedDate?: string;
 };
 
+const viewingTimeOptions = Array.from({ length: 17 }, (_, index) => {
+  const minutes = 9 * 60 + index * 30;
+  const hours = Math.floor(minutes / 60);
+  const minute = minutes % 60;
+  const value = `${String(hours).padStart(2, '0')}:${String(minute).padStart(2, '0')}`;
+  const label = new Date(2000, 0, 1, hours, minute).toLocaleTimeString([], {
+    hour: 'numeric',
+    minute: '2-digit',
+  });
+
+  return { value, label };
+});
+
+const getLocalDateString = () => {
+  const today = new Date();
+  const year = today.getFullYear();
+  const month = String(today.getMonth() + 1).padStart(2, '0');
+  const day = String(today.getDate()).padStart(2, '0');
+
+  return `${year}-${month}-${day}`;
+};
+
 export default function PropertyDetails({ propertySlug: propSlug }: { propertySlug?: string }) {
   const searchParams = useSearchParams();
   const propertySlug = propSlug || searchParams.get('slug') || '';
@@ -80,6 +110,16 @@ export default function PropertyDetails({ propertySlug: propSlug }: { propertySl
   });
   const [inquirySubmitted, setInquirySubmitted] = useState(false);
   const [inquiryError, setInquiryError] = useState('');
+  const [viewingForm, setViewingForm] = useState<ViewingRequestForm>({
+    name: '',
+    email: '',
+    phone: '',
+    preferredDate: '',
+    preferredTime: '',
+  });
+  const [viewingSubmitted, setViewingSubmitted] = useState(false);
+  const [viewingSubmitting, setViewingSubmitting] = useState(false);
+  const [viewingError, setViewingError] = useState('');
 
   useEffect(() => {
     if (propertySlug) {
@@ -146,6 +186,24 @@ export default function PropertyDetails({ propertySlug: propSlug }: { propertySl
     }
   };
 
+  const handleViewingSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    setViewingError('');
+    setViewingSubmitting(true);
+
+    try {
+      await api.createViewing({
+        ...viewingForm,
+        propertyId: property?.id,
+      });
+      setViewingSubmitted(true);
+    } catch (err) {
+      setViewingError(err instanceof Error ? err.message : 'Unable to request a viewing. Please try again.');
+    } finally {
+      setViewingSubmitting(false);
+    }
+  };
+
   const handleShare = async () => {
     if (navigator.share && property) {
       try {
@@ -192,6 +250,7 @@ export default function PropertyDetails({ propertySlug: propSlug }: { propertySl
   return (
     <main className="bg-slate-50 py-8 sm:py-12">
       <div className="mx-auto max-w-7xl px-4 sm:px-6">
+        <TestPropertyNotice className="mb-6" />
         <div className="flex items-center justify-between mb-6">
           <Link to="/properties" className="inline-flex items-center gap-1 text-sm font-medium text-emerald-700">
             <ArrowLeft className="h-4 w-4" />Back to properties
@@ -531,16 +590,86 @@ export default function PropertyDetails({ propertySlug: propSlug }: { propertySl
             {/* Request Viewing */}
             <div className="rounded-xl bg-white p-6 shadow-sm">
               <h2 className="text-lg font-semibold text-slate-900 mb-4">Request Viewing</h2>
-              <form className="space-y-4" onSubmit={(e) => e.preventDefault()}>
-                <input type="text" placeholder="Your name" className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:outline-none focus:border-emerald-500" />
-                <input type="email" placeholder="Your email" className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:outline-none focus:border-emerald-500" />
-                <input type="tel" placeholder="Your phone" className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:outline-none focus:border-emerald-500" />
-                <textarea placeholder="Preferred date and time" rows={3} className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:outline-none focus:border-emerald-500" />
-                <button type="submit" className="w-full bg-emerald-600 text-white py-2 rounded-lg text-sm font-medium hover:bg-emerald-700 transition flex items-center justify-center gap-2">
-                  <Calendar className="h-4 w-4" />
-                  Request Viewing
-                </button>
-              </form>
+              {viewingSubmitted ? (
+                <div className="rounded-lg border border-emerald-200 bg-emerald-50 p-4 text-sm text-emerald-800" role="status">
+                  Viewing request sent. Our team will contact you to confirm the appointment.
+                </div>
+              ) : (
+                <form className="space-y-4" onSubmit={handleViewingSubmit}>
+                  <input
+                    type="text"
+                    placeholder="Your name"
+                    aria-label="Your name"
+                    autoComplete="name"
+                    required
+                    value={viewingForm.name}
+                    onChange={(event) => setViewingForm({ ...viewingForm, name: event.target.value })}
+                    className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:outline-none focus:border-emerald-500"
+                  />
+                  <input
+                    type="email"
+                    placeholder="Your email"
+                    aria-label="Your email"
+                    autoComplete="email"
+                    required
+                    value={viewingForm.email}
+                    onChange={(event) => setViewingForm({ ...viewingForm, email: event.target.value })}
+                    className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:outline-none focus:border-emerald-500"
+                  />
+                  <input
+                    type="tel"
+                    placeholder="Your phone"
+                    aria-label="Your phone"
+                    autoComplete="tel"
+                    required
+                    value={viewingForm.phone}
+                    onChange={(event) => setViewingForm({ ...viewingForm, phone: event.target.value })}
+                    className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:outline-none focus:border-emerald-500"
+                  />
+                  <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                    <div>
+                      <label htmlFor="viewing-date" className="mb-1 block text-xs font-medium text-slate-600">Choose a date</label>
+                      <input
+                        id="viewing-date"
+                        type="date"
+                        min={getLocalDateString()}
+                        required
+                        value={viewingForm.preferredDate}
+                        onChange={(event) => setViewingForm({ ...viewingForm, preferredDate: event.target.value })}
+                        className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:outline-none focus:border-emerald-500"
+                      />
+                    </div>
+                    <div>
+                      <label htmlFor="viewing-time" className="mb-1 block text-xs font-medium text-slate-600">Choose a time</label>
+                      <select
+                        id="viewing-time"
+                        required
+                        value={viewingForm.preferredTime}
+                        onChange={(event) => setViewingForm({ ...viewingForm, preferredTime: event.target.value })}
+                        className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm focus:outline-none focus:border-emerald-500"
+                      >
+                        <option value="">Select a time</option>
+                        {viewingTimeOptions.map((option) => (
+                          <option key={option.value} value={option.value}>{option.label}</option>
+                        ))}
+                      </select>
+                    </div>
+                  </div>
+                  {viewingError && (
+                    <p className="rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-700" role="alert">
+                      {viewingError}
+                    </p>
+                  )}
+                  <button
+                    type="submit"
+                    disabled={viewingSubmitting}
+                    className="flex w-full items-center justify-center gap-2 rounded-lg bg-emerald-600 py-2 text-sm font-medium text-white transition hover:bg-emerald-700 disabled:cursor-not-allowed disabled:opacity-60"
+                  >
+                    <Calendar className="h-4 w-4" />
+                    {viewingSubmitting ? 'Sending request…' : 'Request Viewing'}
+                  </button>
+                </form>
+              )}
             </div>
 
             {/* Contact Agent */}
@@ -648,17 +777,16 @@ export default function PropertyDetails({ propertySlug: propSlug }: { propertySl
                     </div>
                     <div>
                       <label className="block text-sm font-medium text-slate-700 mb-1">Preferred Contact Time (Optional)</label>
-                      <div className="relative">
-                        <input
-                          type="time"
-                          value={inquiryForm.preferredContactTime}
-                          onChange={(e) => setInquiryForm({ ...inquiryForm, preferredContactTime: e.target.value })}
-                          className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:outline-none focus:border-emerald-500"
-                        />
-                        <svg className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                        </svg>
-                      </div>
+                      <select
+                        value={inquiryForm.preferredContactTime}
+                        onChange={(e) => setInquiryForm({ ...inquiryForm, preferredContactTime: e.target.value })}
+                        className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm focus:outline-none focus:border-emerald-500"
+                      >
+                        <option value="">Select a time</option>
+                        {viewingTimeOptions.map((option) => (
+                          <option key={option.value} value={option.value}>{option.label}</option>
+                        ))}
+                      </select>
                     </div>
                   </div>
 

@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
 import { Search, SlidersHorizontal, ArrowUpDown, MapPin, BedDouble, Bath, Ruler, X } from 'lucide-react';
 import api from '@/services/api';
+import { TestPropertyBadge, TestPropertyNotice } from './TestPropertyBadge';
 
 type Property = {
   id: string;
@@ -37,7 +38,10 @@ export default function Properties() {
   // Search and filter state
   const [searchTerm, setSearchTerm] = useState('');
   const [transactionType, setTransactionType] = useState(() => searchParams.get('transactionType')?.toUpperCase() || 'ALL');
-  const [propertyType, setPropertyType] = useState(() => searchParams.get('propertyType')?.toUpperCase() || 'ALL');
+  const [propertyType, setPropertyType] = useState(() =>
+    searchParams.get('propertyType')?.toUpperCase() ||
+    (searchParams.get('isNewDevelopment') === 'true' ? 'NEW_DEVELOPMENTS' : 'ALL')
+  );
   const [location, setLocation] = useState(() => searchParams.get('location') || '');
   const [newDevelopmentsOnly, setNewDevelopmentsOnly] = useState(() => searchParams.get('isNewDevelopment') === 'true');
   const [district, setDistrict] = useState('');
@@ -52,7 +56,10 @@ export default function Properties() {
 
   useEffect(() => {
     setTransactionType(searchParams.get('transactionType')?.toUpperCase() || 'ALL');
-    setPropertyType(searchParams.get('propertyType')?.toUpperCase() || 'ALL');
+    setPropertyType(
+      searchParams.get('propertyType')?.toUpperCase() ||
+      (searchParams.get('isNewDevelopment') === 'true' ? 'NEW_DEVELOPMENTS' : 'ALL')
+    );
     setLocation(searchParams.get('location') || '');
     setNewDevelopmentsOnly(searchParams.get('isNewDevelopment') === 'true');
   }, [searchParams]);
@@ -84,10 +91,14 @@ export default function Properties() {
       }
       
       // Property type filter
-      if (propertyType !== 'ALL' && property.propertyType !== propertyType) {
+      if (propertyType === 'NEW_DEVELOPMENTS') {
+        if (!property.isNewDevelopment && property.propertyType !== 'NEW_DEVELOPMENTS') {
+          return false;
+        }
+      } else if (propertyType !== 'ALL' && property.propertyType !== propertyType) {
         return false;
       }
-      if (newDevelopmentsOnly && !property.isNewDevelopment) {
+      if (newDevelopmentsOnly && !property.isNewDevelopment && property.propertyType !== 'NEW_DEVELOPMENTS') {
         return false;
       }
       
@@ -178,6 +189,7 @@ export default function Properties() {
           <p className="text-sm font-semibold uppercase tracking-wider text-emerald-700">Property Listings</p>
           <h1 className="text-4xl font-bold text-slate-900 mt-2">Browse Properties</h1>
           <p className="text-slate-600 mt-2">Find your perfect property from our extensive listings</p>
+          <TestPropertyNotice className="mt-4" />
         </div>
 
         {/* Search Bar */}
@@ -252,19 +264,31 @@ export default function Properties() {
                 <label className="block text-sm font-medium text-slate-700 mb-1">Property Type</label>
                 <select
                   value={propertyType}
-                  onChange={(e) => setPropertyType(e.target.value)}
+                  onChange={(e) => {
+                    setPropertyType(e.target.value);
+                    setNewDevelopmentsOnly(e.target.value === 'NEW_DEVELOPMENTS');
+                  }}
                   className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:border-emerald-500"
                 >
                   <option value="ALL">All Types</option>
-                  <option value="APARTMENT">Apartment</option>
-                  <option value="HOUSE">House</option>
+                  <option value="RESIDENTIAL">Residential</option>
+                  <option value="COMMERCIAL">Commercial</option>
+                  <option value="APARTMENTS">Apartments</option>
+                  <option value="HOUSES">Houses</option>
                   <option value="VILLA">Villa</option>
-                  <option value="OFFICE">Office</option>
-                  <option value="SHOP">Shop</option>
-                  <option value="WAREHOUSE">Warehouse</option>
-                  <option value="LAND">Land</option>
-                  <option value="COMMERCIAL_BUILDING">Commercial Building</option>
-                  <option value="OTHER">Other</option>
+                  <option value="LAND">Land &amp; plots</option>
+                  <option value="OFFICES">Offices</option>
+                  <option value="WAREHOUSES">Warehouses</option>
+                  <option value="NEW_DEVELOPMENTS">New developments</option>
+                  <optgroup label="Other property types">
+                    <option value="APARTMENT">Apartment</option>
+                    <option value="HOUSE">House</option>
+                    <option value="OFFICE">Office</option>
+                    <option value="SHOP">Shop</option>
+                    <option value="WAREHOUSE">Warehouse</option>
+                    <option value="COMMERCIAL_BUILDING">Commercial building</option>
+                    <option value="OTHER">Other</option>
+                  </optgroup>
                 </select>
               </div>
 
@@ -445,6 +469,7 @@ export default function Properties() {
                         Featured
                       </div>
                     )}
+                    <TestPropertyBadge className="absolute left-3 top-12" />
                     <div className="absolute top-3 right-3 bg-white/90 text-slate-900 text-xs font-semibold px-2 py-1 rounded">
                       {property.transactionType}
                     </div>

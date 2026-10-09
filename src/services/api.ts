@@ -41,14 +41,101 @@ const authRequest = async <T>(path: string, options: RequestInit = {}): Promise<
 	});
 };
 
-const uploadPropertyMedia = async (file: File) => {
+const uploadMedia = async (file: File, path: string) => {
 	const token = getToken();
 	const formData = new FormData();
 	formData.append('file', file);
-	const response = await fetch(`${API_BASE_URL}/admin/properties/media`, { method: 'POST', headers: token ? { Authorization: `Bearer ${token}` } : {}, body: formData });
+	const response = await fetch(`${API_BASE_URL}${path}`, {
+		method: 'POST',
+		headers: token ? { Authorization: `Bearer ${token}` } : {},
+		body: formData,
+	});
 	const body = await response.json().catch(() => ({}));
 	if (!response.ok) throw new Error(body.message || 'Media upload failed.');
 	return body as { data: { url: string; mediaType: 'IMAGE' | 'VIDEO' } };
+};
+
+export const portalApi = {
+	forgotPassword: (email: string) =>
+		request('/auth/forgot-password', { method: 'POST', body: JSON.stringify({ email }) }),
+	resetPassword: (token: string, password: string) =>
+		request('/auth/reset-password', { method: 'POST', body: JSON.stringify({ token, password }) }),
+	getAgentProperties: () => authRequest('/agent-dashboard/my-properties'),
+	getAgentInquiries: () => authRequest('/agent-dashboard/my-inquiries'),
+	getAgentViewings: () => authRequest('/agent-dashboard/my-viewings'),
+	updateAgentProperty: (id: string, data: Record<string, unknown>) =>
+		authRequest(`/agent-dashboard/my-properties/${encodeURIComponent(id)}`, { method: 'PATCH', body: JSON.stringify(data) }),
+	deleteAgentProperty: (id: string) =>
+		authRequest(`/agent-dashboard/my-properties/${encodeURIComponent(id)}`, { method: 'DELETE' }),
+	uploadAgentPropertyMedia: (file: File) => uploadMedia(file, '/agent-dashboard/property-media'),
+	updateAgentInquiryStatus: (id: string, status: string) =>
+		authRequest(`/agent-dashboard/my-inquiries/${encodeURIComponent(id)}/status`, {
+			method: 'PATCH',
+			body: JSON.stringify({ status }),
+		}),
+	updateAgentInquiryFollowUp: (id: string, data: { notes?: string; nextFollowUpDate?: string | null }) =>
+		authRequest(`/agent-dashboard/my-inquiries/${encodeURIComponent(id)}/follow-up`, {
+			method: 'PATCH',
+			body: JSON.stringify(data),
+		}),
+	updateAgentViewingStatus: (id: string, data: Record<string, unknown>) =>
+		authRequest(`/agent-dashboard/my-viewings/${encodeURIComponent(id)}`, {
+			method: 'PATCH',
+			body: JSON.stringify(data),
+		}),
+	getManagedProperties: (query?: Record<string, QueryValue>) =>
+		authRequest(`/property-manager${buildQuery(query)}`),
+	getAssignableAgents: () => authRequest('/property-manager/agents'),
+	uploadManagedPropertyMedia: (file: File) => uploadMedia(file, '/property-manager/media'),
+	createManagedProperty: (data: Record<string, unknown>) =>
+		authRequest('/property-manager', { method: 'POST', body: JSON.stringify(data) }),
+	updateManagedProperty: (id: string, data: Record<string, unknown>) =>
+		authRequest(`/property-manager/${encodeURIComponent(id)}`, { method: 'PATCH', body: JSON.stringify(data) }),
+	deleteManagedProperty: (id: string) =>
+		authRequest(`/property-manager/${encodeURIComponent(id)}`, { method: 'DELETE' }),
+	getManagedInquiries: (query?: Record<string, QueryValue>) =>
+		authRequest(`/property-manager/inquiries${buildQuery(query)}`),
+	updateManagedInquiry: (id: string, data: Record<string, unknown>) =>
+		authRequest(`/property-manager/inquiries/${encodeURIComponent(id)}`, { method: 'PATCH', body: JSON.stringify(data) }),
+	deleteManagedInquiry: (id: string) =>
+		authRequest(`/property-manager/inquiries/${encodeURIComponent(id)}`, { method: 'DELETE' }),
+	getManagedViewings: (query?: Record<string, QueryValue>) =>
+		authRequest(`/property-manager/viewings${buildQuery(query)}`),
+	createManagedViewing: (data: Record<string, unknown>) =>
+		authRequest('/property-manager/viewings', { method: 'POST', body: JSON.stringify(data) }),
+	updateManagedViewing: (id: string, data: Record<string, unknown>) =>
+		authRequest(`/property-manager/viewings/${encodeURIComponent(id)}`, { method: 'PATCH', body: JSON.stringify(data) }),
+	deleteManagedViewing: (id: string) =>
+		authRequest(`/property-manager/viewings/${encodeURIComponent(id)}`, { method: 'DELETE' }),
+	getManagedPropertyRequests: (query?: Record<string, QueryValue>) =>
+		authRequest(`/property-manager/requests${buildQuery(query)}`),
+	updateProfile: (data: { name?: string; phone?: string }) =>
+		authRequest('/auth/profile', { method: 'PATCH', body: JSON.stringify(data) }),
+	getEditorArticles: () => authRequest('/content-editor/articles'),
+	createEditorArticle: (data: Record<string, unknown>) =>
+		authRequest('/content-editor/articles', { method: 'POST', body: JSON.stringify(data) }),
+	updateEditorArticle: (id: string, data: Record<string, unknown>) =>
+		authRequest(`/content-editor/articles/${encodeURIComponent(id)}`, { method: 'PATCH', body: JSON.stringify(data) }),
+	deleteEditorArticle: (id: string) =>
+		authRequest(`/content-editor/articles/${encodeURIComponent(id)}`, { method: 'DELETE' }),
+	getEditorPages: () => authRequest('/content-editor/pages'),
+	createEditorPage: (data: Record<string, unknown>) =>
+		authRequest('/content-editor/pages', { method: 'POST', body: JSON.stringify(data) }),
+	updateEditorPage: (id: string, data: Record<string, unknown>) =>
+		authRequest(`/content-editor/pages/${encodeURIComponent(id)}`, { method: 'PATCH', body: JSON.stringify(data) }),
+	deleteEditorPage: (id: string) =>
+		authRequest(`/content-editor/pages/${encodeURIComponent(id)}`, { method: 'DELETE' }),
+	getEditorFaqs: () => authRequest('/content-editor/faqs'),
+	createEditorFaq: (data: Record<string, unknown>) =>
+		authRequest('/content-editor/faqs', { method: 'POST', body: JSON.stringify(data) }),
+	updateEditorFaq: (id: string, data: Record<string, unknown>) =>
+		authRequest(`/content-editor/faqs/${encodeURIComponent(id)}`, { method: 'PATCH', body: JSON.stringify(data) }),
+	deleteEditorFaq: (id: string) =>
+		authRequest(`/content-editor/faqs/${encodeURIComponent(id)}`, { method: 'DELETE' }),
+};
+
+const uploadPropertyMedia = async (file: File) => {
+	return uploadMedia(file, '/admin/properties/media');
 };
 
 // ─── Public API ───────────────────────────────────────────────────────────────
@@ -120,19 +207,8 @@ export const adminApi = {
 	deleteAdminCategory: (id: string) =>
 		authRequest(`/admin/categories/${id}`, { method: 'DELETE' }),
 
-	// Agents
-	getAgents: () => authRequest('/admin/agents'),
-	getAdminAgents: (query?: Record<string, QueryValue>) =>
-		authRequest(`/admin/agents${buildQuery(query)}`),
-	getAdminAgent: (id: string) => authRequest(`/admin/agents/${id}`),
-	createAgent: (data: Record<string, unknown>) =>
-		authRequest('/admin/agents', { method: 'POST', body: JSON.stringify(data) }),
-	updateAgent: (id: string, data: Record<string, unknown>) =>
-		authRequest(`/admin/agents/${id}`, { method: 'PATCH', body: JSON.stringify(data) }),
-	deleteAgent: (id: string) =>
-		authRequest(`/admin/agents/${id}`, { method: 'DELETE' }),
-	deleteAdminAgent: (id: string) =>
-		authRequest(`/admin/agents/${id}`, { method: 'DELETE' }),
+	// Public agent directory is still used to assign an agent to a property.
+	getAgents: () => request('/agents'),
 
 	// Inquiries
 	getInquiries: (query?: Record<string, QueryValue>) =>
@@ -228,18 +304,16 @@ export const adminApi = {
 	// Users
 	getUsers: (query?: Record<string, QueryValue>) =>
 		authRequest(`/admin/users${buildQuery(query)}`),
+	createUser: (data: Record<string, unknown>) =>
+		authRequest('/admin/users', { method: 'POST', body: JSON.stringify(data) }),
+	updateUser: (id: string, data: Record<string, unknown>) =>
+		authRequest(`/admin/users/${encodeURIComponent(id)}`, { method: 'PATCH', body: JSON.stringify(data) }),
 	getRoles: () => authRequest('/admin/roles'),
 	updateUserMediaPermission: (id: string, canUploadPropertyMedia: boolean) =>
 		authRequest(`/admin/users/${id}/media-permission`, {
 			method: 'PATCH',
 			body: JSON.stringify({ canUploadPropertyMedia }),
 		}),
-	updateUserRole: (id: string, roleId: number) =>
-		authRequest(`/admin/users/${id}/role`, {
-			method: 'PATCH',
-			body: JSON.stringify({ roleId }),
-		}),
-
 	// Settings
 	getSettings: () => authRequest('/admin/settings'),
 	updateSettings: (data: Record<string, unknown>) =>

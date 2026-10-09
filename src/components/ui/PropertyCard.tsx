@@ -2,6 +2,7 @@
 import { Link } from '@/navigation/legacy-router';
 import { Card, CardBody, CardFooter } from './Card';
 import { Button } from './Button';
+import { TestPropertyBadge } from '../property/TestPropertyBadge';
 
 export interface PropertyProps {
   id: string;
@@ -37,6 +38,7 @@ export function PropertyCard({ property }: { property: PropertyProps }) {
           className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
         />
         <div className="absolute top-4 left-4 flex gap-2">
+          <TestPropertyBadge />
           {property.isFeatured && (
             <span className="px-3 py-1 text-xs font-bold rounded-full bg-amber-500 text-white">
               Featured
