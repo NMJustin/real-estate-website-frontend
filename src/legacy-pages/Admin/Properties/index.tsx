@@ -28,6 +28,7 @@ interface Property {
   isFeatured: boolean;
   createdAt: string;
   agent?: { name: string } | null;
+  propertyManager?: { name: string } | null;
   category?: { name: string } | null;
   images?: {
     imageUrl: string;
@@ -411,6 +412,10 @@ export default function Properties() {
                 </th>
 
                 <th className="px-5 py-3 text-left text-xs font-semibold uppercase tracking-wider text-slate-500">
+                  Property Manager
+                </th>
+
+                <th className="px-5 py-3 text-left text-xs font-semibold uppercase tracking-wider text-slate-500">
                   Created
                 </th>
 
@@ -531,6 +536,11 @@ export default function Properties() {
                       {/* Agent */}
                       <td className="whitespace-nowrap px-5 py-4 text-sm text-slate-600">
                         {property.agent?.name ?? 'Unassigned'}
+                      </td>
+
+                      {/* Property Manager */}
+                      <td className="whitespace-nowrap px-5 py-4 text-sm text-slate-600">
+                        {property.propertyManager?.name ?? 'Unassigned'}
                       </td>
 
                       {/* Created */}

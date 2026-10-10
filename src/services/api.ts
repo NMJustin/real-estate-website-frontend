@@ -109,6 +109,12 @@ export const portalApi = {
 		authRequest(`/property-manager/viewings/${encodeURIComponent(id)}`, { method: 'DELETE' }),
 	getManagedPropertyRequests: (query?: Record<string, QueryValue>) =>
 		authRequest(`/property-manager/requests${buildQuery(query)}`),
+	updateManagedListing: (id: string, data: Record<string, unknown>) =>
+		authRequest(`/property-manager/requests/${encodeURIComponent(id)}`, { method: 'PATCH', body: JSON.stringify(data) }),
+	approveManagedListing: (id: string) =>
+		authRequest(`/property-manager/requests/${encodeURIComponent(id)}/approve`, { method: 'PATCH' }),
+	rejectManagedListing: (id: string) =>
+		authRequest(`/property-manager/requests/${encodeURIComponent(id)}/reject`, { method: 'PATCH' }),
 	updateProfile: (data: { name?: string; phone?: string }) =>
 		authRequest('/auth/profile', { method: 'PATCH', body: JSON.stringify(data) }),
 	getEditorArticles: () => authRequest('/content-editor/articles'),
@@ -209,6 +215,7 @@ export const adminApi = {
 
 	// Public agent directory is still used to assign an agent to a property.
 	getAgents: () => request('/agents'),
+	getAssignablePropertyManagers: () => authRequest('/admin/property-managers'),
 
 	// Inquiries
 	getInquiries: (query?: Record<string, QueryValue>) =>
