@@ -553,21 +553,19 @@ export default function Properties() {
                         <div className="flex justify-end gap-2">
                           <Link
                             to={`/admin/properties/${property.id}/edit`}
-                            className="inline-flex items-center gap-1.5 rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-50"
+                            className="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs font-medium text-slate-700 hover:bg-slate-50"
                             title="Edit property"
                           >
-                            <Pencil className="h-4 w-4" />
-                            Edit
+                            <Pencil className="h-3.5 w-3.5" /> Edit
                           </Link>
 
                           <button
                             type="button"
                             onClick={() => setDeleteId(property.id)}
-                            className="inline-flex items-center gap-1.5 rounded-lg border border-red-200 bg-white px-3 py-2 text-sm font-medium text-red-600 transition hover:bg-red-50"
+                            className="inline-flex items-center gap-1.5 rounded-lg border border-red-200 bg-white px-3 py-2 text-xs font-medium text-red-600 hover:bg-red-50"
                             title="Delete property"
                           >
-                            <Trash2 className="h-4 w-4" />
-                            Delete
+                            <Trash2 className="h-3.5 w-3.5" /> Delete
                           </button>
                         </div>
                       </td>
@@ -595,10 +593,9 @@ export default function Properties() {
                     Math.max(1, currentPage - 1)
                   )
                 }
-                className="inline-flex items-center gap-1 rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50"
+                className="inline-flex items-center gap-1 rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-50 disabled:opacity-50"
               >
-                <ChevronLeft className="h-4 w-4" />
-                Previous
+                <ChevronLeft className="h-4 w-4" /> Previous
               </button>
 
               <button
@@ -609,10 +606,9 @@ export default function Properties() {
                     Math.min(totalPages, currentPage + 1)
                   )
                 }
-                className="inline-flex items-center gap-1 rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50"
+                className="inline-flex items-center gap-1 rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-50 disabled:opacity-50"
               >
-                Next
-                <ChevronRight className="h-4 w-4" />
+                Next <ChevronRight className="h-4 w-4" />
               </button>
             </div>
           </div>

@@ -334,14 +334,14 @@ export default function Viewings() {
                         <button
                           type="button"
                           onClick={() => setSelectedViewing(viewing)}
-                          className="inline-flex items-center gap-1.5 rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-50"
+                          className="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs font-medium text-slate-700 hover:bg-slate-50"
                         >
                           View
                         </button>
                         <button
                           type="button"
                           onClick={() => setDeleteId(viewing.id)}
-                          className="inline-flex items-center gap-1.5 rounded-lg border border-red-200 bg-white px-3 py-2 text-sm font-medium text-red-600 transition hover:bg-red-50"
+                          className="inline-flex items-center gap-1.5 rounded-lg border border-red-200 bg-white px-3 py-2 text-xs font-medium text-red-600 hover:bg-red-50"
                         >
                           Delete
                         </button>

@@ -303,17 +303,16 @@ export default function Testimonials() {
                       <div className="flex justify-end gap-2">
                         <Link
                           to={`/admin/testimonials/${testimonial.id}/edit`}
-                          className="inline-flex items-center gap-1.5 rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-50"
+                          className="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 px-3 py-2 text-xs font-medium text-slate-700 hover:bg-slate-50"
                         >
-                          <Pencil className="h-4 w-4" />
-                          Edit
+                          <Pencil className="h-3.5 w-3.5" /> Edit
                         </Link>
                         <button
                           type="button"
                           onClick={() => setDeleteId(testimonial.id)}
-                          className="inline-flex items-center gap-1.5 rounded-lg border border-red-200 bg-white px-3 py-2 text-sm font-medium text-red-600 transition hover:bg-red-50"
+                          className="inline-flex items-center gap-1.5 rounded-lg border border-red-200 bg-white px-3 py-2 text-xs font-medium text-red-600 hover:bg-red-50"
                         >
-                          <Trash2 className="h-4 w-4" />
+                          <Trash2 className="h-3.5 w-3.5" />
                         </button>
                       </div>
                     </td>
