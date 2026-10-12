@@ -315,6 +315,8 @@ export const adminApi = {
 		authRequest('/admin/users', { method: 'POST', body: JSON.stringify(data) }),
 	updateUser: (id: string, data: Record<string, unknown>) =>
 		authRequest(`/admin/users/${encodeURIComponent(id)}`, { method: 'PATCH', body: JSON.stringify(data) }),
+	deleteUser: (id: string) =>
+		authRequest(`/admin/users/${encodeURIComponent(id)}`, { method: 'DELETE' }),
 	getRoles: () => authRequest('/admin/roles'),
 	updateUserMediaPermission: (id: string, canUploadPropertyMedia: boolean) =>
 		authRequest(`/admin/users/${id}/media-permission`, {

@@ -14,7 +14,8 @@ import {
   ShieldCheck,
   Plus,
   Pencil,
-  Save
+  Save,
+  Trash2
 } from 'lucide-react';
 import { adminApi } from '../../../services/api';
 
@@ -161,6 +162,21 @@ export default function UsersPage() {
     } catch (err) {
       console.error('Failed to update permission:', err);
       alert(err instanceof Error ? err.message : 'Failed to update permission.');
+    }
+  };
+
+  const handleDeleteUser = async (userId: string, userName: string) => {
+    if (!confirm(`Are you sure you want to delete ${userName}? This action cannot be undone.`)) {
+      return;
+    }
+
+    try {
+      await adminApi.deleteUser(userId);
+      // Remove user from local state
+      setUsers(prev => prev.filter(u => u.id !== userId));
+    } catch (err) {
+      console.error('Failed to delete user:', err);
+      alert(err instanceof Error ? err.message : 'Failed to delete user.');
     }
   };
 
@@ -406,13 +422,25 @@ export default function UsersPage() {
                         )}
                       </td>
                       <td className="whitespace-nowrap px-5 py-4 text-right">
-                        <button
-                          type="button"
-                          onClick={() => openEditForm(user)}
-                          className="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 px-3 py-2 text-xs font-medium text-slate-700 hover:bg-slate-50"
-                        >
-                          <Pencil className="h-3.5 w-3.5" /> Edit
-                        </button>
+                        <div className="flex justify-end gap-2">
+                          <button
+                            type="button"
+                            onClick={() => openEditForm(user)}
+                            className="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 px-3 py-2 text-xs font-medium text-slate-700 hover:bg-slate-50"
+                          >
+                            <Pencil className="h-3.5 w-3.5" /> Edit
+                          </button>
+                          {user.role?.name.toLowerCase() !== 'admin' && (
+                            <button
+                              type="button"
+                              onClick={() => handleDeleteUser(user.id, user.name || user.email)}
+                              className="inline-flex items-center gap-1.5 rounded-lg border border-red-200 bg-white px-3 py-2 text-xs font-medium text-red-600 hover:bg-red-50"
+                              title="Delete user"
+                            >
+                              <Trash2 className="h-3.5 w-3.5" /> Delete
+                            </button>
+                          )}
+                        </div>
                       </td>
                     </tr>
                   );
