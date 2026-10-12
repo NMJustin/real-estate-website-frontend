@@ -174,6 +174,17 @@ const roleMenus: Record<Exclude<Role, 'admin'>, PortalItem[]> = {
     },
     {
       label: 'Property Requests', href: '/portal/property-manager/requests', icon: FileText, load: portalApi.getManagedPropertyRequests,
+      fields: [
+        { key: 'status', label: 'Request status', type: 'select', options: ['PENDING', 'SUBMITTED', 'APPROVED', 'REJECTED'] },
+      ],
+      update: (id, data) => {
+        if (data.status === 'APPROVED') return portalApi.approveManagedListing(id);
+        if (data.status === 'REJECTED') return portalApi.rejectManagedListing(id);
+        return portalApi.updateManagedListing(id, data);
+      },
+      approveStatus: 'APPROVED',
+      approvalFrom: ['PENDING', 'SUBMITTED'],
+      statusOptions: ['PENDING', 'SUBMITTED', 'APPROVED', 'REJECTED'],
     },
     {
       label: 'Inquiries', href: '/portal/property-manager/inquiries', icon: MessageSquare, load: portalApi.getManagedInquiries,
@@ -951,7 +962,7 @@ function PortalPage({ role, item }: { role: Exclude<Role, 'admin'>; item: Portal
                         <p className="mt-1 line-clamp-2 text-xs leading-5 text-slate-500">{String(inquiry.message || '')}</p>
                         <p className="mt-1 text-xs text-slate-400">{formatPortalDate(inquiry.createdAt)}</p>
                       </div>
-                      <Link href={managerInquiriesHref} className="shrink-0 rounded-lg border border-slate-200 px-2.5 py-1.5 text-xs font-semibold text-slate-700 hover:bg-slate-50">View Inquiry</Link>
+                      <Link href={managerInquiriesHref} className="shrink-0 inline-flex items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs font-medium text-slate-700 hover:bg-slate-50">View Inquiry</Link>
                     </li>;
                   })}
                 </ul>
@@ -1115,17 +1126,17 @@ function PortalPage({ role, item }: { role: Exclude<Role, 'admin'>; item: Portal
                                 aria-label={`Approve ${recordTitle(record)}`}
                                 className="inline-flex items-center gap-1 rounded-lg bg-emerald-600 px-2.5 py-2 text-xs font-semibold text-white hover:bg-emerald-700"
                               >
-                                <Check className="h-4 w-4" /> Approve
+                                <Check className="h-3.5 w-3.5" /> Approve
                               </button>
                             )}
                             {item.fields && item.update && (
-                              <button type="button" onClick={() => { setShowNew(false); setEditing(record); }} aria-label={`Edit ${recordTitle(record)}`} className="rounded-lg border border-slate-200 p-2 text-slate-600 hover:bg-slate-100">
-                                <Pencil className="h-4 w-4" />
+                              <button type="button" onClick={() => { setShowNew(false); setEditing(record); }} aria-label={`Edit ${recordTitle(record)}`} className="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs font-medium text-slate-700 hover:bg-slate-50">
+                                <Pencil className="h-3.5 w-3.5" /> Edit
                               </button>
                             )}
                             {item.remove && (
-                              <button type="button" onClick={() => void deleteRecord(record)} aria-label={`${item.removeAction === 'archive' ? 'Archive' : 'Delete'} ${recordTitle(record)}`} className="rounded-lg border border-red-200 p-2 text-red-600 hover:bg-red-50">
-                                {item.removeAction === 'archive' ? <X className="h-4 w-4" /> : <Trash2 className="h-4 w-4" />}
+                              <button type="button" onClick={() => void deleteRecord(record)} aria-label={`${item.removeAction === 'archive' ? 'Archive' : 'Delete'} ${recordTitle(record)}`} className="inline-flex items-center gap-1.5 rounded-lg border border-red-200 bg-white px-3 py-2 text-xs font-medium text-red-600 hover:bg-red-50">
+                                {item.removeAction === 'archive' ? <X className="h-3.5 w-3.5" /> : <Trash2 className="h-3.5 w-3.5" />}
                               </button>
                             )}
                           </div>
