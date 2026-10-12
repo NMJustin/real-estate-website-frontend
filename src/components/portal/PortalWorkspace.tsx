@@ -5,10 +5,12 @@ import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import {
   Activity,
+  AlertCircle,
   Bell,
   Building2,
   CalendarDays,
   Check,
+  CheckCircle,
   ChevronRight,
   Clock,
   FileText,
@@ -293,6 +295,40 @@ const formatMoney = (price: unknown, currency: unknown) => {
   if (!Number.isFinite(amount)) return 'Price on request';
   return `${typeof currency === 'string' && currency ? currency : 'RWF'} ${amount.toLocaleString()}`;
 };
+
+const statusClasses: Record<string, string> = {
+  AVAILABLE: 'bg-emerald-50 text-emerald-700 ring-emerald-600/15',
+  PUBLISHED: 'bg-emerald-50 text-emerald-700 ring-emerald-600/15',
+  SOLD: 'bg-blue-50 text-blue-700 ring-blue-600/15',
+  RENTED: 'bg-violet-50 text-violet-700 ring-violet-600/15',
+  LEASED: 'bg-violet-50 text-violet-700 ring-violet-600/15',
+  PENDING: 'bg-amber-50 text-amber-700 ring-amber-600/15',
+  SUBMITTED: 'bg-amber-50 text-amber-700 ring-amber-600/15',
+  NEW: 'bg-blue-50 text-blue-700 ring-blue-600/15',
+  READ: 'bg-slate-100 text-slate-600 ring-slate-500/10',
+  CONTACTED: 'bg-indigo-50 text-indigo-700 ring-indigo-600/15',
+  INTERESTED: 'bg-teal-50 text-teal-700 ring-teal-600/15',
+  APPROVED: 'bg-emerald-50 text-emerald-700 ring-emerald-600/15',
+  RESOLVED: 'bg-slate-100 text-slate-600 ring-slate-500/10',
+  CLOSED: 'bg-slate-100 text-slate-500 ring-slate-500/10',
+  DRAFT: 'bg-slate-100 text-slate-600 ring-slate-500/10',
+  ARCHIVED: 'bg-slate-100 text-slate-500 ring-slate-500/10',
+  CONFIRMED: 'bg-blue-50 text-blue-700 ring-blue-600/15',
+  COMPLETED: 'bg-teal-50 text-teal-700 ring-teal-600/15',
+  CANCELLED: 'bg-rose-50 text-rose-700 ring-rose-600/15',
+  SCHEDULED: 'bg-indigo-50 text-indigo-700 ring-indigo-600/15',
+};
+
+const formatLabel = (value?: string | null) => {
+  if (!value) return '—';
+  return value.replace(/[_-]/g, ' ').toLowerCase().replace(/\b\w/g, (char) => char.toUpperCase());
+};
+
+const StatusBadge = ({ status }: { status: string }) => (
+  <span className={`inline-flex whitespace-nowrap items-center rounded-full px-2.5 py-1 text-[11px] font-semibold ring-1 ring-inset ${statusClasses[status.toUpperCase()] || 'bg-slate-100 text-slate-600 ring-slate-500/10'}`}>
+    {formatLabel(status)}
+  </span>
+);
 
 const displayValue = (value: unknown) => {
   if (value === null || value === undefined || value === '') return '—';
@@ -587,9 +623,15 @@ function PortalPage({ role, item }: { role: Exclude<Role, 'admin'>; item: Portal
 
   const heading = item?.label || 'Dashboard';
   const dashboardCounts = useMemo(() => items.map((entry) => ({ ...entry, count: counts[entry.href] })), [items, counts]);
-  const agentProperties = dashboardRecords['/portal/agent/properties'] || [];
-  const agentInquiries = dashboardRecords['/portal/agent/inquiries'] || [];
-  const agentViewings = dashboardRecords['/portal/agent/viewings'] || [];
+  const agentPropertiesHref = '/portal/agent/properties';
+  const agentInquiriesHref = '/portal/agent/inquiries';
+  const agentViewingsHref = '/portal/agent/viewings';
+  const agentProperties = dashboardRecords[agentPropertiesHref] || [];
+  const agentInquiries = dashboardRecords[agentInquiriesHref] || [];
+  const agentViewings = dashboardRecords[agentViewingsHref] || [];
+  const agentSectionItems = items.filter((entry) =>
+    [agentPropertiesHref, agentInquiriesHref, agentViewingsHref].includes(entry.href),
+  );
   const followUpCount = agentInquiries.filter((inquiry) => {
     if (typeof inquiry.nextFollowUpDate !== 'string' || !inquiry.nextFollowUpDate) return false;
     return new Date(inquiry.nextFollowUpDate).getTime() >= new Date().setHours(0, 0, 0, 0);
@@ -597,27 +639,94 @@ function PortalPage({ role, item }: { role: Exclude<Role, 'admin'>; item: Portal
   const soldOrRentedCount = agentProperties.filter((property) => ['SOLD', 'RENTED'].includes(String(property.status))).length;
   const newInquiryCount = agentInquiries.filter((inquiry) => ['NEW', 'PENDING'].includes(String(inquiry.status))).length;
   const scheduledViewingCount = agentViewings.filter((viewing) => ['PENDING', 'SCHEDULED', 'CONFIRMED'].includes(String(viewing.status))).length;
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const tomorrow = new Date(today);
+  tomorrow.setDate(tomorrow.getDate() + 1);
+
+  const todayViewings = agentViewings.filter((viewing) => {
+    if (typeof viewing.preferredDate !== 'string' || !viewing.preferredDate || !['PENDING', 'SCHEDULED', 'CONFIRMED'].includes(String(viewing.status))) return false;
+    const date = new Date(viewing.preferredDate);
+    return date.getTime() >= today.getTime() && date.getTime() < tomorrow.getTime();
+  });
+
+  const upcomingViewings = agentViewings.filter((viewing) => {
+    if (typeof viewing.preferredDate !== 'string' || !viewing.preferredDate || !['PENDING', 'SCHEDULED', 'CONFIRMED'].includes(String(viewing.status))) return false;
+    const date = new Date(viewing.preferredDate);
+    return date.getTime() >= tomorrow.getTime();
+  }).sort((left, right) => {
+    const leftDate = new Date(left.preferredDate as string).getTime();
+    const rightDate = new Date(right.preferredDate as string).getTime();
+    return leftDate - rightDate;
+  }).slice(0, 5);
+
+  const overdueFollowUps = agentInquiries.filter((inquiry) => {
+    if (typeof inquiry.nextFollowUpDate !== 'string' || !inquiry.nextFollowUpDate) return false;
+    const date = new Date(inquiry.nextFollowUpDate);
+    return date.getTime() < today.getTime();
+  });
+
+  const todayFollowUps = agentInquiries.filter((inquiry) => {
+    if (typeof inquiry.nextFollowUpDate !== 'string' || !inquiry.nextFollowUpDate) return false;
+    const date = new Date(inquiry.nextFollowUpDate);
+    return date.getTime() >= today.getTime() && date.getTime() < tomorrow.getTime();
+  });
+
   const agentAgenda = [
-    ...agentViewings.flatMap((viewing) => {
-      if (typeof viewing.preferredDate !== 'string' || !viewing.preferredDate || !['PENDING', 'SCHEDULED', 'CONFIRMED'].includes(String(viewing.status))) return [];
-      const date = new Date(viewing.preferredDate);
-      if (date.getTime() < new Date().setHours(0, 0, 0, 0)) return [];
-      return [{ id: String(viewing.id), date, label: `Viewing: ${String(viewing.name || 'Client')} · ${String(viewing.property && typeof viewing.property === 'object' && 'title' in viewing.property ? viewing.property.title : 'Property')}`, detail: String(viewing.preferredTime || viewing.status) }];
-    }),
-    ...agentInquiries.flatMap((inquiry) => {
-      if (typeof inquiry.nextFollowUpDate !== 'string' || !inquiry.nextFollowUpDate) return [];
-      const date = new Date(inquiry.nextFollowUpDate);
-      if (Number.isNaN(date.getTime()) || date.getTime() < new Date().setHours(0, 0, 0, 0)) return [];
-      return [{ id: String(inquiry.id), date, label: `Follow up: ${String(inquiry.name || 'Inquiry')}`, detail: String(inquiry.email || '') }];
-    }),
+    ...todayViewings.map((viewing) => ({
+      id: `viewing-${String(viewing.id)}`,
+      date: new Date(viewing.preferredDate as string),
+      label: `Viewing: ${String(viewing.name || 'Client')} · ${String(viewing.property && typeof viewing.property === 'object' && 'title' in viewing.property ? viewing.property.title : 'Property')}`,
+      detail: String(viewing.preferredTime || viewing.status),
+      type: 'viewing' as const,
+    })),
+    ...todayFollowUps.map((inquiry) => ({
+      id: `followup-${String(inquiry.id)}`,
+      date: new Date(inquiry.nextFollowUpDate as string),
+      label: `Follow up: ${String(inquiry.name || 'Inquiry')}`,
+      detail: String(inquiry.email || ''),
+      type: 'followup' as const,
+    })),
   ].sort((left, right) => left.date.getTime() - right.date.getTime()).slice(0, 8);
   const agentNotifications = [
-    ...agentInquiries.map((inquiry) => ({ id: `inquiry-${String(inquiry.id)}`, at: String(inquiry.createdAt || ''), label: `Inquiry from ${String(inquiry.name || 'a client')}`, detail: String(inquiry.message || '') })),
-    ...agentViewings.map((viewing) => ({ id: `viewing-${String(viewing.id)}`, at: String(viewing.createdAt || ''), label: `Viewing request from ${String(viewing.name || 'a client')}`, detail: String(viewing.status || '') })),
-    ...agentProperties.map((property) => ({ id: `property-${String(property.id)}`, at: String(property.createdAt || ''), label: `Property assigned: ${String(property.title || 'Property')}`, detail: String(property.status || '') })),
+    ...agentInquiries.map((inquiry) => ({
+      id: `inquiry-${String(inquiry.id)}`,
+      at: String(inquiry.createdAt || ''),
+      label: `Inquiry from ${String(inquiry.name || 'a client')}`,
+      detail: String(inquiry.message || ''),
+      status: String(inquiry.status || 'NEW'),
+      type: 'inquiry' as const,
+      href: '/portal/agent/inquiries',
+    })),
+    ...agentViewings.map((viewing) => ({
+      id: `viewing-${String(viewing.id)}`,
+      at: String(viewing.createdAt || ''),
+      label: `Viewing request from ${String(viewing.name || 'a client')}`,
+      detail: String(viewing.status || ''),
+      status: String(viewing.status || 'PENDING'),
+      type: 'viewing' as const,
+      href: '/portal/agent/viewings',
+    })),
+    ...agentProperties.map((property) => ({
+      id: `property-${String(property.id)}`,
+      at: String(property.createdAt || ''),
+      label: `Property assigned: ${String(property.title || 'Property')}`,
+      detail: String(property.status || ''),
+      status: String(property.status || 'AVAILABLE'),
+      type: 'property' as const,
+      href: '/portal/agent/properties',
+    })),
   ].filter((entry) => !Number.isNaN(Date.parse(entry.at)))
     .sort((left, right) => Date.parse(right.at) - Date.parse(left.at))
     .slice(0, 6);
+
+  const recentAssignedProperties = [...agentProperties]
+    .sort((left, right) => {
+      const leftDate = recordDate(left.updatedAt || left.createdAt)?.getTime() || 0;
+      const rightDate = recordDate(right.updatedAt || right.createdAt)?.getTime() || 0;
+      return rightDate - leftDate;
+    })
+    .slice(0, 5);
   const managerPropertiesHref = '/portal/property-manager/properties';
   const managerInquiriesHref = '/portal/property-manager/inquiries';
   const managerViewingsHref = '/portal/property-manager/viewings';
@@ -759,64 +868,269 @@ function PortalPage({ role, item }: { role: Exclude<Role, 'admin'>; item: Portal
 
       {!item && role === 'agent' && (
         <>
-          <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-5">
-            {[
-              { label: 'My Properties', count: counts['/portal/agent/properties'], href: '/portal/agent/properties', icon: Home },
-              { label: 'New Inquiries', count: newInquiryCount, href: '/portal/agent/inquiries', icon: MessageSquare },
-              { label: 'Scheduled Viewings', count: scheduledViewingCount, href: '/portal/agent/viewings', icon: CalendarDays },
-              { label: 'Sold / Rented', count: soldOrRentedCount, href: '/portal/agent/properties', icon: Building2 },
-              { label: 'Pending Follow-ups', count: followUpCount, href: '/portal/agent/inquiries', icon: CalendarDays },
-            ].map(({ label, count, href, icon: Icon }) => (
-              <Link key={label} href={href} className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm font-medium text-slate-500">{label}</p>
-                    <p className="mt-2 text-3xl font-bold text-slate-900">{loading ? '…' : count ?? '—'}</p>
-                  </div>
-                  <span className="rounded-xl bg-emerald-50 p-3 text-emerald-600"><Icon className="h-5 w-5" /></span>
-                </div>
-                <p className="mt-4 flex items-center gap-1 text-sm font-medium text-emerald-700">Open {label.toLowerCase()} <ChevronRight className="h-4 w-4" /></p>
-              </Link>
-            ))}
-          </div>
-          {counts['/portal/agent/properties'] === 0 && (
-            <p className="rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900">
-              No properties are assigned to your agent profile yet. Ask a property manager or administrator to assign listings to you.
-            </p>
-          )}
-          <div className="grid gap-6 lg:grid-cols-2">
-            <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-              <div className="flex items-center justify-between">
-                <div><h2 className="font-semibold text-slate-900">Calendar & follow-ups</h2><p className="mt-1 text-sm text-slate-500">Upcoming viewings and scheduled client follow-ups</p></div>
-                <CalendarDays className="h-5 w-5 text-emerald-600" />
+          <section className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-slate-950 via-slate-900 to-emerald-950 px-5 py-6 text-white shadow-lg sm:px-8 sm:py-7">
+            <div className="pointer-events-none absolute -right-12 -top-28 h-72 w-72 rounded-full border-[42px] border-white/5" />
+            <div className="relative flex flex-col gap-5 sm:flex-row sm:items-center sm:justify-between">
+              <div>
+                <p className="text-sm font-medium text-emerald-200">
+                  {new Date().toLocaleDateString(undefined, { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}
+                </p>
+                <h1 className="mt-2 text-2xl font-bold tracking-tight sm:text-3xl">
+                  Welcome back{user?.name ? `, ${user.name.split(' ')[0]}` : ''}
+                </h1>
+                <p className="mt-2 text-sm text-slate-300">Your assigned properties, client inquiries, and upcoming schedule at a glance.</p>
               </div>
-              {agentAgenda.length ? (
-                <ul className="mt-4 divide-y divide-slate-100">
+              <div className="flex flex-wrap items-center gap-3">
+                <Link href="/portal/agent/inquiries" aria-label={`${newInquiryCount + scheduledViewingCount} items need attention`} className="relative grid h-11 w-11 place-items-center rounded-xl border border-white/15 bg-white/10 transition hover:bg-white/20">
+                  <Bell className="h-5 w-5" />
+                  {newInquiryCount + scheduledViewingCount > 0 && <span className="absolute -right-1 -top-1 grid min-h-5 min-w-5 place-items-center rounded-full bg-rose-500 px-1 text-[10px] font-bold">{newInquiryCount + scheduledViewingCount > 99 ? '99+' : newInquiryCount + scheduledViewingCount}</span>}
+                </Link>
+                <div className="flex items-center gap-3 rounded-xl border border-white/15 bg-white/10 px-3 py-2">
+                  <span className="grid h-9 w-9 place-items-center rounded-full bg-emerald-300 font-bold text-emerald-950">{(user?.name || user?.email || 'A').slice(0, 1).toUpperCase()}</span>
+                  <div className="max-w-40">
+                    <p className="truncate text-sm font-semibold">{user?.name || 'Agent'}</p>
+                    <p className="truncate text-xs text-slate-300">{user?.email}</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <section aria-label="Key performance indicators" className="grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4 xl:grid-cols-5">
+            {[
+              { label: 'My Properties', count: counts[agentPropertiesHref], detail: 'Assigned to you', href: agentPropertiesHref, icon: Home, tone: 'bg-blue-50 text-blue-600' },
+              { label: 'New Inquiries', count: newInquiryCount, detail: 'Awaiting response', href: agentInquiriesHref, icon: MessageSquare, tone: 'bg-amber-50 text-amber-600' },
+              { label: 'Scheduled Viewings', count: scheduledViewingCount, detail: 'Upcoming appointments', href: agentViewingsHref, icon: CalendarDays, tone: 'bg-violet-50 text-violet-600' },
+              { label: 'Sold / Rented', count: soldOrRentedCount, detail: 'Completed deals', href: agentPropertiesHref, icon: Building2, tone: 'bg-emerald-50 text-emerald-600' },
+              { label: 'Pending Follow-ups', count: followUpCount, detail: 'Client callbacks due', href: agentInquiriesHref, icon: Clock, tone: 'bg-rose-50 text-rose-600' },
+            ].map((card) => {
+              const failedItem = agentSectionItems.find((entry) => entry.href === card.href);
+              const sectionError = dashboardErrors[card.href];
+              return (
+                <Link key={card.label} href={card.href} className="rounded-2xl border border-slate-200/80 bg-white p-4 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md sm:p-5">
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="min-w-0">
+                      <p className="truncate text-xs font-semibold text-slate-500 sm:text-sm">{card.label}</p>
+                      <p className="mt-2 text-2xl font-bold tracking-tight text-slate-900 sm:text-3xl">{loading ? '…' : sectionError ? '—' : card.count ?? '—'}</p>
+                      <p className="mt-1 truncate text-xs text-slate-500">{sectionError ? 'Statistics unavailable' : card.detail}</p>
+                    </div>
+                    <span className={`grid h-10 w-10 shrink-0 place-items-center rounded-xl sm:h-11 sm:w-11 ${card.tone}`}>
+                      <card.icon className="h-5 w-5" aria-hidden="true" />
+                    </span>
+                  </div>
+                  {sectionError && failedItem ? (
+                    <button type="button" onClick={() => void retryDashboardSection(failedItem)} className="mt-3 inline-flex items-center gap-1 text-xs font-semibold text-rose-700 hover:underline"><RefreshCw className="h-3 w-3" /> Retry {failedItem.label.toLowerCase()}</button>
+                  ) : null}
+                </Link>
+              );
+            })}
+          </section>
+
+          {counts['/portal/agent/properties'] === 0 && !loading && (
+            <div className="flex flex-col gap-3 rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900 sm:flex-row sm:items-center sm:justify-between">
+              <p>No properties are assigned to your agent profile yet. Ask a property manager or administrator to assign listings to you.</p>
+            </div>
+          )}
+
+          <div className="grid gap-6 lg:grid-cols-2">
+            <section className="rounded-2xl border border-slate-200/80 bg-white p-5 shadow-sm sm:p-6">
+              <div className="flex items-start justify-between gap-3">
+                <div>
+                  <p className="text-xs font-semibold uppercase tracking-wider text-emerald-700">Your schedule</p>
+                  <h2 className="mt-1 text-lg font-bold text-slate-900">Today's Schedule</h2>
+                  <p className="mt-1 text-sm text-slate-500">Viewings and follow-ups scheduled for today</p>
+                </div>
+                <span className="grid h-10 w-10 place-items-center rounded-xl bg-emerald-50 text-emerald-700"><CalendarDays className="h-5 w-5" /></span>
+              </div>
+              {dashboardErrors[agentViewingsHref] || dashboardErrors[agentInquiriesHref] ? (
+                <div className="mt-5 space-y-3">
+                  {[agentViewingsHref, agentInquiriesHref].filter((href) => dashboardErrors[href]).map((href) => {
+                    const entry = agentSectionItems.find((section) => section.href === href);
+                    return <div key={href} className="rounded-xl border border-rose-100 bg-rose-50 p-3 text-sm text-rose-800"><p>{entry?.label}: {dashboardErrors[href]}</p>{entry && <button type="button" onClick={() => void retryDashboardSection(entry)} className="mt-2 inline-flex items-center gap-1 text-xs font-semibold hover:underline"><RefreshCw className="h-3 w-3" /> Retry</button>}</div>;
+                  })}
+                </div>
+              ) : loading ? (
+                <div className="mt-5 space-y-3">
+                  {Array.from({ length: 3 }, (_, index) => <div key={index} className="h-16 animate-pulse rounded-xl bg-slate-100" />)}
+                </div>
+              ) : agentAgenda.length ? (
+                <ul className="mt-5 divide-y divide-slate-100">
                   {agentAgenda.map((entry) => (
                     <li key={`${entry.id}-${entry.label}`} className="flex items-start justify-between gap-3 py-3">
-                      <div><p className="text-sm font-medium text-slate-800">{entry.label}</p><p className="text-xs text-slate-500">{entry.detail}</p></div>
-                      <time className="shrink-0 text-xs font-medium text-slate-600">{entry.date.toLocaleDateString()}</time>
+                      <div className="min-w-0 flex-1">
+                        <div className="flex items-center gap-2">
+                          {entry.type === 'viewing' && <span className="rounded-full bg-violet-50 px-2 py-0.5 text-[10px] font-semibold text-violet-700">Viewing</span>}
+                          {entry.type === 'followup' && <span className="rounded-full bg-amber-50 px-2 py-0.5 text-[10px] font-semibold text-amber-700">Follow-up</span>}
+                          <p className="truncate text-sm font-medium text-slate-800">{entry.label}</p>
+                        </div>
+                        <p className="truncate text-xs text-slate-500">{entry.detail}</p>
+                      </div>
+                      <time className="shrink-0 text-xs font-medium text-slate-600">{entry.date.toLocaleDateString(undefined, { day: 'numeric', month: 'short' })}</time>
                     </li>
                   ))}
                 </ul>
-              ) : <p className="mt-4 text-sm text-slate-500">No upcoming viewings or follow-ups scheduled.</p>}
+              ) : (
+                <div className="mt-5 rounded-xl bg-slate-50 px-4 py-8 text-center">
+                  <CalendarDays className="mx-auto h-7 w-7 text-slate-300" />
+                  <p className="mt-2 text-sm font-medium text-slate-600">No schedule today</p>
+                  <p className="mt-1 text-xs text-slate-400">You have no viewings or follow-ups scheduled for today.</p>
+                </div>
+              )}
             </section>
-            <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-              <div className="flex items-center justify-between">
-                <div><h2 className="font-semibold text-slate-900">Recent activity</h2><p className="mt-1 text-sm text-slate-500">Recent inquiries, viewing requests, and assigned properties</p></div>
-                <MessageSquare className="h-5 w-5 text-emerald-600" />
+            <section className="rounded-2xl border border-slate-200/80 bg-white p-5 shadow-sm sm:p-6">
+              <div className="flex items-start justify-between gap-3">
+                <div>
+                  <p className="text-xs font-semibold uppercase tracking-wider text-rose-700">Priority tasks</p>
+                  <h2 className="mt-1 text-lg font-bold text-slate-900">My Priority Tasks</h2>
+                  <p className="mt-1 text-sm text-slate-500">Overdue follow-ups and urgent items</p>
+                </div>
+                <span className="grid h-10 w-10 place-items-center rounded-xl bg-rose-50 text-rose-700"><AlertCircle className="h-5 w-5" /></span>
               </div>
-              {agentNotifications.length ? (
-                <ul className="mt-4 divide-y divide-slate-100">
+              {dashboardErrors[agentInquiriesHref] ? (
+                <div className="mt-5 rounded-xl border border-rose-100 bg-rose-50 p-3 text-sm text-rose-800">
+                  <p>{dashboardErrors[agentInquiriesHref]}</p>
+                  {agentSectionItems.find((section) => section.href === agentInquiriesHref) && (
+                    <button type="button" onClick={() => { const entry = agentSectionItems.find((section) => section.href === agentInquiriesHref); if (entry) void retryDashboardSection(entry); }} className="mt-2 inline-flex items-center gap-1 text-xs font-semibold hover:underline"><RefreshCw className="h-3 w-3" /> Retry inquiries</button>
+                  )}
+                </div>
+              ) : loading ? (
+                <div className="mt-5 space-y-3">
+                  {Array.from({ length: 3 }, (_, index) => <div key={index} className="h-16 animate-pulse rounded-xl bg-slate-100" />)}
+                </div>
+              ) : overdueFollowUps.length > 0 ? (
+                <ul className="mt-5 divide-y divide-slate-100">
+                  {overdueFollowUps.slice(0, 5).map((inquiry) => (
+                    <li key={String(inquiry.id)} className="flex items-start justify-between gap-3 py-3">
+                      <div className="min-w-0 flex-1">
+                        <p className="truncate text-sm font-medium text-slate-800">{String(inquiry.name || 'Client')}</p>
+                        <p className="truncate text-xs text-slate-500">{String(inquiry.email || '')}</p>
+                        <p className="mt-1 text-xs text-rose-600">Follow-up was due {formatPortalDate(inquiry.nextFollowUpDate)}</p>
+                      </div>
+                      <Link href="/portal/agent/inquiries" className="shrink-0 rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-xs font-medium text-slate-700 hover:bg-slate-50">Update</Link>
+                    </li>
+                  ))}
+                </ul>
+              ) : (
+                <div className="mt-5 rounded-xl bg-slate-50 px-4 py-8 text-center">
+                  <CheckCircle className="mx-auto h-7 w-7 text-slate-300" />
+                  <p className="mt-2 text-sm font-medium text-slate-600">All caught up</p>
+                  <p className="mt-1 text-xs text-slate-400">You have no overdue follow-ups or urgent tasks.</p>
+                </div>
+              )}
+            </section>
+          </div>
+
+          <div className="grid gap-6 xl:grid-cols-2">
+            <section className="rounded-2xl border border-slate-200/80 bg-white p-5 shadow-sm sm:p-6">
+              <div className="flex items-start justify-between gap-3">
+                <div>
+                  <p className="text-xs font-semibold uppercase tracking-wider text-blue-700">Activity feed</p>
+                  <h2 className="mt-1 text-lg font-bold text-slate-900">Recent Activity</h2>
+                  <p className="mt-1 text-sm text-slate-500">Recent inquiries, viewing requests, and assigned properties</p>
+                </div>
+                <span className="grid h-10 w-10 place-items-center rounded-xl bg-blue-50 text-blue-700"><Activity className="h-5 w-5" /></span>
+              </div>
+              {dashboardErrors[agentPropertiesHref] || dashboardErrors[agentInquiriesHref] || dashboardErrors[agentViewingsHref] ? (
+                <div className="mt-5 space-y-3">
+                  {[agentPropertiesHref, agentInquiriesHref, agentViewingsHref].filter((href) => dashboardErrors[href]).map((href) => {
+                    const entry = agentSectionItems.find((section) => section.href === href);
+                    return <div key={href} className="rounded-xl border border-rose-100 bg-rose-50 p-3 text-sm text-rose-800"><p>{entry?.label}: {dashboardErrors[href]}</p>{entry && <button type="button" onClick={() => void retryDashboardSection(entry)} className="mt-2 inline-flex items-center gap-1 text-xs font-semibold hover:underline"><RefreshCw className="h-3 w-3" /> Retry</button>}</div>;
+                  })}
+                </div>
+              ) : loading ? (
+                <div className="mt-5 space-y-3">
+                  {Array.from({ length: 3 }, (_, index) => <div key={index} className="h-16 animate-pulse rounded-xl bg-slate-100" />)}
+                </div>
+              ) : agentNotifications.length ? (
+                <ul className="mt-5 divide-y divide-slate-100">
                   {agentNotifications.map((entry) => (
                     <li key={entry.id} className="py-3">
-                      <p className="text-sm font-medium text-slate-800">{entry.label}</p>
-                      <p className="truncate text-xs text-slate-500">{entry.detail}</p>
-                      <time className="text-xs text-slate-400">{new Date(entry.at).toLocaleString()}</time>
+                      <div className="flex items-start justify-between gap-3">
+                        <div className="min-w-0 flex-1">
+                          <div className="flex items-center gap-2">
+                            {entry.type === 'inquiry' && <span className="rounded-full bg-amber-50 px-2 py-0.5 text-[10px] font-semibold text-amber-700">Inquiry</span>}
+                            {entry.type === 'viewing' && <span className="rounded-full bg-violet-50 px-2 py-0.5 text-[10px] font-semibold text-violet-700">Viewing</span>}
+                            {entry.type === 'property' && <span className="rounded-full bg-emerald-50 px-2 py-0.5 text-[10px] font-semibold text-emerald-700">Property</span>}
+                            <p className="truncate text-sm font-medium text-slate-800">{entry.label}</p>
+                          </div>
+                          <p className="truncate text-xs text-slate-500">{entry.detail}</p>
+                        </div>
+                        <StatusBadge status={entry.status} />
+                      </div>
+                      <div className="mt-2 flex items-center justify-between gap-3">
+                        <time className="text-xs text-slate-400">{formatPortalDate(entry.at, true)}</time>
+                        <Link href={entry.href} className="text-xs font-semibold text-emerald-700 hover:text-emerald-800">View details</Link>
+                      </div>
                     </li>
                   ))}
                 </ul>
-              ) : <p className="mt-4 text-sm text-slate-500">No recent activity yet.</p>}
+              ) : (
+                <div className="mt-5 rounded-xl bg-slate-50 px-4 py-8 text-center">
+                  <Activity className="mx-auto h-7 w-7 text-slate-300" />
+                  <p className="mt-2 text-sm font-medium text-slate-600">No recent activity</p>
+                  <p className="mt-1 text-xs text-slate-400">Your recent work will appear here.</p>
+                </div>
+              )}
+            </section>
+
+            <section className="rounded-2xl border border-slate-200/80 bg-white p-5 shadow-sm sm:p-6">
+              <div className="flex items-start justify-between gap-3">
+                <div>
+                  <p className="text-xs font-semibold uppercase tracking-wider text-violet-700">Your portfolio</p>
+                  <h2 className="mt-1 text-lg font-bold text-slate-900">Recently Assigned Properties</h2>
+                  <p className="mt-1 text-sm text-slate-500">Your latest property assignments</p>
+                </div>
+                <Link href="/portal/agent/properties" className="text-sm font-semibold text-emerald-700 hover:underline">View all</Link>
+              </div>
+              {dashboardErrors[agentPropertiesHref] ? (
+                <div className="mt-5 rounded-xl border border-rose-100 bg-rose-50 p-3 text-sm text-rose-800">
+                  <p>{dashboardErrors[agentPropertiesHref]}</p>
+                  {agentSectionItems.find((section) => section.href === agentPropertiesHref) && (
+                    <button type="button" onClick={() => { const entry = agentSectionItems.find((section) => section.href === agentPropertiesHref); if (entry) void retryDashboardSection(entry); }} className="mt-2 inline-flex items-center gap-1 text-xs font-semibold hover:underline"><RefreshCw className="h-3 w-3" /> Retry properties</button>
+                  )}
+                </div>
+              ) : loading ? (
+                <div className="mt-5 space-y-3">
+                  {Array.from({ length: 3 }, (_, index) => <div key={index} className="h-16 animate-pulse rounded-xl bg-slate-100" />)}
+                </div>
+              ) : recentAssignedProperties.length ? (
+                <ul className="mt-5 divide-y divide-slate-100">
+                  {recentAssignedProperties.map((property) => {
+                    const primaryImage = Array.isArray(property.propertyImages)
+                      ? property.propertyImages.sort((a: unknown, b: unknown) => {
+                          const aIsPrimary = typeof a === 'object' && a !== null && 'isPrimary' in a ? Boolean(a.isPrimary) : false;
+                          const bIsPrimary = typeof b === 'object' && b !== null && 'isPrimary' in b ? Boolean(b.isPrimary) : false;
+                          return Number(bIsPrimary) - Number(aIsPrimary);
+                        })[0]
+                      : null;
+                    const imageUrl = primaryImage && typeof primaryImage === 'object' && 'imageUrl' in primaryImage ? String(primaryImage.imageUrl) : null;
+                    return (
+                      <li key={String(property.id)} className="flex items-center gap-3 py-3">
+                        {imageUrl ? (
+                          <img src={imageUrl} alt="" className="h-12 w-14 shrink-0 rounded-lg bg-slate-100 object-cover" />
+                        ) : (
+                          <span className="grid h-12 w-14 shrink-0 place-items-center rounded-lg bg-slate-100 text-slate-400"><Home className="h-5 w-5" /></span>
+                        )}
+                        <div className="min-w-0 flex-1">
+                          <p className="truncate text-sm font-semibold text-slate-800">{String(property.title || 'Untitled property')}</p>
+                          <p className="flex items-center gap-1 truncate text-xs text-slate-500"><MapPin className="h-3 w-3 shrink-0" />{String(property.location || property.district || 'Location not specified')}</p>
+                          <div className="mt-1 flex items-center gap-2">
+                            <p className="truncate text-xs text-slate-500">{formatMoney(property.price, property.currency)}</p>
+                            <StatusBadge status={String(property.status || 'AVAILABLE')} />
+                          </div>
+                        </div>
+                        <Link href="/portal/agent/properties" className="shrink-0 rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-xs font-medium text-slate-700 hover:bg-slate-50">Manage</Link>
+                      </li>
+                    );
+                  })}
+                </ul>
+              ) : (
+                <div className="mt-5 rounded-xl bg-slate-50 px-4 py-8 text-center">
+                  <Home className="mx-auto h-7 w-7 text-slate-300" />
+                  <p className="mt-2 text-sm font-medium text-slate-600">No properties assigned</p>
+                  <p className="mt-1 text-xs text-slate-400">Properties assigned to you will appear here.</p>
+                </div>
+              )}
             </section>
           </div>
         </>
