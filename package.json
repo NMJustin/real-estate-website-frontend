@@ -3,9 +3,11 @@
     "version": "1.0.0",
     "private": true,
     "dependencies": {
+        "apexcharts": "^8.1.0",
         "lucide-react": "^1.46.0",
         "next": "^15.0.0",
         "react": "^19.3.0",
+        "react-apexcharts": "^2.1.1",
         "react-dom": "^19.3.0"
     },
     "description": "",
