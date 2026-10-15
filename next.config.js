@@ -1,6 +1,6 @@
 /** @type {import('next').NextConfig} */
-const path = require('path')
-const { PHASE_DEVELOPMENT_SERVER } = require('next/constants')
+const path = require('path');
+const { PHASE_DEVELOPMENT_SERVER } = require('next/constants');
 
 const nextConfig = (phase) => ({
   reactStrictMode: true,
@@ -8,8 +8,16 @@ const nextConfig = (phase) => ({
   distDir: phase === PHASE_DEVELOPMENT_SERVER ? '.next-dev' : '.next',
   images: {
     remotePatterns: [
-      { protocol: 'http', hostname: 'localhost', pathname: '/**' },
-      { protocol: 'https', hostname: 'localhost', pathname: '/**' },
+      {
+        protocol: 'http',
+        hostname: 'localhost',
+        pathname: '/**',
+      },
+      {
+        protocol: 'https',
+        hostname: 'localhost',
+        pathname: '/**',
+      },
     ],
   },
   webpack: (config) => {
@@ -19,6 +27,6 @@ const nextConfig = (phase) => ({
     };
     return config;
   },
-})
+});
 
-module.exports = nextConfig
+module.exports = nextConfig;
