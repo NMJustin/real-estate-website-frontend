@@ -3,6 +3,13 @@ import React, { createContext, useCallback, useContext, useEffect, useState } fr
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api/v1';
 const TOKEN_KEY = 'admin_token';
 
+// Sanitize URL to avoid double slashes when concatenating base URL and path
+const sanitizeUrl = (baseUrl: string, path: string): string => {
+	const trimmedBase = baseUrl.replace(/\/+$/, '');
+	const trimmedPath = path.replace(/^\/+/, '');
+	return `${trimmedBase}/${trimmedPath}`;
+};
+
 interface AdminUser {
   id: string;
   name: string | null;
@@ -44,7 +51,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
 
     setToken(storedToken);
-    fetch(`${API_BASE}/auth/me`, {
+    fetch(sanitizeUrl(API_BASE, '/auth/me'), {
       headers: { Authorization: `Bearer ${storedToken}` },
     })
       .then((res) => {
@@ -71,7 +78,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const login = useCallback(async (email: string, password: string) => {
-    const res = await fetch(`${API_BASE}/auth/admin/login`, {
+    const res = await fetch(sanitizeUrl(API_BASE, '/auth/admin/login'), {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ email, password }),
@@ -87,7 +94,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const userLogin = useCallback(async (email: string, password: string): Promise<AdminUser> => {
-    const res = await fetch(`${API_BASE}/auth/login`, {
+    const res = await fetch(sanitizeUrl(API_BASE, '/auth/login'), {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ email, password }),
@@ -109,7 +116,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const userRegister = useCallback(async (name: string, email: string, password: string) => {
-    const res = await fetch(`${API_BASE}/auth/register`, {
+    const res = await fetch(sanitizeUrl(API_BASE, '/auth/register'), {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ name, email, password }),
@@ -127,7 +134,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const updateProfile = useCallback(async (name: string, phone: string) => {
     const currentToken = token || (typeof window !== 'undefined' ? localStorage.getItem(TOKEN_KEY) : null);
     if (!currentToken) throw new Error('You must be signed in to update your profile.');
-    const response = await fetch(`${API_BASE}/auth/profile`, {
+    const response = await fetch(sanitizeUrl(API_BASE, '/auth/profile'), {
       method: 'PATCH',
       headers: {
         Authorization: `Bearer ${currentToken}`,

@@ -1,5 +1,12 @@
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api/v1';
 
+// Sanitize URL to avoid double slashes when concatenating base URL and path
+const sanitizeUrl = (baseUrl: string, path: string): string => {
+	const trimmedBase = baseUrl.replace(/\/+$/, '');
+	const trimmedPath = path.replace(/^\/+/, '');
+	return `${trimmedBase}/${trimmedPath}`;
+};
+
 type QueryValue = string | number | boolean | undefined;
 
 const buildQuery = (query: Record<string, QueryValue> = {}) => {
@@ -23,7 +30,8 @@ const request = async <T>(path: string, options: RequestInit = {}): Promise<T> =
 	if (typeof options.body === 'string' && !headers.has('Content-Type')) {
 		headers.set('Content-Type', 'application/json');
 	}
-	const response = await fetch(`${API_BASE_URL}${path}`, { ...options, headers });
+	const url = sanitizeUrl(API_BASE_URL, path);
+	const response = await fetch(url, { ...options, headers });
 	const body = await response.json().catch(() => ({}));
 	if (!response.ok) throw new Error(body.message || `API request failed (${response.status})`);
 	return body;
@@ -45,7 +53,8 @@ const uploadMedia = async (file: File, path: string) => {
 	const token = getToken();
 	const formData = new FormData();
 	formData.append('file', file);
-	const response = await fetch(`${API_BASE_URL}${path}`, {
+	const url = sanitizeUrl(API_BASE_URL, path);
+	const response = await fetch(url, {
 		method: 'POST',
 		headers: token ? { Authorization: `Bearer ${token}` } : {},
 		body: formData,
