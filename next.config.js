@@ -4,7 +4,7 @@ const { PHASE_DEVELOPMENT_SERVER } = require('next/constants')
 
 const nextConfig = (phase) => ({
   reactStrictMode: true,
-  outputFileTracingRoot: path.join(__dirname, '..'),
+  outputFileTracingRoot: __dirname,
   distDir: phase === PHASE_DEVELOPMENT_SERVER ? '.next-dev' : '.next',
   images: {
     remotePatterns: [
@@ -15,7 +15,7 @@ const nextConfig = (phase) => ({
   webpack: (config) => {
     config.resolve.alias = {
       ...config.resolve.alias,
-      '@': require('path').resolve(__dirname, './src'),
+      '@': path.resolve(__dirname, './src'),
     };
     return config;
   },
