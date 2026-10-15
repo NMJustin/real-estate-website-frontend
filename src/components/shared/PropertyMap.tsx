@@ -11,15 +11,15 @@ interface PropertyMapProps {
 
 export default function PropertyMap({ latitude, longitude, title, className = '' }: PropertyMapProps) {
   const mapRef = useRef<HTMLDivElement>(null);
-  const mapInstanceRef = useRef<google.maps.Map | null>(null);
-  const markerRef = useRef<google.maps.Marker | null>(null);
+  const mapInstanceRef = useRef<any | null>(null);
+  const markerRef = useRef<any | null>(null);
 
   useEffect(() => {
     if (!mapRef.current || !window.google) return;
 
     // Initialize map if not already initialized
     if (!mapInstanceRef.current) {
-      mapInstanceRef.current = new window.google.maps.Map(mapRef.current, {
+      mapInstanceRef.current = new (window.google as any).maps.Map(mapRef.current, {
         center: { lat: latitude, lng: longitude },
         zoom: 15,
         styles: [
@@ -39,7 +39,7 @@ export default function PropertyMap({ latitude, longitude, title, className = ''
     if (markerRef.current) {
       markerRef.current.setPosition({ lat: latitude, lng: longitude });
     } else {
-      markerRef.current = new window.google.maps.Marker({
+      markerRef.current = new (window.google as any).maps.Marker({
         position: { lat: latitude, lng: longitude },
         map: mapInstanceRef.current,
         title: title || 'Property Location',

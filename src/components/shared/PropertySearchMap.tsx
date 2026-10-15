@@ -26,16 +26,16 @@ export default function PropertySearchMap({
   className = '',
 }: PropertySearchMapProps) {
   const mapRef = useRef<HTMLDivElement>(null);
-  const mapInstanceRef = useRef<google.maps.Map | null>(null);
-  const markersRef = useRef<google.maps.Marker[]>([]);
-  const infoWindowRef = useRef<google.maps.InfoWindow | null>(null);
+  const mapInstanceRef = useRef<any | null>(null);
+  const markersRef = useRef<any[]>([]);
+  const infoWindowRef = useRef<any | null>(null);
 
   useEffect(() => {
     if (!mapRef.current || !window.google) return;
 
     // Initialize map
     if (!mapInstanceRef.current) {
-      mapInstanceRef.current = new window.google.maps.Map(mapRef.current, {
+      mapInstanceRef.current = new (window.google as any).maps.Map(mapRef.current, {
         center: { lat: -1.95, lng: 30.05 }, // Default to Kigali center
         zoom: 12,
         styles: [
@@ -53,16 +53,16 @@ export default function PropertySearchMap({
     markersRef.current = [];
 
     // Add markers for each property
-    const bounds = new window.google.maps.LatLngBounds();
+    const bounds = new (window.google as any).maps.LatLngBounds();
 
     properties.forEach((property) => {
       if (property.latitude == null || property.longitude == null) return;
 
-      const marker = new window.google.maps.Marker({
+      const marker = new (window.google as any).maps.Marker({
         position: { lat: property.latitude, lng: property.longitude },
         map: mapInstanceRef.current,
         title: property.title,
-        animation: property.id === selectedPropertyId ? google.maps.Animation.BOUNCE : undefined,
+        animation: property.id === selectedPropertyId ? (window.google as any).maps.Animation.BOUNCE : undefined,
       });
 
       // Add click handler
@@ -73,7 +73,7 @@ export default function PropertySearchMap({
       });
 
       // Add info window
-      const infoWindow = new window.google.maps.InfoWindow({
+      const infoWindow = new (window.google as any).maps.InfoWindow({
         content: `
           <div class="p-2 min-w-[200px]">
             <h3 class="font-semibold text-sm">${property.title}</h3>

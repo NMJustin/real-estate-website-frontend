@@ -4,7 +4,7 @@ const { PHASE_DEVELOPMENT_SERVER } = require('next/constants')
 
 const nextConfig = (phase) => ({
   reactStrictMode: true,
-  outputFileTracingRoot: path.join(__dirname, '..'),
+  outputFileTracingRoot: phase === PHASE_DEVELOPMENT_SERVER ? path.join(__dirname, '..') : __dirname,
   distDir: phase === PHASE_DEVELOPMENT_SERVER ? '.next-dev' : '.next',
   images: {
     remotePatterns: [
