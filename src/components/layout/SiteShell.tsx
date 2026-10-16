@@ -4,6 +4,7 @@ import { usePathname } from 'next/navigation'
 import type { ReactNode } from 'react'
 import { Footer } from './Footer'
 import { Header } from './Header'
+import { PageViewTracker } from '../analytics/PageViewTracker'
 
 export function SiteShell({ children }: { children: ReactNode }) {
   const isAdminRoute = usePathname().startsWith('/admin')
@@ -12,6 +13,7 @@ export function SiteShell({ children }: { children: ReactNode }) {
 
   return (
     <div className="min-h-screen flex flex-col font-sans">
+      <PageViewTracker />
       <Header />
       <main className="flex-1 w-full flex flex-col">{children}</main>
       <Footer />

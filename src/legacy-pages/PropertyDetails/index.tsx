@@ -7,6 +7,7 @@ import { BedDouble, Bath, MapPin, Ruler, ArrowLeft, Maximize2, Share2, Phone, Ma
 import api from '../../services/api';
 import { ImageViewer } from '../../components/ImageViewer';
 import { TestPropertyNotice } from '../../components/property/TestPropertyBadge';
+import { trackPropertyView, trackClickEvent } from '../../utils/analytics';
 
 type InquiryForm = {
   name: string;
@@ -143,6 +144,13 @@ export default function PropertyDetails({ propertySlug: propSlug }: { propertySl
         .finally(() => setLoading(false));
     }
   }, [propertySlug]);
+
+  // Track property view when property is loaded
+  useEffect(() => {
+    if (property?.id) {
+      trackPropertyView(property.id);
+    }
+  }, [property?.id]);
 
   const validateInquiryForm = (): string => {
     if (!inquiryForm.name.trim()) return 'Full Name is required';
@@ -459,13 +467,29 @@ export default function PropertyDetails({ propertySlug: propSlug }: { propertySl
                     <p className="font-medium text-slate-900">{property.agent.name || 'Agent'}</p>
                     <div className="mt-2 space-y-1">
                       {property.agent.phone && (
-                        <a href={`tel:${property.agent.phone}`} className="flex items-center gap-2 text-sm text-emerald-600 hover:underline">
+                        <a
+                          href={`tel:${property.agent.phone}`}
+                          className="flex items-center gap-2 text-sm text-emerald-600 hover:underline"
+                          onClick={() => {
+                            if (property.agent?.phone) {
+                              trackClickEvent('PHONE', property.id, 'agent-phone', property.agent.phone, `tel:${property.agent.phone}`);
+                            }
+                          }}
+                        >
                           <Phone className="h-4 w-4" />
                           {property.agent.phone}
                         </a>
                       )}
                       {property.agent.email && (
-                        <a href={`mailto:${property.agent.email}`} className="flex items-center gap-2 text-sm text-emerald-600 hover:underline">
+                        <a
+                          href={`mailto:${property.agent.email}`}
+                          className="flex items-center gap-2 text-sm text-emerald-600 hover:underline"
+                          onClick={() => {
+                            if (property.agent?.email) {
+                              trackClickEvent('EMAIL', property.id, 'agent-email', property.agent.email, `mailto:${property.agent.email}`);
+                            }
+                          }}
+                        >
                           <Mail className="h-4 w-4" />
                           {property.agent.email}
                         </a>
