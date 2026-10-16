@@ -42,8 +42,12 @@ interface ApiResponse {
 }
 
 const STATUS_COLORS: Record<string, string> = {
+  NEW: 'bg-yellow-100 text-yellow-700',
   PENDING: 'bg-yellow-100 text-yellow-700',
   READ: 'bg-blue-100 text-blue-700',
+  CONTACTED: 'bg-purple-100 text-purple-700',
+  INTERESTED: 'bg-indigo-100 text-indigo-700',
+  APPROVED: 'bg-teal-100 text-teal-700',
   RESOLVED: 'bg-green-100 text-green-700',
   CLOSED: 'bg-gray-100 text-gray-500',
 };
@@ -222,8 +226,12 @@ export default function Inquiries() {
             className="rounded-lg border border-slate-300 bg-white px-3 py-2.5 text-sm text-slate-700 outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100"
           >
             <option value="">All Statuses</option>
+            <option value="NEW">New</option>
             <option value="PENDING">Pending</option>
             <option value="READ">Read</option>
+            <option value="CONTACTED">Contacted</option>
+            <option value="INTERESTED">Interested</option>
+            <option value="APPROVED">Approved</option>
             <option value="RESOLVED">Resolved</option>
             <option value="CLOSED">Closed</option>
           </select>
@@ -298,14 +306,18 @@ export default function Inquiries() {
                     </td>
                     <td className="whitespace-nowrap px-5 py-4">
                       <select
-                        value={item.status || 'PENDING'}
+                        value={item.status || 'NEW'}
                         onChange={(e) => handleStatusUpdate(item.id, e.target.value)}
                         className={`rounded-lg px-2.5 py-1 text-xs font-medium border border-slate-200 outline-none focus:ring-2 focus:ring-emerald-500 ${
-                          STATUS_COLORS[item.status ?? 'PENDING'] ?? 'bg-slate-100 text-slate-600'
+                          STATUS_COLORS[item.status ?? 'NEW'] ?? 'bg-slate-100 text-slate-600'
                         }`}
                       >
+                        <option value="NEW">New</option>
                         <option value="PENDING">Pending</option>
                         <option value="READ">Read</option>
+                        <option value="CONTACTED">Contacted</option>
+                        <option value="INTERESTED">Interested</option>
+                        <option value="APPROVED">Approved</option>
                         <option value="RESOLVED">Resolved</option>
                         <option value="CLOSED">Closed</option>
                       </select>
