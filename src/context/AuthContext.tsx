@@ -1,14 +1,8 @@
 import React, { createContext, useCallback, useContext, useEffect, useState } from 'react';
+import { getApiBaseUrl, sanitizeUrl, isApiConfigValid } from '../config/api';
 
-const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api/v1';
+const API_BASE = getApiBaseUrl();
 const TOKEN_KEY = 'admin_token';
-
-// Sanitize URL to avoid double slashes when concatenating base URL and path
-const sanitizeUrl = (baseUrl: string, path: string): string => {
-	const trimmedBase = baseUrl.replace(/\/+$/, '');
-	const trimmedPath = path.replace(/^\/+/, '');
-	return `${trimmedBase}/${trimmedPath}`;
-};
 
 interface AdminUser {
   id: string;
@@ -36,6 +30,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<AdminUser | null>(null);
   const [token, setToken] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+
+  // Validate API configuration on mount
+  useEffect(() => {
+    isApiConfigValid();
+  }, []);
 
   // On mount: restore session from stored token
   useEffect(() => {

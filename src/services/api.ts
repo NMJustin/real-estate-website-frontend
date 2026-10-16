@@ -1,11 +1,11 @@
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api/v1';
+import { getApiBaseUrl, sanitizeUrl, isApiConfigValid } from '../config/api';
 
-// Sanitize URL to avoid double slashes when concatenating base URL and path
-const sanitizeUrl = (baseUrl: string, path: string): string => {
-	const trimmedBase = baseUrl.replace(/\/+$/, '');
-	const trimmedPath = path.replace(/^\/+/, '');
-	return `${trimmedBase}/${trimmedPath}`;
-};
+const API_BASE_URL = getApiBaseUrl();
+
+// Validate API configuration on module load
+if (typeof window !== 'undefined') {
+	isApiConfigValid();
+}
 
 type QueryValue = string | number | boolean | undefined;
 
