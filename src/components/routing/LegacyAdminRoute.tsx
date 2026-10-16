@@ -5,6 +5,7 @@ import ProtectedRoute from '@/components/auth/ProtectedRoute'
 import Articles from '@/legacy-pages/Admin/Articles'
 import NewArticle from '@/legacy-pages/Admin/Articles/NewArticle'
 import EditArticle from '@/legacy-pages/Admin/Articles/EditArticle'
+import Analytics from '@/legacy-pages/Admin/Analytics'
 import Categories from '@/legacy-pages/Admin/Categories'
 import NewCategory from '@/legacy-pages/Admin/Categories/NewCategory'
 import EditCategory from '@/legacy-pages/Admin/Categories/EditCategory'
@@ -29,6 +30,7 @@ import Settings from '@/legacy-pages/Admin/Settings'
 import { RouteParamsProvider } from '@/navigation/legacy-router'
 
 const staticRoutes: Record<string, ComponentType> = {
+  analytics: Analytics,
   articles: Articles,
   categories: Categories,
   faqs: FAQs,

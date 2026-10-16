@@ -336,6 +336,16 @@ export const adminApi = {
 	getSettings: () => authRequest('/admin/settings'),
 	updateSettings: (data: Record<string, unknown>) =>
 		authRequest('/admin/settings', { method: 'PUT', body: JSON.stringify(data) }),
+
+	// Analytics
+	getAnalyticsSummary: (period?: string) =>
+		authRequest(`/analytics/summary${period ? `?period=${period}` : ''}`),
+	getAnalyticsDevices: (period?: string) =>
+		authRequest(`/analytics/devices${period ? `?period=${period}` : ''}`),
+	getAnalyticsSources: (period?: string) =>
+		authRequest(`/analytics/sources${period ? `?period=${period}` : ''}`),
+	getAnalyticsFunnel: (period?: string) =>
+		authRequest(`/analytics/funnel${period ? `?period=${period}` : ''}`),
 };
 
 export default api;
