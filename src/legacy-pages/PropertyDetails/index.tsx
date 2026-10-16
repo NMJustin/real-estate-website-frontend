@@ -421,7 +421,7 @@ export default function PropertyDetails({ propertySlug: propSlug }: { propertySl
             {/* Location */}
             <section className="mt-8 rounded-xl bg-white p-6 shadow-sm">
               <h2 className="text-lg font-semibold text-slate-900 mb-4">Location</h2>
-              <div className="space-y-3">
+              <div className="space-y-4">
                 <div className="flex items-start gap-2 text-slate-700">
                   <MapPin className="h-5 w-5 text-emerald-600 mt-0.5" />
                   <div>
@@ -446,6 +446,17 @@ export default function PropertyDetails({ propertySlug: propSlug }: { propertySl
                 {property.locationDescription && (
                   <div className="text-sm text-slate-600">
                     <span className="font-medium">About the Location:</span> {property.locationDescription}
+                  </div>
+                )}
+                {/* Embedded Map */}
+                {property.latitude != null && property.longitude != null && (
+                  <div className="mt-4">
+                    <iframe
+                      title="Property location map"
+                      src={`https://www.google.com/maps?q=${property.latitude},${property.longitude}&output=embed`}
+                      className="w-full h-80 rounded-lg border-0"
+                      loading="lazy"
+                    />
                   </div>
                 )}
               </div>
