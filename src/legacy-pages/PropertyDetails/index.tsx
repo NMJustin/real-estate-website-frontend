@@ -7,7 +7,7 @@ import { BedDouble, Bath, MapPin, Ruler, ArrowLeft, Maximize2, Share2, Phone, Ma
 import api from '../../services/api';
 import { ImageViewer } from '../../components/ImageViewer';
 import { TestPropertyNotice } from '../../components/property/TestPropertyBadge';
-import { trackPropertyView, trackClickEvent } from '../../utils/analytics';
+import { usePropertyViewTracking, trackClickEvent } from '../../utils/analytics';
 
 type InquiryForm = {
   name: string;
@@ -145,12 +145,8 @@ export default function PropertyDetails({ propertySlug: propSlug }: { propertySl
     }
   }, [propertySlug]);
 
-  // Track property view when property is loaded
-  useEffect(() => {
-    if (property?.id) {
-      trackPropertyView(property.id);
-    }
-  }, [property?.id]);
+  // Track property view with session duration
+  usePropertyViewTracking(property?.id || '');
 
   const validateInquiryForm = (): string => {
     if (!inquiryForm.name.trim()) return 'Full Name is required';
