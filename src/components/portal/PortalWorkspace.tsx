@@ -64,6 +64,22 @@ interface PortalItem {
 
 type PortalRecord = Record<string, unknown>;
 
+const getPrimaryImageUrl = (property: PortalRecord): string | null => {
+  if (!property || typeof property !== 'object') return null;
+  const images = property.propertyImages;
+  if (!Array.isArray(images) || images.length === 0) return null;
+  
+  const primaryImage = images.sort((a: unknown, b: unknown) => {
+    const aIsPrimary = typeof a === 'object' && a !== null && 'isPrimary' in a ? Boolean(a.isPrimary) : false;
+    const bIsPrimary = typeof b === 'object' && b !== null && 'isPrimary' in b ? Boolean(b.isPrimary) : false;
+    return Number(bIsPrimary) - Number(aIsPrimary);
+  })[0];
+  
+  return primaryImage && typeof primaryImage === 'object' && 'imageUrl' in primaryImage 
+    ? String(primaryImage.imageUrl) 
+    : null;
+};
+
 const roleNames: Record<Role, string> = {
   agent: 'Agent',
   property_manager: 'Property Manager',
@@ -1097,14 +1113,7 @@ function PortalPage({ role, item }: { role: Exclude<Role, 'admin'>; item: Portal
               ) : recentAssignedProperties.length ? (
                 <ul className="mt-5 divide-y divide-slate-100">
                   {recentAssignedProperties.map((property) => {
-                    const primaryImage = Array.isArray(property.propertyImages)
-                      ? property.propertyImages.sort((a: unknown, b: unknown) => {
-                          const aIsPrimary = typeof a === 'object' && a !== null && 'isPrimary' in a ? Boolean(a.isPrimary) : false;
-                          const bIsPrimary = typeof b === 'object' && b !== null && 'isPrimary' in b ? Boolean(b.isPrimary) : false;
-                          return Number(bIsPrimary) - Number(aIsPrimary);
-                        })[0]
-                      : null;
-                    const imageUrl = primaryImage && typeof primaryImage === 'object' && 'imageUrl' in primaryImage ? String(primaryImage.imageUrl) : null;
+                    const imageUrl = getPrimaryImageUrl(property);
                     return (
                       <li key={String(property.id)} className="flex items-center gap-3 py-3">
                         {imageUrl ? (
@@ -1242,8 +1251,13 @@ function PortalPage({ role, item }: { role: Exclude<Role, 'admin'>; item: Portal
                 <ul className="mt-4 divide-y divide-slate-100">
                   {managerUpcomingViewings.map((viewing, index) => {
                     const property = viewing.property && typeof viewing.property === 'object' ? viewing.property as PortalRecord : {};
+                    const propertyImageUrl = getPrimaryImageUrl(property);
                     return <li key={String(viewing.id || index)} className="flex items-start gap-3 py-3">
-                      <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-violet-50 text-violet-700"><CalendarDays className="h-5 w-5" /></span>
+                      {propertyImageUrl ? (
+                        <img src={propertyImageUrl} alt="" className="h-10 w-10 shrink-0 rounded-lg bg-slate-100 object-cover" />
+                      ) : (
+                        <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-violet-50 text-violet-700"><CalendarDays className="h-5 w-5" /></span>
+                      )}
                       <div className="min-w-0 flex-1">
                         <p className="truncate text-sm font-semibold text-slate-800">{String(viewing.name || 'Client viewing')}</p>
                         <p className="truncate text-xs text-slate-500">{String(property.title || 'Assigned property')} · {String(viewing.preferredTime || 'Time not set')}</p>
@@ -1269,8 +1283,13 @@ function PortalPage({ role, item }: { role: Exclude<Role, 'admin'>; item: Portal
                 <ul className="divide-y divide-slate-100">
                   {managerRecentInquiries.map((inquiry, index) => {
                     const property = inquiry.property && typeof inquiry.property === 'object' ? inquiry.property as PortalRecord : {};
+                    const propertyImageUrl = getPrimaryImageUrl(property);
                     return <li key={String(inquiry.id || index)} className="flex items-start gap-3 px-5 py-4 sm:px-6">
-                      <span className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-amber-50 text-amber-700"><MessageSquare className="h-4 w-4" /></span>
+                      {propertyImageUrl ? (
+                        <img src={propertyImageUrl} alt="" className="h-11 w-11 shrink-0 rounded-lg bg-slate-100 object-cover" />
+                      ) : (
+                        <span className="grid h-11 w-11 shrink-0 place-items-center rounded-full bg-amber-50 text-amber-700"><MessageSquare className="h-4 w-4" /></span>
+                      )}
                       <div className="min-w-0 flex-1">
                         <p className="truncate text-sm font-semibold text-slate-800">{String(inquiry.name || 'Customer')}</p>
                         <p className="truncate text-xs text-slate-500">{String(property.title || 'Assigned property')} · {String(inquiry.email || '')}</p>
@@ -1293,20 +1312,27 @@ function PortalPage({ role, item }: { role: Exclude<Role, 'admin'>; item: Portal
                 <div className="p-5 text-sm text-rose-700"><p>{dashboardErrors[managerPropertiesHref]}</p><button type="button" onClick={() => { const entry = managerSectionItems.find((section) => section.href === managerPropertiesHref); if (entry) void retryDashboardSection(entry); }} className="mt-2 inline-flex items-center gap-1 text-xs font-semibold hover:underline"><RefreshCw className="h-3 w-3" /> Retry properties</button></div>
               ) : managerRecentProperties.length ? (
                 <ul className="divide-y divide-slate-100">
-                  {managerRecentProperties.map((property, index) => (
-                    <li key={String(property.id || index)} className="flex items-center gap-3 px-5 py-4 sm:px-6">
-                      <span className="grid h-11 w-11 shrink-0 place-items-center rounded-xl bg-emerald-50 text-emerald-700"><Home className="h-5 w-5" /></span>
-                      <div className="min-w-0 flex-1">
-                        <p className="truncate text-sm font-semibold text-slate-800">{String(property.title || 'Untitled property')}</p>
-                        <p className="flex items-center gap-1 truncate text-xs text-slate-500"><MapPin className="h-3 w-3 shrink-0" />{String(property.location || property.district || 'Location not specified')}</p>
-                        <p className="mt-1 truncate text-xs text-slate-500">{formatMoney(property.price, property.currency)} · Updated {formatPortalDate(property.updatedAt || property.createdAt)}</p>
-                      </div>
-                      <div className="text-right">
-                        <span className="rounded-full bg-slate-100 px-2 py-1 text-[11px] font-semibold text-slate-700">{String(property.status || property.publicationStatus || '—').replace(/_/g, ' ')}</span>
-                        <p className="mt-2"><Link href={managerPropertiesHref} className="text-xs font-semibold text-emerald-700 hover:underline">Manage</Link></p>
-                      </div>
-                    </li>
-                  ))}
+                  {managerRecentProperties.map((property, index) => {
+                    const propertyImageUrl = getPrimaryImageUrl(property);
+                    return (
+                      <li key={String(property.id || index)} className="flex items-center gap-3 px-5 py-4 sm:px-6">
+                        {propertyImageUrl ? (
+                          <img src={propertyImageUrl} alt="" className="h-11 w-11 shrink-0 rounded-lg bg-slate-100 object-cover" />
+                        ) : (
+                          <span className="grid h-11 w-11 shrink-0 place-items-center rounded-xl bg-emerald-50 text-emerald-700"><Home className="h-5 w-5" /></span>
+                        )}
+                        <div className="min-w-0 flex-1">
+                          <p className="truncate text-sm font-semibold text-slate-800">{String(property.title || 'Untitled property')}</p>
+                          <p className="flex items-center gap-1 truncate text-xs text-slate-500"><MapPin className="h-3 w-3 shrink-0" />{String(property.location || property.district || 'Location not specified')}</p>
+                          <p className="mt-1 truncate text-xs text-slate-500">{formatMoney(property.price, property.currency)} · Updated {formatPortalDate(property.updatedAt || property.createdAt)}</p>
+                        </div>
+                        <div className="text-right">
+                          <span className="rounded-full bg-slate-100 px-2 py-1 text-[11px] font-semibold text-slate-700">{String(property.status || property.publicationStatus || '—').replace(/_/g, ' ')}</span>
+                          <p className="mt-2"><Link href={managerPropertiesHref} className="text-xs font-semibold text-emerald-700 hover:underline">Manage</Link></p>
+                        </div>
+                      </li>
+                    );
+                  })}
                 </ul>
               ) : <div className="p-8 text-center text-sm text-slate-500">{loading ? 'Loading properties…' : 'No properties are assigned to this workspace yet.'}</div>}
             </article>
