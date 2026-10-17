@@ -471,7 +471,7 @@ export default function Properties() {
                     )}
                     <TestPropertyBadge className="absolute left-3 top-12" />
                     <div className="absolute top-3 right-3 bg-white/90 text-slate-900 text-xs font-semibold px-2 py-1 rounded">
-                      {property.transactionType}
+                      {property.transactionType === 'SALE' ? 'For Sale' : property.transactionType === 'RENT' ? 'For Rent' : property.transactionType === 'LEASE' ? 'For Lease' : property.transactionType}
                     </div>
                   </div>
 

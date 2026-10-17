@@ -74,6 +74,13 @@ const formatLabel = (value: string) => {
     .replace(/\b\w/g, (char) => char.toUpperCase());
 };
 
+const formatTransactionType = (value: string) => {
+  if (value === 'SALE') return 'For Sale';
+  if (value === 'RENT') return 'For Rent';
+  if (value === 'LEASE') return 'For Lease';
+  return formatLabel(value);
+};
+
 const formatPrice = (
   price: string | null,
   currency: string | null
@@ -499,7 +506,7 @@ export default function Properties() {
 
                       {/* Transaction */}
                       <td className="whitespace-nowrap px-5 py-4 text-sm text-slate-600">
-                        {formatLabel(property.transactionType)}
+                        {formatTransactionType(property.transactionType)}
                       </td>
 
                       {/* Price */}

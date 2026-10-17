@@ -11,6 +11,7 @@ interface PropertyCardProps {
     sqft: number;
     location: string;
     image: string;
+    transactionType?: string;
   };
 }
 
@@ -21,7 +22,7 @@ export default function PropertyCard({ property }: PropertyCardProps) {
       <div className="relative h-64 w-full overflow-hidden">
         <Image alt="{property.title}" className="object-cover group-hover:scale-105 transition-transform duration-500" fill src="{property.image}"/>
         <div className="absolute top-4 left-4 bg-white/90 backdrop-blur-sm px-3 py-1 rounded-full text-sm font-semibold text-gray-900">
-          For Sale
+          {property.transactionType === 'SALE' ? 'For Sale' : property.transactionType === 'RENT' ? 'For Rent' : property.transactionType === 'LEASE' ? 'For Lease' : 'For Sale'}
         </div>
       </div>
 
