@@ -1,0 +1,9 @@
+# Allow all crawlers
+User-agent: *
+Allow: /
+
+# Sitemap
+Sitemap: https://ingata-real-estate.com/sitemap.xml
+
+# Crawl-delay (optional, good for large sites)
+Crawl-delay: 1
