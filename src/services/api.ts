@@ -124,6 +124,23 @@ export const portalApi = {
 		authRequest(`/property-manager/requests/${encodeURIComponent(id)}/approve`, { method: 'PATCH' }),
 	rejectManagedListing: (id: string) =>
 		authRequest(`/property-manager/requests/${encodeURIComponent(id)}/reject`, { method: 'PATCH' }),
+	getManagedDevelopments: () => authRequest('/property-manager/developments'),
+	getManagedDevelopment: (id: string) => authRequest(`/property-manager/developments/${id}`),
+	createManagedDevelopment: (data: Record<string, unknown>) =>
+		authRequest('/property-manager/developments', { method: 'POST', body: JSON.stringify(data) }),
+	updateManagedDevelopment: (id: string, data: Record<string, unknown>) =>
+		authRequest(`/property-manager/developments/${id}`, { method: 'PATCH', body: JSON.stringify(data) }),
+	deleteManagedDevelopment: (id: string) =>
+		authRequest(`/property-manager/developments/${id}`, { method: 'DELETE' }),
+	uploadManagedDevelopmentMedia: (file: File) => uploadMedia(file, '/property-manager/developments/media'),
+	getManagedPropertyFeatures: () => authRequest('/property-manager/property-features'),
+	getManagedPropertyFeature: (id: string) => authRequest(`/property-manager/property-features/${id}`),
+	createManagedPropertyFeature: (data: Record<string, unknown>) =>
+		authRequest('/property-manager/property-features', { method: 'POST', body: JSON.stringify(data) }),
+	updateManagedPropertyFeature: (id: string, data: Record<string, unknown>) =>
+		authRequest(`/property-manager/property-features/${id}`, { method: 'PATCH', body: JSON.stringify(data) }),
+	deleteManagedPropertyFeature: (id: string) =>
+		authRequest(`/property-manager/property-features/${id}`, { method: 'DELETE' }),
 	updateProfile: (data: { name?: string; phone?: string }) =>
 		authRequest('/auth/profile', { method: 'PATCH', body: JSON.stringify(data) }),
 	getEditorArticles: () => authRequest('/content-editor/articles'),
@@ -151,6 +168,10 @@ export const portalApi = {
 
 const uploadPropertyMedia = async (file: File) => {
 	return uploadMedia(file, '/admin/properties/media');
+};
+
+const uploadDevelopmentMedia = async (file: File) => {
+	return uploadMedia(file, '/admin/developments/media');
 };
 
 // ─── Public API ───────────────────────────────────────────────────────────────
@@ -187,6 +208,7 @@ export const adminApi = {
 	// Dashboard
 	getDashboard: () => authRequest('/admin/dashboard'),
 	uploadPropertyMedia,
+	uploadDevelopmentMedia,
 
 	// Properties
 	getProperties: (query?: Record<string, QueryValue>) =>

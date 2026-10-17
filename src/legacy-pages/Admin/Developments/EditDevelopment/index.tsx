@@ -1,8 +1,8 @@
 'use client'
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Link, useNavigate, useParams } from '@/navigation/legacy-router';
-import { ArrowLeft, Save, AlertCircle } from 'lucide-react';
+import { ArrowLeft, Save, AlertCircle, X, Upload } from 'lucide-react';
 import { adminApi } from '../../../../services/api';
 
 interface Development {
@@ -23,8 +23,10 @@ export default function EditDevelopment() {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [uploading, setUploading] = useState(false);
   const [error, setError] = useState('');
-  
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
   const [name, setName] = useState('');
   const [slug, setSlug] = useState('');
   const [description, setDescription] = useState('');
@@ -43,7 +45,7 @@ export default function EditDevelopment() {
       setLoading(true);
       const developmentRes = await adminApi.getDevelopment(id!);
       const development = (developmentRes as { data: Development }).data;
-      
+
       setName(development.name);
       setSlug(development.slug);
       setDescription(development.description || '');
@@ -71,6 +73,33 @@ export default function EditDevelopment() {
   const handleNameChange = (value: string) => {
     setName(value);
     setSlug(generateSlug(value));
+  };
+
+  const handleFileButtonClick = () => {
+    fileInputRef.current?.click();
+  };
+
+  const handleFileUpload = async (files: FileList | null) => {
+    if (!files || files.length === 0) {
+      return;
+    }
+
+    const file = files[0];
+    if (!/^image\/(jpeg|png|webp|gif)$/.test(file.type) || file.size > 100 * 1024 * 1024) {
+      setError('Use JPG, PNG, WebP, or GIF files up to 100 MB.');
+      return;
+    }
+
+    try {
+      setUploading(true);
+      setError('');
+      const result = await adminApi.uploadDevelopmentMedia(file);
+      setImageUrl(result.data.url);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Unable to upload image.');
+    } finally {
+      setUploading(false);
+    }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -226,15 +255,45 @@ export default function EditDevelopment() {
 
           <div>
             <label className="block text-sm font-medium text-slate-700 mb-2">
-              Image URL
+              Development Image
             </label>
-            <input
-              type="url"
-              value={imageUrl}
-              onChange={(e) => setImageUrl(e.target.value)}
-              className="w-full rounded-lg border border-slate-300 px-3 py-2.5 text-sm outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100"
-              placeholder="https://example.com/image.jpg"
-            />
+            <div className="space-y-3">
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="image/jpeg,image/png,image/webp,image/gif"
+                className="hidden"
+                onChange={(e) => handleFileUpload(e.target.files)}
+                disabled={uploading}
+              />
+              <button
+                type="button"
+                onClick={handleFileButtonClick}
+                disabled={uploading}
+                className="inline-flex items-center gap-2 rounded-lg border border-slate-300 bg-white px-4 py-2.5 text-sm font-medium text-slate-700 hover:bg-slate-50 disabled:opacity-60"
+              >
+                <Upload className="h-4 w-4" />
+                {uploading ? 'Uploading...' : 'Upload Image'}
+              </button>
+              <p className="text-xs text-slate-500">JPG, PNG, WebP, GIF up to 100MB</p>
+
+              {imageUrl && (
+                <div className="relative inline-block">
+                  <img
+                    src={imageUrl}
+                    alt="Development preview"
+                    className="h-32 w-32 rounded-lg object-cover border border-slate-200"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setImageUrl('')}
+                    className="absolute -top-2 -right-2 rounded-full bg-red-500 p-1 text-white hover:bg-red-600"
+                  >
+                    <X className="h-3 w-3" />
+                  </button>
+                </div>
+              )}
+            </div>
           </div>
         </div>
 
