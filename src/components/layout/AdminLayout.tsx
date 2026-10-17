@@ -16,12 +16,14 @@ import {
   FileText,
   HelpCircle,
   Star,
+  CheckCircle,
   Settings,
   LogOut,
   Menu,
   X,
   ChevronRight,
   User,
+  Building,
 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 
@@ -29,6 +31,8 @@ const navItems = [
   { to: '/admin/dashboard', icon: LayoutDashboard, label: 'Dashboard' },
   { to: '/admin/properties', icon: Home, label: 'Properties' },
   { to: '/admin/categories', icon: Tag, label: 'Categories' },
+  { to: '/admin/property-features', icon: CheckCircle, label: 'Property Features' },
+  { to: '/admin/developments', icon: Building, label: 'Developments' },
   { to: '/admin/listings', icon: ClipboardList, label: 'Property Requests' },
   { to: '/admin/inquiries', icon: MessageSquare, label: 'Inquiries' },
   { to: '/admin/viewings', icon: Calendar, label: 'Viewings' },

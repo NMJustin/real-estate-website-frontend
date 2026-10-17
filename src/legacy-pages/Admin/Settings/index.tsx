@@ -14,6 +14,7 @@ import {
   User,
   FileText,
   Image as ImageIcon,
+  BarChart3,
 } from 'lucide-react';
 import { adminApi } from '../../../services/api';
 
@@ -68,11 +69,16 @@ interface SecuritySettings {
   enableTwoFactor: boolean;
 }
 
+interface AnalyticsSettings {
+  retentionDays: number;
+}
+
 interface AllSettings {
   contact: ContactSettings;
   homepage: HomepageSettings;
   system: SystemSettings;
   security: SecuritySettings;
+  analytics: AnalyticsSettings;
 }
 
 const mergeSavedSettings = (saved: Record<string, unknown>, defaults: AllSettings): AllSettings => ({
@@ -111,6 +117,10 @@ const mergeSavedSettings = (saved: Record<string, unknown>, defaults: AllSetting
     faviconUrl: typeof saved.faviconUrl === 'string' ? saved.faviconUrl : defaults.system.faviconUrl,
   },
   security: defaults.security,
+  analytics: {
+    ...defaults.analytics,
+    retentionDays: typeof saved.analyticsRetentionDays === 'number' ? saved.analyticsRetentionDays : defaults.analytics.retentionDays,
+  },
 });
 
 export default function Settings() {
@@ -162,11 +172,14 @@ export default function Settings() {
       maxLoginAttempts: 5,
       enableTwoFactor: false,
     },
+    analytics: {
+      retentionDays: 365,
+    },
   });
 
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-  const [activeTab, setActiveTab] = useState<'contact' | 'homepage' | 'system' | 'security'>('contact');
+  const [activeTab, setActiveTab] = useState<'contact' | 'homepage' | 'system' | 'security' | 'analytics'>('contact');
   const [message, setMessage] = useState('');
   const [error, setError] = useState('');
 
@@ -220,6 +233,7 @@ export default function Settings() {
         showFeaturedSection: settings.homepage.showFeaturedSection,
         showServicesSection: settings.homepage.showServicesSection,
         showAboutSection: settings.homepage.showAboutSection,
+        analyticsRetentionDays: settings.analytics.retentionDays,
       });
       if ((response as { success: boolean }).success) {
         setMessage('Settings saved successfully!');
@@ -260,6 +274,13 @@ export default function Settings() {
     setSettings(prev => ({
       ...prev,
       security: { ...prev.security, [field]: value }
+    }));
+  };
+
+  const handleAnalyticsChange = (field: keyof AnalyticsSettings, value: number) => {
+    setSettings(prev => ({
+      ...prev,
+      analytics: { ...prev.analytics, [field]: value }
     }));
   };
 
@@ -326,6 +347,16 @@ export default function Settings() {
             }`}
           >
             Security Settings
+          </button>
+          <button
+            onClick={() => setActiveTab('analytics')}
+            className={`pb-3 border-b-2 font-medium text-sm transition-colors whitespace-nowrap ${
+              activeTab === 'analytics'
+                ? 'border-emerald-600 text-emerald-600'
+                : 'border-transparent text-slate-500 hover:text-slate-700'
+            }`}
+          >
+            Analytics Settings
           </button>
         </nav>
       </div>
@@ -988,6 +1019,40 @@ export default function Settings() {
                 />
                 <span className="text-sm text-slate-700">Enable Two-Factor Authentication</span>
               </label>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Analytics Settings Tab */}
+      {activeTab === 'analytics' && (
+        <div className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
+          <div className="mb-6">
+            <h2 className="text-lg font-semibold text-slate-900 mb-2 flex items-center gap-2">
+              <BarChart3 className="h-5 w-5 text-emerald-600" />
+              Analytics Settings
+            </h2>
+            <p className="text-sm text-slate-500">
+              Configure data retention policies for analytics data.
+            </p>
+          </div>
+
+          <div className="space-y-6">
+            <div>
+              <label className="block text-sm font-medium text-slate-700 mb-2">
+                Analytics Data Retention (Days)
+              </label>
+              <input
+                type="number"
+                value={settings.analytics.retentionDays}
+                onChange={(e) => handleAnalyticsChange('retentionDays', Number(e.target.value))}
+                min="0"
+                max="3650"
+                className="w-full rounded-lg border border-slate-300 px-3 py-2.5 text-sm outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100"
+              />
+              <p className="mt-2 text-xs text-slate-500">
+                Analytics data older than this number of days will be automatically deleted. Set to 0 to disable automatic cleanup.
+              </p>
             </div>
           </div>
         </div>

@@ -17,6 +17,12 @@ import ListingRequests from '@/legacy-pages/Admin/ListingRequests'
 import Properties from '@/legacy-pages/Admin/Properties'
 import NewProperty from '@/legacy-pages/Admin/Properties/NewProperty'
 import EditProperty from '@/legacy-pages/Admin/Properties/EditProperty'
+import PropertyFeatures from '@/legacy-pages/Admin/PropertyFeatures'
+import NewFeature from '@/legacy-pages/Admin/PropertyFeatures/NewFeature'
+import EditFeature from '@/legacy-pages/Admin/PropertyFeatures/EditFeature'
+import Developments from '@/legacy-pages/Admin/Developments'
+import NewDevelopment from '@/legacy-pages/Admin/Developments/NewDevelopment'
+import EditDevelopment from '@/legacy-pages/Admin/Developments/EditDevelopment'
 import Services from '@/legacy-pages/Admin/Services'
 import NewService from '@/legacy-pages/Admin/Services/NewService'
 import EditService from '@/legacy-pages/Admin/Services/EditService'
@@ -36,7 +42,9 @@ const staticRoutes: Record<string, ComponentType> = {
   faqs: FAQs,
   inquiries: Inquiries,
   listings: ListingRequests,
+  'property-features': PropertyFeatures,
   properties: Properties,
+  developments: Developments,
   services: Services,
   settings: Settings,
   testimonials: Testimonials,
@@ -49,6 +57,8 @@ const createRoutes: Record<string, ComponentType> = {
   'articles/new': NewArticle,
   'categories/new': NewCategory,
   'properties/new': NewProperty,
+  'property-features/new': NewFeature,
+  'developments/new': NewDevelopment,
   'services/new': NewService,
   'testimonials/new': NewTestimonial,
   'faqs/new': NewFAQ,
@@ -58,6 +68,8 @@ const editRoutes: Record<string, ComponentType> = {
   articles: EditArticle,
   categories: EditCategory,
   properties: EditProperty,
+  'property-features': EditFeature,
+  developments: EditDevelopment,
   services: EditService,
   testimonials: EditTestimonial,
   faqs: EditFAQ,

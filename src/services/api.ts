@@ -337,6 +337,10 @@ export const adminApi = {
 	updateSettings: (data: Record<string, unknown>) =>
 		authRequest('/admin/settings', { method: 'PUT', body: JSON.stringify(data) }),
 
+	// Analytics Cleanup
+	cleanupAnalyticsData: () => authRequest('/admin/analytics/cleanup', { method: 'POST' }),
+	getAnalyticsRetentionStatus: () => authRequest('/admin/analytics/retention-status'),
+
 	// Analytics
 	getAnalyticsSummary: (period?: string) =>
 		authRequest(`/analytics/summary${period ? `?period=${period}` : ''}`),
@@ -346,6 +350,26 @@ export const adminApi = {
 		authRequest(`/analytics/sources${period ? `?period=${period}` : ''}`),
 	getAnalyticsFunnel: (period?: string) =>
 		authRequest(`/analytics/funnel${period ? `?period=${period}` : ''}`),
+
+	// Property Features
+	getPropertyFeatures: () => authRequest('/admin/property-features'),
+	getPropertyFeature: (id: string) => authRequest(`/admin/property-features/${id}`),
+	createPropertyFeature: (data: Record<string, unknown>) =>
+		authRequest('/admin/property-features', { method: 'POST', body: JSON.stringify(data) }),
+	updatePropertyFeature: (id: string, data: Record<string, unknown>) =>
+		authRequest(`/admin/property-features/${id}`, { method: 'PATCH', body: JSON.stringify(data) }),
+	deletePropertyFeature: (id: string) =>
+		authRequest(`/admin/property-features/${id}`, { method: 'DELETE' }),
+
+	// Developments
+	getDevelopments: () => authRequest('/admin/developments'),
+	getDevelopment: (id: string) => authRequest(`/admin/developments/${id}`),
+	createDevelopment: (data: Record<string, unknown>) =>
+		authRequest('/admin/developments', { method: 'POST', body: JSON.stringify(data) }),
+	updateDevelopment: (id: string, data: Record<string, unknown>) =>
+		authRequest(`/admin/developments/${id}`, { method: 'PATCH', body: JSON.stringify(data) }),
+	deleteDevelopment: (id: string) =>
+		authRequest(`/admin/developments/${id}`, { method: 'DELETE' }),
 };
 
 export default api;
