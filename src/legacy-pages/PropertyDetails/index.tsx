@@ -8,6 +8,7 @@ import api from '../../services/api';
 import { ImageViewer } from '../../components/ImageViewer';
 import { TestPropertyNotice } from '../../components/property/TestPropertyBadge';
 import { usePropertyViewTracking, trackClickEvent } from '../../utils/analytics';
+import { PropertyStructuredData } from '@/components/seo/PropertyStructuredData';
 
 type InquiryForm = {
   name: string;
@@ -233,8 +234,8 @@ export default function PropertyDetails({ propertySlug: propSlug }: { propertySl
 
   const media = property.propertyImages || [];
   const location = [property.address, property.neighborhood, property.sector, property.district, property.location].filter(Boolean).join(', ');
-  const mapUrl = property.latitude != null && property.longitude != null 
-    ? `https://www.google.com/maps?q=${property.latitude},${property.longitude}` 
+  const mapUrl = property.latitude != null && property.longitude != null
+    ? `https://www.google.com/maps?q=${property.latitude},${property.longitude}`
     : null;
 
   const openViewer = (index: number) => {
@@ -252,7 +253,9 @@ export default function PropertyDetails({ propertySlug: propSlug }: { propertySl
   };
 
   return (
-    <main className="bg-slate-50 py-8 sm:py-12">
+    <>
+      <PropertyStructuredData property={property} />
+      <main className="bg-slate-50 py-8 sm:py-12">
       <div className="mx-auto max-w-7xl px-4 sm:px-6">
         <TestPropertyNotice className="mb-6" />
         <div className="flex items-center justify-between mb-6">
@@ -853,5 +856,6 @@ export default function PropertyDetails({ propertySlug: propSlug }: { propertySl
       </div>
       {viewerOpen && <ImageViewer images={media} initialIndex={viewerIndex} onClose={() => setViewerOpen(false)} />}
     </main>
+    </>
   );
 }

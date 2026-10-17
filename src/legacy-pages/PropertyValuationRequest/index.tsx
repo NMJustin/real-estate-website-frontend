@@ -24,6 +24,11 @@ export default function PropertyValuationRequest() {
 	const [message, setMessage] = useState('');
 	const [error, setError] = useState('');
 	
+	const handleDistrictChange = (district: string) => {
+		setForm({ ...form, district, sector: '' });
+		setAvailableSectors(getSectors(district));
+	};
+	
 	const submit = async (event: FormEvent) => { 
 		event.preventDefault(); 
 		setError('');
@@ -96,6 +101,34 @@ export default function PropertyValuationRequest() {
 									<option value="WAREHOUSES">Warehouses</option>
 								</select>
 							</div>
+							<div>
+								<label className="block text-sm font-medium text-slate-700 mb-1">District *</label>
+								<select 
+									required
+									value={form.district} 
+									onChange={(event) => handleDistrictChange(event.target.value)} 
+									className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:border-emerald-500"
+								>
+									<option value="">Select district</option>
+									{Object.values(rwandaDistricts).flatMap(province => Object.keys(province)).sort().map(d => (
+										<option key={d} value={d}>{d}</option>
+									))}
+								</select>
+							</div>
+							<div>
+								<label className="block text-sm font-medium text-slate-700 mb-1">Sector</label>
+								<select 
+									value={form.sector} 
+									onChange={(event) => setForm({ ...form, sector: event.target.value })} 
+									className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:border-emerald-500"
+									disabled={!form.district}
+								>
+									<option value="">Select sector</option>
+									{availableSectors.map(s => (
+										<option key={s} value={s}>{s}</option>
+									))}
+								</select>
+							</div>
 							<div className="md:col-span-2">
 								<label className="block text-sm font-medium text-slate-700 mb-1">Property Location *</label>
 								<input 
@@ -104,7 +137,7 @@ export default function PropertyValuationRequest() {
 									value={form.location} 
 									onChange={(event) => setForm({ ...form, location: event.target.value })} 
 									className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:border-emerald-500"
-									placeholder="e.g., Kigali, Gasabo District"
+									placeholder="e.g., KN 5 Rd, Near Airport"
 								/>
 							</div>
 							<div>

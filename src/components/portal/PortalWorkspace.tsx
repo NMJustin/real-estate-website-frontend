@@ -30,6 +30,7 @@ import {
 } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
 import { portalApi } from '@/services/api';
+import { rwandaDistricts, getAllDistricts, getSectors } from '@/data/rwandaDistricts';
 
 type Role = 'agent' | 'property_manager' | 'content_editor' | 'admin';
 type IconType = typeof Home;
@@ -80,7 +81,7 @@ const roleMenus: Record<Exclude<Role, 'admin'>, PortalItem[]> = {
         { key: 'propertyType', label: 'Property type' }, { key: 'transactionType', label: 'Transaction type' },
         { key: 'categoryId', label: 'Category ID' }, { key: 'price', label: 'Price', type: 'number' },
         { key: 'currency', label: 'Currency' }, { key: 'location', label: 'Location' },
-        { key: 'district', label: 'District' }, { key: 'sector', label: 'Sector' }, { key: 'address', label: 'Address' },
+        { key: 'district', label: 'District', type: 'select' }, { key: 'sector', label: 'Sector', type: 'select' }, { key: 'address', label: 'Address' },
         { key: 'bedrooms', label: 'Bedrooms', type: 'number' }, { key: 'bathrooms', label: 'Bathrooms', type: 'number' },
         { key: 'size', label: 'Size', type: 'number' }, { key: 'sizeUnit', label: 'Size unit' },
         { key: 'furnishingStatus', label: 'Furnishing status' }, { key: 'parking', label: 'Parking spaces', type: 'number' },
@@ -145,8 +146,8 @@ const roleMenus: Record<Exclude<Role, 'admin'>, PortalItem[]> = {
         { key: 'price', label: 'Price', type: 'number' },
         { key: 'currency', label: 'Currency', initial: 'RWF' },
         { key: 'location', label: 'Location' },
-        { key: 'district', label: 'District' },
-        { key: 'sector', label: 'Sector' },
+        { key: 'district', label: 'District', type: 'select' },
+        { key: 'sector', label: 'Sector', type: 'select' },
         { key: 'address', label: 'Street address' },
         { key: 'neighborhood', label: 'Neighborhood' },
         { key: 'area', label: 'Area' },
@@ -1489,10 +1490,21 @@ function RecordForm({
   const [uploadError, setUploadError] = useState('');
   const [optionLists, setOptionLists] = useState<Record<string, Array<{ value: string; label: string }>>>({});
   const [optionError, setOptionError] = useState('');
+  const [selectedDistrict, setSelectedDistrict] = useState<string>('');
 
   useEffect(() => {
     let active = true;
     const optionFields = fields.filter((field) => field.loadOptions);
+    
+    // Add district options
+    const districtOptions = getAllDistricts().map(d => ({ value: d, label: d }));
+    
+    // Set initial district from record if editing
+    const initialDistrict = record?.district ? String(record.district) : '';
+    if (initialDistrict) {
+      setSelectedDistrict(initialDistrict);
+    }
+    
     Promise.all(optionFields.map(async (field) => {
       const response = await field.loadOptions!();
       const data = response && typeof response === 'object' && 'data' in response
@@ -1508,12 +1520,29 @@ function RecordForm({
         : [];
       return [field.key, options] as const;
     })).then((entries) => {
-      if (active) setOptionLists(Object.fromEntries(entries));
+      if (active) {
+        const baseOptions = Object.fromEntries(entries);
+        setOptionLists({
+          ...baseOptions,
+          district: districtOptions,
+          sector: initialDistrict ? getSectors(initialDistrict).map(s => ({ value: s, label: s })) : [],
+        });
+      }
     }).catch((reason: unknown) => {
       if (active) setOptionError(reason instanceof Error ? reason.message : 'Could not load property assignment options.');
     });
     return () => { active = false; };
-  }, [fields]);
+  }, [fields, record]);
+
+  // Update sector options when district changes
+  useEffect(() => {
+    if (selectedDistrict) {
+      const sectorOptions = getSectors(selectedDistrict).map(s => ({ value: s, label: s }));
+      setOptionLists(prev => ({ ...prev, sector: sectorOptions }));
+    } else {
+      setOptionLists(prev => ({ ...prev, sector: [] }));
+    }
+  }, [selectedDistrict]);
 
   const handleFile = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.currentTarget.files?.[0];
@@ -1576,14 +1605,39 @@ function RecordForm({
               </div>
             );
           }
-          if (field.type === 'select') {
-            const options = field.loadOptions
-              ? [{ value: '', label: field.required ? 'Select a property' : 'Unassigned' }, ...(optionLists[field.key] || [])]
-              : (field.options || []).map((option) => ({ value: option, label: option ? option.replace(/_/g, ' ').toLowerCase().replace(/\b\w/g, (char) => char.toUpperCase()) : 'Not specified' }));
+          if (field.type === 'select' || field.key === 'district' || field.key === 'sector') {
+            const isDistrict = field.key === 'district';
+            const isSector = field.key === 'sector';
+            
+            let options: Array<{ value: string; label: string }> = [];
+            
+            if (isDistrict) {
+              options = [{ value: '', label: 'Select district' }, ...(optionLists.district || [])];
+            } else if (isSector) {
+              options = selectedDistrict 
+                ? [{ value: '', label: 'Select sector' }, ...(optionLists.sector || [])]
+                : [{ value: '', label: 'Select district first' }];
+            } else if (field.loadOptions) {
+              options = [{ value: '', label: field.required ? 'Select a property' : 'Unassigned' }, ...(optionLists[field.key] || [])];
+            } else {
+              options = (field.options || []).map((option) => ({ value: option, label: option ? option.replace(/_/g, ' ').toLowerCase().replace(/\b\w/g, (char) => char.toUpperCase()) : 'Not specified' }));
+            }
+            
             return (
               <label key={field.key} className="text-sm font-medium text-slate-700">
                 {field.label}
-                <select name={field.key} required={field.required} defaultValue={initial || field.options?.[0]} className="mt-1 block w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm outline-none focus:border-emerald-500">
+                <select 
+                  name={field.key} 
+                  required={field.required} 
+                  defaultValue={initial || field.options?.[0]} 
+                  className="mt-1 block w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm outline-none focus:border-emerald-500"
+                  disabled={isSector && !selectedDistrict}
+                  onChange={(e) => {
+                    if (isDistrict) {
+                      setSelectedDistrict(e.target.value);
+                    }
+                  }}
+                >
                   {options.map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}
                 </select>
               </label>
