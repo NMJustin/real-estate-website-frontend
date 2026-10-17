@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import PropertyCard from '@/components/ui/PropertyCard';
 import CategoryCard from '@/components/ui/CategoryCard';
+import GoldenParticles from '@/components/ui/GoldenParticles';
 import type { PropertyProps } from '@/components/ui/PropertyCard';
 import type { CategoryProps } from '@/components/ui/CategoryCard';
 import api from '@/services/api';
@@ -162,7 +163,8 @@ export default function Home() {
 
   return (
     <div className="flex flex-col w-full bg-brand-navy">
-      <section className="relative w-full min-h-[calc(100vh-80px)] flex items-center justify-center">
+      <section className="relative w-full min-h-[calc(100vh-80px)] flex items-center justify-center overflow-hidden">
+        <GoldenParticles />
         <div className="relative z-10 w-full max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col items-center mt-10 text-center">
           <span className="px-4 py-1.5 rounded-full bg-brand-emerald/20 text-brand-emerald border border-brand-emerald/30 text-sm font-semibold mb-6">Rwanda's Premier Real Estate Platform</span>
           <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-brand-white mb-6 leading-tight">Find a Place to <span className="text-brand-emerald">Call Home</span></h1>
