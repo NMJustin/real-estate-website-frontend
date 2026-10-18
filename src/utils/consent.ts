@@ -1,5 +1,6 @@
 export const TERMS_POLICY_VERSION = '2026-10-15'
-export const COOKIE_POLICY_VERSION = '2026-10-15'
+// Bump this version whenever cookie purposes, vendors, or the policy wording changes.
+export const COOKIE_POLICY_VERSION = '2026-10-18'
 
 export type CookiePreferences = {
   necessary: true
