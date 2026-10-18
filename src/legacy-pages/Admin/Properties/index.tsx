@@ -67,7 +67,8 @@ const PUB_COLORS: Record<string, string> = {
   ARCHIVED: 'bg-gray-100 text-gray-500',
 };
 
-const formatLabel = (value: string) => {
+const formatLabel = (value?: string | null) => {
+  if (!value) return '—';
   return value
     .replace(/_/g, ' ')
     .toLowerCase()

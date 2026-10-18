@@ -51,7 +51,8 @@ const STATUS_COLORS: Record<string, string> = {
   CANCELLED: 'bg-red-100 text-red-600',
 };
 
-const formatLabel = (value: string) => {
+const formatLabel = (value?: string | null) => {
+  if (!value) return '—';
   return value
     .replace(/_/g, ' ')
     .toLowerCase()

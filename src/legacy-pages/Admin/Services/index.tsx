@@ -40,7 +40,8 @@ interface ApiResponse {
   message?: string;
 }
 
-const formatLabel = (value: string) => {
+const formatLabel = (value?: string | null) => {
+  if (!value) return '—';
   return value
     .replace(/_/g, ' ')
     .toLowerCase()
