@@ -30,7 +30,6 @@ interface Article {
 export default function EditArticle() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const [categories, setCategories] = useState<Category[]>([]);
   const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -45,6 +44,19 @@ export default function EditArticle() {
   const [authorId, setAuthorId] = useState('');
   const [publicationStatus, setPublicationStatus] = useState('DRAFT');
 
+  const categories: Category[] = [
+    { id: '1', name: 'Property Market Updates' },
+    { id: '2', name: 'Buying Guides' },
+    { id: '3', name: 'Renting Guides' },
+    { id: '4', name: 'Selling Guides' },
+    { id: '5', name: 'Property Investment' },
+    { id: '6', name: 'Property Management' },
+    { id: '7', name: 'Homeownership' },
+    { id: '8', name: 'Real Estate Trends' },
+    { id: '9', name: 'Company Announcements' },
+    { id: '10', name: 'New Developments' },
+  ];
+
   useEffect(() => {
     loadData();
   }, [id]);
@@ -52,9 +64,8 @@ export default function EditArticle() {
   const loadData = async () => {
     try {
       setLoading(true);
-      const [articleRes, categoriesRes, usersRes] = await Promise.all([
+      const [articleRes, usersRes] = await Promise.all([
         adminApi.getAdminArticle(id!),
-        adminApi.getCategories(),
         adminApi.getUsers(),
       ]);
       
@@ -68,7 +79,6 @@ export default function EditArticle() {
       setAuthorId(article.authorId || '');
       setPublicationStatus(article.publicationStatus);
       
-      setCategories((categoriesRes as { data: Category[] }).data || []);
       setUsers((usersRes as { data: User[] }).data || []);
     } catch (err) {
       console.error('Failed to load data:', err);
@@ -224,7 +234,6 @@ export default function EditArticle() {
                 onChange={(e) => setCategoryId(e.target.value)}
                 className="w-full rounded-lg border border-slate-300 px-3 py-2.5 text-sm outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100"
               >
-                <option value="">No category</option>
                 {categories.map((cat) => (
                   <option key={cat.id} value={cat.id}>
                     {cat.name}

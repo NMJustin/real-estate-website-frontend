@@ -8,8 +8,6 @@ import { adminApi } from '../../../../services/api';
 interface Category {
   id: string;
   name: string;
-  slug: string;
-  isActive?: boolean;
 }
 
 interface User {
@@ -19,7 +17,6 @@ interface User {
 
 export default function NewArticle() {
   const navigate = useNavigate();
-  const [categories, setCategories] = useState<Category[]>([]);
   const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
   
@@ -34,6 +31,19 @@ export default function NewArticle() {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
 
+  const categories: Category[] = [
+    { id: '1', name: 'Property Market Updates' },
+    { id: '2', name: 'Buying Guides' },
+    { id: '3', name: 'Renting Guides' },
+    { id: '4', name: 'Selling Guides' },
+    { id: '5', name: 'Property Investment' },
+    { id: '6', name: 'Property Management' },
+    { id: '7', name: 'Homeownership' },
+    { id: '8', name: 'Real Estate Trends' },
+    { id: '9', name: 'Company Announcements' },
+    { id: '10', name: 'New Developments' },
+  ];
+
   useEffect(() => {
     loadData();
   }, []);
@@ -41,12 +51,7 @@ export default function NewArticle() {
   const loadData = async () => {
     try {
       setLoading(true);
-      const [categoriesRes, usersRes] = await Promise.all([
-        adminApi.getArticleCategories(),
-        adminApi.getUsers(),
-      ]);
-      const articleCategories = (categoriesRes as { data: Category[] }).data || [];
-      setCategories(articleCategories.filter((category) => category.isActive !== false));
+      const usersRes = await adminApi.getUsers();
       setUsers((usersRes as { data: User[] }).data || []);
     } catch (err) {
       console.error('Failed to load data:', err);
@@ -201,7 +206,6 @@ export default function NewArticle() {
                 onChange={(e) => setCategoryId(e.target.value)}
                 className="w-full rounded-lg border border-slate-300 px-3 py-2.5 text-sm outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100"
               >
-                <option value="">No category</option>
                 {categories.map((cat) => (
                   <option key={cat.id} value={cat.id}>
                     {cat.name}
