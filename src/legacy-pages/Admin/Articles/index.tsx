@@ -19,7 +19,7 @@ interface Article {
   id: string;
   title: string;
   slug: string;
-  status: string;
+  publicationStatus: string;
   category?: { name: string } | null;
   author?: { name: string } | null;
   createdAt: string;
@@ -117,7 +117,7 @@ export default function Articles() {
     return articles.filter((article) => {
       const matchesSearch =
         !searchTerm || article.title.toLowerCase().includes(searchTerm.toLowerCase());
-      const matchesStatus = !statusFilter || article.status === statusFilter;
+      const matchesStatus = !statusFilter || article.publicationStatus === statusFilter;
       return matchesSearch && matchesStatus;
     });
   }, [articles, searchTerm, statusFilter]);
@@ -285,10 +285,10 @@ export default function Articles() {
                     <td className="whitespace-nowrap px-5 py-4">
                       <span
                         className={`rounded-full px-2.5 py-1 text-xs font-medium ${
-                          PUB_COLORS[article.status] ?? 'bg-slate-100 text-slate-600'
+                          PUB_COLORS[article.publicationStatus] ?? 'bg-slate-100 text-slate-600'
                         }`}
                       >
-                        {formatLabel(article.status)}
+                        {formatLabel(article.publicationStatus)}
                       </span>
                     </td>
                     <td className="whitespace-nowrap px-5 py-4 text-sm text-slate-500">
