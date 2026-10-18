@@ -1,4 +1,4 @@
-﻿'use client'
+'use client'
 
 import { useEffect, useState } from 'react';
 import { Link } from '@/navigation/legacy-router';
@@ -11,10 +11,16 @@ type Article = {
   excerpt?: string;
   content?: string;
   featuredImage?: string;
-  category?: string;
+  category?: ArticleCategory;
   publicationStatus?: string;
   publishedAt?: string;
   createdAt?: string;
+};
+
+type ArticleCategory = {
+  id: string;
+  name: string;
+  slug: string;
 };
 
 export default function Articles() {
@@ -22,29 +28,20 @@ export default function Articles() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<string>('');
-
-  const categories = [
-    'Property Market Updates',
-    'Buying Guides',
-    'Renting Guides',
-    'Selling Guides',
-    'Property Investment',
-    'Property Management',
-    'Homeownership',
-    'Real Estate Trends',
-    'Company Announcements',
-    'New Developments'
-  ];
+  const [categories, setCategories] = useState<ArticleCategory[]>([]);
 
   useEffect(() => {
-    api.getArticles(selectedCategory)
-      .then((response) => {
-        const data = (response as { data: Article[] }).data || [];
+    setLoading(true);
+    Promise.all([api.getArticles(selectedCategory), api.getArticleCategories()])
+      .then(([articlesResponse, categoriesResponse]) => {
+        const data = (articlesResponse as { data: Article[] }).data || [];
+        const availableCategories = (categoriesResponse as { data: ArticleCategory[] }).data || [];
         // Filter for published articles only
         const publishedArticles = data.filter(
           (article) => article.publicationStatus === 'PUBLISHED'
         );
         setArticles(publishedArticles);
+        setCategories(availableCategories);
       })
       .catch((err) => {
         setError('Unable to load articles.');
@@ -100,15 +97,15 @@ export default function Articles() {
             </button>
             {categories.map((category) => (
               <button
-                key={category}
-                onClick={() => setSelectedCategory(category)}
+                key={category.id}
+                onClick={() => setSelectedCategory(category.slug)}
                 className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${
-                  selectedCategory === category
+                  selectedCategory === category.slug
                     ? 'bg-emerald-600 text-white'
                     : 'bg-white text-slate-700 border border-slate-300 hover:bg-slate-50'
                 }`}
               >
-                {category}
+                {category.name}
               </button>
             ))}
           </div>
@@ -140,9 +137,9 @@ export default function Articles() {
                   </div>
                 )}
                 <div className="p-6">
-                  {article.category && (
+                  {article.category?.name && (
                     <span className="inline-block text-xs font-medium text-emerald-600 bg-emerald-50 px-2 py-1 rounded mb-3">
-                      {article.category}
+                      {article.category.name}
                     </span>
                   )}
                   <h2 className="text-xl font-bold text-slate-900 mb-2 line-clamp-2">
@@ -170,7 +167,7 @@ export default function Articles() {
           <div className="text-center py-12">
             <p className="text-slate-600 mb-4">
               {selectedCategory
-                ? `No articles found in "${selectedCategory}"`
+                ? `No articles found in "${categories.find((category) => category.slug === selectedCategory)?.name || selectedCategory}"`
                 : 'No articles available at this time.'}
             </p>
             {selectedCategory && (

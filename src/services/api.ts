@@ -191,6 +191,7 @@ export const api = {
 	getArticle: (slug: string) => request(`/articles/${encodeURIComponent(slug)}`),
 	getFaqs: () => request('/faqs'),
 	getCategories: () => request('/categories'),
+	getArticleCategories: () => request('/article-categories?isActive=true'),
 	createContact: (data: unknown) => request('/contact', { method: 'POST', body: JSON.stringify(data) }),
 	createInquiry: (data: unknown) => request('/inquiries', { method: 'POST', body: JSON.stringify(data) }),
 	createListing: (data: FormData) => request('/listings', { method: 'POST', body: data }),
@@ -231,6 +232,7 @@ export const adminApi = {
 
 	// Categories
 	getCategories: () => authRequest('/admin/categories'),
+	getArticleCategories: () => authRequest('/admin/article-categories'),
 	getAdminCategories: (query?: Record<string, QueryValue>) =>
 		authRequest(`/admin/categories${buildQuery(query)}`),
 	getAdminCategory: (id: string) =>

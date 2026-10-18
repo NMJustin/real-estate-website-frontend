@@ -8,6 +8,8 @@ import { adminApi } from '../../../../services/api';
 interface Category {
   id: string;
   name: string;
+  slug: string;
+  isActive?: boolean;
 }
 
 interface User {
@@ -40,10 +42,11 @@ export default function NewArticle() {
     try {
       setLoading(true);
       const [categoriesRes, usersRes] = await Promise.all([
-        adminApi.getCategories(),
+        adminApi.getArticleCategories(),
         adminApi.getUsers(),
       ]);
-      setCategories((categoriesRes as { data: Category[] }).data || []);
+      const articleCategories = (categoriesRes as { data: Category[] }).data || [];
+      setCategories(articleCategories.filter((category) => category.isActive !== false));
       setUsers((usersRes as { data: User[] }).data || []);
     } catch (err) {
       console.error('Failed to load data:', err);
