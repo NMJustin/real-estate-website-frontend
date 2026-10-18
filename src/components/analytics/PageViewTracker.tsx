@@ -13,5 +13,11 @@ export function PageViewTracker() {
     trackPageView(pathname, pageTitle);
   }, [pathname]);
 
+  useEffect(() => {
+    const trackAfterConsent = () => trackPageView(pathname, document.title);
+    window.addEventListener('ingata-cookie-preferences-updated', trackAfterConsent);
+    return () => window.removeEventListener('ingata-cookie-preferences-updated', trackAfterConsent);
+  }, [pathname]);
+
   return null; // This component doesn't render anything
 }

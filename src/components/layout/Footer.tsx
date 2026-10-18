@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import { CookieSettingsButton } from '../consent/ConsentManager';
 
 export function Footer() {
   return (
@@ -84,6 +85,7 @@ export function Footer() {
               <li><Link className="hover:text-white transition-colors" href="/legal/terms-and-conditions">Terms & Conditions</Link></li>
               <li><Link className="hover:text-white transition-colors" href="/legal/property-listing-disclaimer">Property Listing Disclaimer</Link></li>
               <li><Link className="hover:text-white transition-colors" href="/legal/cookie-policy">Cookie Policy</Link></li>
+              <li><CookieSettingsButton /></li>
             </ul>
           </div>
         </div>

@@ -1,5 +1,6 @@
 import React from 'react';
 import { getApiBaseUrl } from '../config/api';
+import { hasAnalyticsConsent } from './consent';
 
 const API_BASE_URL = getApiBaseUrl();
 
@@ -25,6 +26,7 @@ const getUserId = (): string | undefined => {
 // Track page view
 export const trackPageView = async (pagePath: string, pageTitle?: string) => {
   if (typeof window === 'undefined') return;
+  if (!hasAnalyticsConsent()) return;
 
   try {
     await fetch(`${API_BASE_URL}/analytics/page-view`, {
@@ -53,6 +55,7 @@ export const trackPageView = async (pagePath: string, pageTitle?: string) => {
 // Track property view
 export const trackPropertyView = async (propertyId: string, sessionDurationSeconds?: number) => {
   if (typeof window === 'undefined') return;
+  if (!hasAnalyticsConsent()) return;
 
   try {
     await fetch(`${API_BASE_URL}/analytics/property-view`, {
@@ -82,6 +85,7 @@ export const trackClickEvent = async (
   destinationUrl?: string
 ) => {
   if (typeof window === 'undefined') return;
+  if (!hasAnalyticsConsent()) return;
 
   try {
     await fetch(`${API_BASE_URL}/analytics/click-event`, {

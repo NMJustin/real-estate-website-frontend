@@ -5,6 +5,7 @@ import type { ReactNode } from 'react'
 import { Footer } from './Footer'
 import { Header } from './Header'
 import { PageViewTracker } from '../analytics/PageViewTracker'
+import { ConsentManager } from '../consent/ConsentManager'
 
 export function SiteShell({ children }: { children: ReactNode }) {
   const isAdminRoute = usePathname().startsWith('/admin')
@@ -14,6 +15,7 @@ export function SiteShell({ children }: { children: ReactNode }) {
   return (
     <div className="min-h-screen flex flex-col font-sans">
       <PageViewTracker />
+      <ConsentManager />
       <Header />
       <main className="flex-1 w-full flex flex-col">{children}</main>
       <Footer />
