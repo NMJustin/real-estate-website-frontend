@@ -16,6 +16,7 @@ import { adminApi } from '../../../services/api';
 
 interface AnalyticsSummary {
   totalPageViews: number;
+  uniquePageViews: number;
   totalPropertyViews: number;
   totalInquiries: number;
   totalViewings: number;
@@ -43,13 +44,14 @@ interface AnalyticsData {
     BUTTON: number;
   };
   pageViewTrend: { date: string; count: number }[];
-  popularProperties: { propertyId: string; title: string; viewCount: number }[];
+  popularProperties: { propertyId: string; title: string; thumbnailUrl: string | null; viewCount: number }[];
   trafficSources: { source: string; count: number }[];
   deviceBreakdown: Record<string, number>;
   conversionFunnel: {
     stage: string;
     count: number;
     rate: number;
+    rateLabel?: string;
   }[];
 }
 
@@ -104,18 +106,19 @@ export default function Analytics() {
     value: number | string;
     icon: typeof TrendingUp;
     color: string;
-    change?: number;
+  change?: number | null;
   }) => (
     <div className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
       <div className="flex items-start justify-between">
         <div>
           <p className="text-sm font-medium text-slate-500">{label}</p>
           <p className="mt-2 text-2xl font-bold text-slate-900">{value}</p>
-          {change !== undefined && (
+          {change !== undefined && change !== null && (
             <p className={`mt-1 text-xs ${change >= 0 ? 'text-emerald-600' : 'text-rose-600'}`}>
               {change >= 0 ? '+' : ''}{change.toFixed(1)}% vs previous period
             </p>
           )}
+          {change === null && <p className="mt-1 text-xs text-slate-400">No prior-period baseline</p>}
         </div>
         <div className={`rounded-lg p-2 ${color}`}>
           <Icon className="h-5 w-5" />
@@ -202,13 +205,19 @@ export default function Analytics() {
       )}
 
       {/* Summary Cards */}
-      <section className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+      <section className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
         <StatCard
           label="Total Page Views"
           value={data?.summary.totalPageViews || 0}
           icon={Users}
           color="bg-blue-50 text-blue-600"
           change={data?.comparison.pageViewsChange}
+        />
+        <StatCard
+          label="Unique Visitors"
+          value={data?.summary.uniquePageViews || 0}
+          icon={Users}
+          color="bg-cyan-50 text-cyan-600"
         />
         <StatCard
           label="Property Views"
@@ -231,6 +240,20 @@ export default function Analytics() {
           color="bg-amber-50 text-amber-600"
           change={data?.comparison.viewingsChange}
         />
+        <StatCard
+          label="Property Searches"
+          value={data?.summary.totalSearches || 0}
+          icon={BarChart3}
+          color="bg-indigo-50 text-indigo-600"
+        />
+      </section>
+
+      <section className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
+        <div className="flex items-baseline justify-between gap-3">
+          <div><h2 className="text-lg font-semibold text-slate-900">Page-view trend</h2><p className="mt-1 text-sm text-slate-500">Public page views by day for the selected period.</p></div>
+          <span className="text-sm font-semibold text-emerald-700">{data?.summary.totalPageViews.toLocaleString() || 0} total</span>
+        </div>
+        {data?.pageViewTrend.length ? (() => { const max = Math.max(...data.pageViewTrend.map((point) => point.count), 1); return <div className="mt-6 flex h-40 items-end gap-1" aria-label="Page-view trend chart">{data.pageViewTrend.map((point) => <div key={point.date} className="group relative flex h-full flex-1 items-end"><div className="w-full rounded-t bg-emerald-500/85 transition-colors group-hover:bg-emerald-600" style={{ height: `${Math.max((point.count / max) * 100, 3)}%` }} title={`${point.date}: ${point.count} views`} /><span className="sr-only">{point.date}: {point.count} page views</span></div>)}</div>; })() : <div className="mt-6 rounded-lg bg-slate-50 px-4 py-8 text-center text-sm text-slate-500">No public page views in this period.</div>}
       </section>
 
       {/* Conversion Funnel */}
@@ -248,9 +271,7 @@ export default function Analytics() {
                   <span className="font-medium text-slate-700">{step.stage}</span>
                   <div className="flex items-center gap-2">
                     <span className="font-semibold text-slate-900">{step.count.toLocaleString()}</span>
-                    {step.rate > 0 && step.rate < 100 && (
-                      <span className="text-xs text-slate-500">({step.rate.toFixed(1)}%)</span>
-                    )}
+                    <span className="text-xs text-slate-500">{step.rate.toFixed(1)}% {step.rateLabel || ''}</span>
                   </div>
                 </div>
                 <div className="mt-2 h-8 overflow-hidden rounded-lg bg-slate-100">
@@ -359,11 +380,12 @@ export default function Analytics() {
                   key={property.propertyId}
                   className="flex items-center justify-between rounded-lg border border-slate-100 bg-slate-50 px-4 py-3"
                 >
-                  <div className="flex items-center gap-3">
+                  <div className="flex min-w-0 items-center gap-3">
                     <span className="flex h-6 w-6 items-center justify-center rounded-full bg-emerald-100 text-xs font-semibold text-emerald-700">
                       {index + 1}
                     </span>
-                    <span className="font-medium text-slate-700">{property.title}</span>
+                    {property.thumbnailUrl ? <img src={property.thumbnailUrl} alt="" className="h-10 w-12 rounded-md object-cover" /> : <div className="h-10 w-12 rounded-md bg-slate-200" aria-hidden="true" />}
+                    <span className="truncate font-medium text-slate-700">{property.title}</span>
                   </div>
                   <span className="font-semibold text-slate-900">{property.viewCount.toLocaleString()} views</span>
                 </div>

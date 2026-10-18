@@ -37,6 +37,9 @@ export const trackPageView = async (pagePath: string, pageTitle?: string) => {
         pagePath,
         pageTitle,
         referrer: document.referrer || undefined,
+        utmSource: new URLSearchParams(window.location.search).get('utm_source') || undefined,
+        utmMedium: new URLSearchParams(window.location.search).get('utm_medium') || undefined,
+        utmCampaign: new URLSearchParams(window.location.search).get('utm_campaign') || undefined,
       }),
       // Use keepalive to ensure tracking doesn't block navigation
       keepalive: true,
@@ -72,7 +75,7 @@ export const trackPropertyView = async (propertyId: string, sessionDurationSecon
 
 // Track click event
 export const trackClickEvent = async (
-  eventType: 'CTA' | 'PHONE' | 'EMAIL' | 'WHATSAPP' | 'LINK' | 'BUTTON',
+  eventType: 'CTA' | 'PHONE' | 'EMAIL' | 'WHATSAPP' | 'LINK' | 'BUTTON' | 'SEARCH' | 'FILTER',
   propertyId?: string,
   elementId?: string,
   elementText?: string,
@@ -116,26 +119,17 @@ export const usePageViewTracking = (pageTitle?: string) => {
 export const usePropertyViewTracking = (propertyId: string) => {
   if (typeof window === 'undefined') return;
 
-  const [startTime] = React.useState(Date.now());
-
   React.useEffect(() => {
-    // Track initial view
-    trackPropertyView(propertyId);
-
-    // Track session duration on unmount
-    return () => {
-      const duration = Math.floor((Date.now() - startTime) / 1000);
-      if (duration > 0) {
-        trackPropertyView(propertyId, duration);
-      }
-    };
-  }, [propertyId, startTime]);
+    // One property-view event represents one detail-page visit. Recording again on
+    // unmount inflated view totals because the API treats it as a separate visit.
+    if (propertyId) trackPropertyView(propertyId);
+  }, [propertyId]);
 };
 
 // Helper to wrap click handlers with tracking
 export const withClickTracking = (
   handler: () => void,
-  eventType: 'CTA' | 'PHONE' | 'EMAIL' | 'WHATSAPP' | 'LINK' | 'BUTTON',
+  eventType: 'CTA' | 'PHONE' | 'EMAIL' | 'WHATSAPP' | 'LINK' | 'BUTTON' | 'SEARCH' | 'FILTER',
   propertyId?: string,
   elementId?: string,
   elementText?: string,

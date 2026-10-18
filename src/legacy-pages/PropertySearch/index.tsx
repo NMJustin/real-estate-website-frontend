@@ -3,6 +3,7 @@
 import { FormEvent, useState, useEffect } from 'react';
 import { Link, useSearchParams } from '@/navigation/legacy-router';
 import api from '../../services/api';
+import { trackClickEvent } from '../../utils/analytics';
 import { rwandaDistricts, getSectors } from '../../data/rwandaDistricts';
 import { TestPropertyBadge, TestPropertyNotice } from '../../components/property/TestPropertyBadge';
 
@@ -118,6 +119,8 @@ export default function PropertySearch() {
   const handleSubmit = async (event: FormEvent) => {
     event.preventDefault(); setLoading(true); setError(''); setHasSearched(true);
     const query = Object.fromEntries(Object.entries(form).filter(([, value]) => value.trim() !== ''));
+    trackClickEvent('SEARCH', undefined, 'property-search-submit', 'Search properties');
+    if (Object.keys(query).length > 0) trackClickEvent('FILTER', undefined, 'property-search-filters', `${Object.keys(query).length} filters applied`);
     try { const response = await api.getProperties(query) as { data: Property[] }; setProperties(response.data || []); }
     catch (requestError) { setError(requestError instanceof Error ? requestError.message : 'Unable to search properties'); }
     finally { setLoading(false); }
