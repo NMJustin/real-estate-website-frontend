@@ -108,6 +108,9 @@ export default function Categories() {
 
   const filteredCategories = useMemo(() => {
     return categories.filter((cat) => {
+      // Filter out article categories since they're now hardcoded
+      if (cat.type === 'article') return false;
+      
       const matchesSearch =
         !searchTerm ||
         cat.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -144,10 +147,10 @@ export default function Categories() {
         <div>
           <div className="flex items-center gap-2">
             <FolderTree className="h-6 w-6 text-emerald-600" />
-            <h1 className="text-2xl font-bold text-slate-900">Categories</h1>
+            <h1 className="text-2xl font-bold text-slate-900">Property Categories</h1>
           </div>
           <p className="mt-1 text-sm text-slate-500">
-            Organize properties and articles into structured categories.
+            Organize properties into structured categories.
           </p>
         </div>
 

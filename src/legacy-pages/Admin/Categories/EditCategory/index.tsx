@@ -70,6 +70,7 @@ export default function EditCategory() {
 
     try {
       await adminApi.updateCategory(id!, {
+        type: 'property',
         name,
         slug: slug || generateSlug(name),
         description: description || null,
@@ -100,7 +101,7 @@ export default function EditCategory() {
             <ArrowLeft className="h-4 w-4" />
             Back to Categories
           </Link>
-          <h1 className="mt-2 text-2xl font-bold text-slate-900">Edit Category</h1>
+          <h1 className="mt-2 text-2xl font-bold text-slate-900">Edit Property Category</h1>
         </div>
       </div>
 

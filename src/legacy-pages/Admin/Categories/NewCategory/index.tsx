@@ -35,6 +35,7 @@ export default function NewCategory() {
 
     try {
       await adminApi.createCategory({
+        type: 'property',
         name,
         slug: slug || generateSlug(name),
         description: description || null,
@@ -57,7 +58,7 @@ export default function NewCategory() {
             <ArrowLeft className="h-4 w-4" />
             Back to Categories
           </Link>
-          <h1 className="mt-2 text-2xl font-bold text-slate-900">Add Category</h1>
+          <h1 className="mt-2 text-2xl font-bold text-slate-900">Add Property Category</h1>
         </div>
       </div>
 
