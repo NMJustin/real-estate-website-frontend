@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import Link from 'next/link'
 import { COOKIE_POLICY_VERSION, getCookiePreferences, saveCookiePreferences, TERMS_POLICY_VERSION } from '@/utils/consent'
 
@@ -22,6 +22,7 @@ export function ConsentManager() {
   const [banner, setBanner] = useState<Banner>(null)
   const [analytics, setAnalytics] = useState(false)
   const [marketing, setMarketing] = useState(false)
+  const bannerRef = useRef<HTMLElement>(null)
 
   useEffect(() => {
     const preferences = getCookiePreferences()
@@ -33,12 +34,27 @@ export function ConsentManager() {
     }
   }, [])
 
-  // Reserve space while a banner is visible so the page's final content remains reachable.
+  // Reserve only the rendered banner height. A viewport-based reservation leaves a large
+  // blank area after the footer and makes it appear to move up while scrolling.
   useEffect(() => {
     if (!banner) return
     const previousPadding = document.body.style.paddingBottom
-    document.body.style.paddingBottom = 'min(34rem, 72vh)'
-    return () => { document.body.style.paddingBottom = previousPadding }
+    const element = bannerRef.current
+    if (!element) return
+
+    const updateReservedSpace = () => {
+      const height = Math.ceil(element.getBoundingClientRect().height)
+      document.body.style.paddingBottom = height > 0 ? `${height}px` : previousPadding
+    }
+
+    updateReservedSpace()
+    const observer = typeof ResizeObserver === 'undefined' ? null : new ResizeObserver(updateReservedSpace)
+    observer?.observe(element)
+
+    return () => {
+      observer?.disconnect()
+      document.body.style.paddingBottom = previousPadding
+    }
   }, [banner])
 
   useEffect(() => {
@@ -67,7 +83,7 @@ export function ConsentManager() {
   if (!banner) return null
 
   return (
-    <aside aria-labelledby="consent-title" aria-live="polite" className="fixed inset-x-0 bottom-0 z-[100] border-t border-slate-200 bg-white/98 shadow-[0_-12px_36px_rgba(15,23,42,0.16)] backdrop-blur">
+    <aside ref={bannerRef} aria-labelledby="consent-title" aria-live="polite" className="fixed inset-x-0 bottom-0 z-[100] border-t border-slate-200 bg-white/98 shadow-[0_-12px_36px_rgba(15,23,42,0.16)] backdrop-blur">
       <div className="mx-auto max-h-[72vh] w-full max-w-6xl overflow-y-auto px-4 py-4 sm:px-6 sm:py-5 lg:flex lg:items-center lg:gap-8 lg:px-8">
         <div className="min-w-0 flex-1">
           {banner === 'terms' && <>

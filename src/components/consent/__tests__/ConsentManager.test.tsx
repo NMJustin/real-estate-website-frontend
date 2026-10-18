@@ -40,4 +40,14 @@ describe('ConsentManager', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Save preferences' }))
     expect(JSON.parse(localStorage.getItem('ingata_cookie_preferences') || '{}')).toMatchObject({ analytics: true, marketing: false })
   })
+
+  it('reserves only the rendered banner height and restores it after consent', async () => {
+    const getBoundingClientRect = jest.spyOn(HTMLElement.prototype, 'getBoundingClientRect').mockReturnValue({ height: 184 } as DOMRect)
+    const { unmount } = render(<ConsentManager />)
+    await screen.findByRole('heading', { name: 'Terms & Conditions' })
+    expect(document.body.style.paddingBottom).toBe('184px')
+    unmount()
+    expect(document.body.style.paddingBottom).toBe('')
+    getBoundingClientRect.mockRestore()
+  })
 })
