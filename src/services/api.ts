@@ -363,6 +363,18 @@ export const adminApi = {
 	updateSettings: (data: Record<string, unknown>) =>
 		authRequest('/admin/settings', { method: 'PUT', body: JSON.stringify(data) }),
 
+	// Contact Messages
+	getContactMessages: (query?: Record<string, QueryValue>) =>
+		authRequest(`/admin/contact${buildQuery(query)}`),
+	getContactMessage: (id: string) =>
+		authRequest(`/admin/contact/${encodeURIComponent(id)}`),
+	updateContactMessage: (id: string, data: Record<string, unknown>) =>
+		authRequest(`/admin/contact/${encodeURIComponent(id)}`, { method: 'PATCH', body: JSON.stringify(data) }),
+	replyToContactMessage: (id: string, data: { subject: string; message: string }) =>
+		authRequest(`/admin/contact/${encodeURIComponent(id)}/reply`, { method: 'POST', body: JSON.stringify(data) }),
+	deleteContactMessage: (id: string) =>
+		authRequest(`/admin/contact/${encodeURIComponent(id)}`, { method: 'DELETE' }),
+
 	// Analytics Cleanup
 	cleanupAnalyticsData: () => authRequest('/admin/analytics/cleanup', { method: 'POST' }),
 	getAnalyticsRetentionStatus: () => authRequest('/admin/analytics/retention-status'),

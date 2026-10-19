@@ -33,12 +33,14 @@ import Users from '@/legacy-pages/Admin/Users'
 import Valuations from '@/legacy-pages/Admin/Valuations'
 import Viewings from '@/legacy-pages/Admin/Viewings'
 import Settings from '@/legacy-pages/Admin/Settings'
+import ContactMessages from '@/legacy-pages/Admin/Contact'
 import { RouteParamsProvider } from '@/navigation/legacy-router'
 
 const staticRoutes: Record<string, ComponentType> = {
   analytics: Analytics,
   articles: Articles,
   categories: Categories,
+  contact: ContactMessages,
   faqs: FAQs,
   inquiries: Inquiries,
   listings: ListingRequests,
