@@ -10,6 +10,7 @@ jest.mock('@/services/api', () => ({
   __esModule: true,
   default: {
     getArticles: jest.fn(),
+    getArticleCategories: jest.fn(),
   },
 }))
 
@@ -17,6 +18,7 @@ const mockedApi = api as jest.Mocked<typeof api>
 
 describe('Articles', () => {
   beforeEach(() => {
+    mockedApi.getArticleCategories.mockResolvedValue({ data: [{ id: 'market-id', name: 'Property Market Updates', slug: 'property-market-updates' }] })
     mockedApi.getArticles.mockResolvedValue({ data: [] })
   })
 

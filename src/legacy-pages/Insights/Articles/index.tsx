@@ -28,30 +28,20 @@ export default function Articles() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<string>('');
-
-  const categories: ArticleCategory[] = [
-    { id: '1', name: 'Property Market Updates', slug: 'property-market-updates' },
-    { id: '2', name: 'Buying Guides', slug: 'buying-guides' },
-    { id: '3', name: 'Renting Guides', slug: 'renting-guides' },
-    { id: '4', name: 'Selling Guides', slug: 'selling-guides' },
-    { id: '5', name: 'Property Investment', slug: 'property-investment' },
-    { id: '6', name: 'Property Management', slug: 'property-management' },
-    { id: '7', name: 'Homeownership', slug: 'homeownership' },
-    { id: '8', name: 'Real Estate Trends', slug: 'real-estate-trends' },
-    { id: '9', name: 'Company Announcements', slug: 'company-announcements' },
-    { id: '10', name: 'New Developments', slug: 'new-developments' },
-  ];
+  const [categories, setCategories] = useState<ArticleCategory[]>([]);
 
   useEffect(() => {
     setLoading(true);
-    api.getArticles(selectedCategory)
-      .then((articlesResponse) => {
+    Promise.all([api.getArticles(selectedCategory), api.getArticleCategories()])
+      .then(([articlesResponse, categoriesResponse]) => {
         const data = (articlesResponse as { data: Article[] }).data || [];
+        const availableCategories = (categoriesResponse as { data: ArticleCategory[] }).data || [];
         // Filter for published articles only
         const publishedArticles = data.filter(
           (article) => article.publicationStatus === 'PUBLISHED'
         );
         setArticles(publishedArticles);
+        setCategories(availableCategories);
       })
       .catch((err) => {
         setError('Unable to load articles.');
