@@ -1757,7 +1757,7 @@ export default function PortalWorkspace() {
     }
   }, [isAuthenticated, isLoading, role, router, user, userRole]);
 
-  const roleSlug = role === 'property_manager' ? 'property-manager' : role;
+  const roleSlug = role?.replace('_', '-');
   const item = useMemo(() => {
     if (!role) return null;
     return roleMenus[role].find((entry) => pathname === entry.href) || null;
