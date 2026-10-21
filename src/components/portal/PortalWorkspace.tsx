@@ -15,6 +15,7 @@ import {
   Clock,
   FileText,
   Home,
+  Image as ImageIcon,
   LogOut,
   MapPin,
   Menu,
@@ -267,12 +268,21 @@ const roleMenus: Record<Exclude<Role, 'admin'>, PortalItem[]> = {
       fields: [
         { key: 'title', label: 'Title', required: true }, { key: 'slug', label: 'Slug', required: true },
         { key: 'excerpt', label: 'Excerpt', type: 'textarea' }, { key: 'content', label: 'Content', type: 'textarea', required: true },
+        { key: 'categoryId', label: 'Category', type: 'select', loadOptions: async () => {
+          const res = await portalApi.getArticleCategories() as { data?: PortalRecord[] };
+          return Array.isArray(res?.data) ? res.data.map((c: PortalRecord) => ({ value: c.id, label: c.name })) : [];
+        }},
+        { key: 'featuredImage', label: 'Featured image URL', type: 'textarea' },
         { key: 'publicationStatus', label: 'Publication', type: 'select', options: ['DRAFT', 'PUBLISHED'], initial: 'DRAFT' },
       ],
       create: portalApi.createEditorArticle,
       update: (id, data) => portalApi.updateEditorArticle(id, data),
       remove: portalApi.deleteEditorArticle,
       statusOptions: ['DRAFT', 'PUBLISHED'],
+      upload: async (file: File) => {
+        const res = await portalApi.uploadEditorMedia(file);
+        return res.data.url;
+      },
     },
     {
       label: 'Pages', href: '/portal/content-editor/pages', icon: FileText, load: portalApi.getEditorPages,
@@ -296,6 +306,27 @@ const roleMenus: Record<Exclude<Role, 'admin'>, PortalItem[]> = {
       create: portalApi.createEditorFaq,
       update: (id, data) => portalApi.updateEditorFaq(id, data),
       remove: portalApi.deleteEditorFaq,
+    },
+    {
+      label: 'Testimonials', href: '/portal/content-editor/testimonials', icon: MessageSquare, load: portalApi.getEditorTestimonials,
+      fields: [
+        { key: 'clientName', label: 'Client name', required: true }, { key: 'clientRole', label: 'Client role' },
+        { key: 'testimonial', label: 'Testimonial', type: 'textarea', required: true },
+        { key: 'rating', label: 'Rating', type: 'number', initial: '5' },
+        { key: 'isActive', label: 'Active', type: 'checkbox', initial: 'true' },
+      ],
+      create: portalApi.createEditorTestimonial,
+      update: (id, data) => portalApi.updateEditorTestimonial(id, data),
+      remove: portalApi.deleteEditorTestimonial,
+      statusOptions: ['true', 'false'],
+    },
+    {
+      label: 'Media', href: '/portal/content-editor/media', icon: ImageIcon, load: async () => ({ data: [] }),
+      fields: [],
+      upload: async (file: File) => {
+        const res = await portalApi.uploadEditorMedia(file);
+        return res.data.url;
+      },
     },
   ],
 };
@@ -497,6 +528,8 @@ function PortalPage({ role, item }: { role: Exclude<Role, 'admin'>; item: Portal
   const [profileSaving, setProfileSaving] = useState(false);
   const [profileError, setProfileError] = useState('');
   const [profileSaved, setProfileSaved] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [statusFilter, setStatusFilter] = useState('');
   const items = roleMenus[role];
 
   const refreshItem = async () => {
@@ -1384,20 +1417,139 @@ function PortalPage({ role, item }: { role: Exclude<Role, 'admin'>; item: Portal
       )}
 
       {!item && role === 'content_editor' && (
-        <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
-          {dashboardCounts.map(({ label, href, icon: Icon, count }) => (
-            <Link key={href} href={href} className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium text-slate-500">{label}</p>
-                  <p className="mt-2 text-3xl font-bold text-slate-900">{loading ? '…' : count ?? '—'}</p>
-                </div>
-                <span className="rounded-xl bg-emerald-50 p-3 text-emerald-600"><Icon className="h-5 w-5" /></span>
+        <>
+          <section className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-slate-950 via-slate-900 to-emerald-950 px-5 py-6 text-white shadow-lg sm:px-8 sm:py-7">
+            <div className="pointer-events-none absolute -right-12 -top-28 h-72 w-72 rounded-full border-[42px] border-white/5" />
+            <div className="relative flex flex-col gap-5 sm:flex-row sm:items-center sm:justify-between">
+              <div>
+                <p className="text-sm font-medium text-emerald-200">
+                  {new Date().toLocaleDateString(undefined, { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}
+                </p>
+                <h1 className="mt-2 text-2xl font-bold tracking-tight sm:text-3xl">
+                  Welcome back{user?.name ? `, ${user.name.split(' ')[0]}` : ''}
+                </h1>
+                <p className="mt-2 text-sm text-slate-300">Manage articles, pages, FAQs, testimonials, and media for the Ingata platform.</p>
               </div>
-              <p className="mt-4 flex items-center gap-1 text-sm font-medium text-emerald-700">Open {label.toLowerCase()} <ChevronRight className="h-4 w-4" /></p>
-            </Link>
-          ))}
-        </div>
+              <div className="flex items-center gap-3 rounded-xl border border-white/15 bg-white/10 px-3 py-2">
+                <span className="grid h-9 w-9 place-items-center rounded-full bg-emerald-300 font-bold text-emerald-950">{(user?.name || user?.email || 'C').slice(0, 1).toUpperCase()}</span>
+                <div className="max-w-40">
+                  <p className="truncate text-sm font-semibold">{user?.name || 'Content Editor'}</p>
+                  <p className="truncate text-xs text-slate-300">{user?.email}</p>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <section aria-label="Content overview" className="grid grid-cols-2 gap-3 sm:grid-cols-3 xl:grid-cols-5">
+            {[
+              { label: 'Articles', count: counts['/portal/content-editor/articles'], detail: 'All articles', href: '/portal/content-editor/articles', icon: FileText, tone: 'bg-blue-50 text-blue-600' },
+              { label: 'Pages', count: counts['/portal/content-editor/pages'], detail: 'Site pages', href: '/portal/content-editor/pages', icon: FileText, tone: 'bg-violet-50 text-violet-600' },
+              { label: 'FAQs', count: counts['/portal/content-editor/faqs'], detail: 'Help content', href: '/portal/content-editor/faqs', icon: MessageSquare, tone: 'bg-amber-50 text-amber-600' },
+              { label: 'Testimonials', count: counts['/portal/content-editor/testimonials'], detail: 'Client reviews', href: '/portal/content-editor/testimonials', icon: MessageSquare, tone: 'bg-emerald-50 text-emerald-600' },
+              { label: 'Media', count: null, detail: 'Upload & manage', href: '/portal/content-editor/media', icon: ImageIcon, tone: 'bg-rose-50 text-rose-600' },
+            ].map((card) => {
+              const failedItem = items.find((entry) => entry.href === card.href);
+              const sectionError = dashboardErrors[card.href];
+              return (
+                <Link key={card.label} href={card.href} className="rounded-2xl border border-slate-200/80 bg-white p-4 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md sm:p-5">
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="min-w-0">
+                      <p className="truncate text-xs font-semibold text-slate-500 sm:text-sm">{card.label}</p>
+                      <p className="mt-2 text-2xl font-bold tracking-tight text-slate-900 sm:text-3xl">{loading ? '…' : sectionError ? '—' : card.count ?? '—'}</p>
+                      <p className="mt-1 truncate text-xs text-slate-500">{sectionError ? 'Statistics unavailable' : card.detail}</p>
+                    </div>
+                    <span className={`grid h-10 w-10 shrink-0 place-items-center rounded-xl sm:h-11 sm:w-11 ${card.tone}`}>
+                      <card.icon className="h-5 w-5" aria-hidden="true" />
+                    </span>
+                  </div>
+                  {sectionError && failedItem ? (
+                    <button type="button" onClick={() => void retryDashboardSection(failedItem)} className="mt-3 inline-flex items-center gap-1 text-xs font-semibold text-rose-700 hover:underline"><RefreshCw className="h-3 w-3" /> Retry {failedItem.label.toLowerCase()}</button>
+                  ) : null}
+                </Link>
+              );
+            })}
+          </section>
+
+          <div className="grid gap-6 lg:grid-cols-2">
+            <section className="rounded-2xl border border-slate-200/80 bg-white p-5 shadow-sm sm:p-6">
+              <div className="flex items-start justify-between gap-3">
+                <div>
+                  <p className="text-xs font-semibold uppercase tracking-wider text-emerald-700">Quick actions</p>
+                  <h2 className="mt-1 text-lg font-bold text-slate-900">Create Content</h2>
+                  <p className="mt-1 text-sm text-slate-500">Start creating new content items</p>
+                </div>
+                <span className="grid h-10 w-10 place-items-center rounded-xl bg-emerald-50 text-emerald-700"><Plus className="h-5 w-5" /></span>
+              </div>
+              <div className="mt-5 grid gap-3 sm:grid-cols-2">
+                <Link href="/portal/content-editor/articles" className="flex items-center gap-3 rounded-xl border border-slate-200 bg-white p-4 transition hover:border-emerald-300 hover:bg-emerald-50">
+                  <span className="rounded-lg bg-blue-50 p-2 text-blue-600"><FileText className="h-5 w-5" /></span>
+                  <div>
+                    <p className="text-sm font-semibold text-slate-800">New Article</p>
+                    <p className="text-xs text-slate-500">Create a blog post</p>
+                  </div>
+                </Link>
+                <Link href="/portal/content-editor/pages" className="flex items-center gap-3 rounded-xl border border-slate-200 bg-white p-4 transition hover:border-emerald-300 hover:bg-emerald-50">
+                  <span className="rounded-lg bg-violet-50 p-2 text-violet-600"><FileText className="h-5 w-5" /></span>
+                  <div>
+                    <p className="text-sm font-semibold text-slate-800">New Page</p>
+                    <p className="text-xs text-slate-500">Create a site page</p>
+                  </div>
+                </Link>
+                <Link href="/portal/content-editor/faqs" className="flex items-center gap-3 rounded-xl border border-slate-200 bg-white p-4 transition hover:border-emerald-300 hover:bg-emerald-50">
+                  <span className="rounded-lg bg-amber-50 p-2 text-amber-600"><MessageSquare className="h-5 w-5" /></span>
+                  <div>
+                    <p className="text-sm font-semibold text-slate-800">New FAQ</p>
+                    <p className="text-xs text-slate-500">Add help content</p>
+                  </div>
+                </Link>
+                <Link href="/portal/content-editor/testimonials" className="flex items-center gap-3 rounded-xl border border-slate-200 bg-white p-4 transition hover:border-emerald-300 hover:bg-emerald-50">
+                  <span className="rounded-lg bg-emerald-50 p-2 text-emerald-600"><MessageSquare className="h-5 w-5" /></span>
+                  <div>
+                    <p className="text-sm font-semibold text-slate-800">New Testimonial</p>
+                    <p className="text-xs text-slate-500">Add client review</p>
+                  </div>
+                </Link>
+              </div>
+            </section>
+
+            <section className="rounded-2xl border border-slate-200/80 bg-white p-5 shadow-sm sm:p-6">
+              <div className="flex items-start justify-between gap-3">
+                <div>
+                  <p className="text-xs font-semibold uppercase tracking-wider text-blue-700">Recent content</p>
+                  <h2 className="mt-1 text-lg font-bold text-slate-900">Latest Updates</h2>
+                  <p className="mt-1 text-sm text-slate-500">Recently modified content items</p>
+                </div>
+                <span className="grid h-10 w-10 place-items-center rounded-xl bg-blue-50 text-blue-700"><Clock className="h-5 w-5" /></span>
+              </div>
+              {loading ? (
+                <div className="mt-5 space-y-3">
+                  {Array.from({ length: 3 }, (_, index) => <div key={index} className="h-16 animate-pulse rounded-xl bg-slate-100" />)}
+                </div>
+              ) : (
+                <ul className="mt-5 divide-y divide-slate-100">
+                  {[
+                    ...dashboardRecords['/portal/content-editor/articles']?.slice(0, 2).map((r: PortalRecord) => ({ ...r, type: 'Article', href: '/portal/content-editor/articles' })) || [],
+                    ...dashboardRecords['/portal/content-editor/pages']?.slice(0, 2).map((r: PortalRecord) => ({ ...r, type: 'Page', href: '/portal/content-editor/pages' })) || [],
+                    ...dashboardRecords['/portal/content-editor/faqs']?.slice(0, 2).map((r: PortalRecord) => ({ ...r, type: 'FAQ', href: '/portal/content-editor/faqs' })) || [],
+                  ].slice(0, 5).map((item: PortalRecord & { type: string; href: string }) => (
+                    <li key={String(item.id)} className="py-3">
+                      <div className="flex items-start justify-between gap-3">
+                        <div className="min-w-0 flex-1">
+                          <div className="flex items-center gap-2">
+                            <span className="rounded-full bg-slate-100 px-2 py-0.5 text-[10px] font-semibold text-slate-600">{item.type}</span>
+                            <p className="truncate text-sm font-medium text-slate-800">{String(item.title || item.question || 'Untitled')}</p>
+                          </div>
+                          <p className="truncate text-xs text-slate-500">Updated {formatPortalDate(item.updatedAt, true)}</p>
+                        </div>
+                        <Link href={item.href} className="shrink-0 rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-xs font-medium text-slate-700 hover:bg-slate-50">Edit</Link>
+                      </div>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </section>
+          </div>
+        </>
       )}
 
       {error && (
@@ -1430,6 +1582,38 @@ function PortalPage({ role, item }: { role: Exclude<Role, 'admin'>; item: Portal
               onSubmit={submitRecord}
             />
           )}
+          {!showNew && !editing && (
+            <div className="flex flex-wrap items-center gap-3 border-b border-slate-100 px-4 py-3">
+              <div className="flex-1 min-w-[200px]">
+                <input
+                  type="text"
+                  placeholder={`Search ${item.label.toLowerCase()}...`}
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm outline-none focus:border-emerald-500"
+                />
+              </div>
+              {item.statusOptions && (
+                <select
+                  value={statusFilter}
+                  onChange={(e) => setStatusFilter(e.target.value)}
+                  className="rounded-lg border border-slate-300 px-3 py-2 text-sm outline-none focus:border-emerald-500"
+                >
+                  <option value="">All Statuses</option>
+                  {item.statusOptions.map((status) => <option key={status} value={status}>{status}</option>)}
+                </select>
+              )}
+              {(searchQuery || statusFilter) && (
+                <button
+                  type="button"
+                  onClick={() => { setSearchQuery(''); setStatusFilter(''); }}
+                  className="text-sm font-medium text-slate-600 hover:text-slate-800"
+                >
+                  Clear filters
+                </button>
+              )}
+            </div>
+          )}
           {loading ? (
             <p className="p-8 text-center text-sm text-slate-500">Loading {item.label.toLowerCase()}…</p>
           ) : error ? (
@@ -1452,7 +1636,15 @@ function PortalPage({ role, item }: { role: Exclude<Role, 'admin'>; item: Portal
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100">
-                  {records.map((record, index) => (
+                  {records
+                    .filter((record) => {
+                      const title = recordTitle(record).toLowerCase();
+                      const matchesSearch = !searchQuery || title.includes(searchQuery.toLowerCase());
+                      const status = displayValue(record.publicationStatus ?? record.status ?? record.isPublished ?? record.isActive);
+                      const matchesStatus = !statusFilter || status === statusFilter;
+                      return matchesSearch && matchesStatus;
+                    })
+                    .map((record, index) => (
                     <tr key={displayValue(record.id) === '—' ? index : displayValue(record.id)} className="hover:bg-slate-50">
                               <td className="px-5 py-4 text-sm text-slate-800">
                                 <p className="font-medium">{recordTitle(record)}</p>

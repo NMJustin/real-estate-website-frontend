@@ -164,6 +164,16 @@ export const portalApi = {
 		authRequest(`/content-editor/faqs/${encodeURIComponent(id)}`, { method: 'PATCH', body: JSON.stringify(data) }),
 	deleteEditorFaq: (id: string) =>
 		authRequest(`/content-editor/faqs/${encodeURIComponent(id)}`, { method: 'DELETE' }),
+	getEditorTestimonials: () => authRequest('/content-editor/testimonials'),
+	createEditorTestimonial: (data: Record<string, unknown>) =>
+		authRequest('/content-editor/testimonials', { method: 'POST', body: JSON.stringify(data) }),
+	updateEditorTestimonial: (id: string, data: Record<string, unknown>) =>
+		authRequest(`/content-editor/testimonials/${encodeURIComponent(id)}`, { method: 'PATCH', body: JSON.stringify(data) }),
+	deleteEditorTestimonial: (id: string) =>
+		authRequest(`/content-editor/testimonials/${encodeURIComponent(id)}`, { method: 'DELETE' }),
+	uploadEditorMedia: async (file: File) => uploadMedia(file, '/content-editor/media'),
+	getArticleCategories: (query?: Record<string, QueryValue>) =>
+		request(`/article-categories${buildQuery(query)}`),
 };
 
 const uploadPropertyMedia = async (file: File) => {
