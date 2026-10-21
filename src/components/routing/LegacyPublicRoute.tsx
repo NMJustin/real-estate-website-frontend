@@ -45,6 +45,7 @@ import RealEstateAdvisory from '@/legacy-pages/Services/RealEstateAdvisory'
 import RealEstateConsultancy from '@/legacy-pages/Services/RealEstateConsultancy'
 import { RouteParamsProvider } from '@/navigation/legacy-router'
 import ArticleDetails from '@/components/content/ArticleDetails'
+import DynamicPage from '@/components/content/DynamicPage'
 
 const staticRoutes: Record<string, ComponentType> = {
   '/about/core-values': CoreValues,
@@ -111,6 +112,11 @@ export function LegacyPublicRoute({ segments }: { segments: string[] }) {
         <AgentProfile />
       </RouteParamsProvider>
     )
+  }
+
+  // Check for dynamic pages from database
+  if (segments.length === 1) {
+    return <DynamicPage slug={segments[0]} />
   }
 
   notFound()

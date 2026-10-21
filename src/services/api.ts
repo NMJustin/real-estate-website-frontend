@@ -203,6 +203,7 @@ export const api = {
 	getCategories: () => request('/categories'),
 	getArticleCategories: (query?: Record<string, QueryValue>) =>
 		request(`/article-categories${buildQuery({ isActive: true, limit: 100, ...query })}`),
+	getPageBySlug: (slug: string) => request(`/pages/${encodeURIComponent(slug)}`),
 	createContact: (data: unknown) => request('/contact', { method: 'POST', body: JSON.stringify(data) }),
 	createInquiry: (data: unknown) => request('/inquiries', { method: 'POST', body: JSON.stringify(data) }),
 	createListing: (data: FormData) => request('/listings', { method: 'POST', body: data }),

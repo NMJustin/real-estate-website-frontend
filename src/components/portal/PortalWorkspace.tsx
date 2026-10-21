@@ -273,12 +273,12 @@ const roleMenus: Record<Exclude<Role, 'admin'>, PortalItem[]> = {
           return Array.isArray(res?.data) ? res.data.map((c: PortalRecord) => ({ value: c.id, label: c.name })) : [];
         }},
         { key: 'featuredImage', label: 'Featured image URL', type: 'textarea' },
-        { key: 'publicationStatus', label: 'Publication', type: 'select', options: ['DRAFT', 'PUBLISHED'], initial: 'DRAFT' },
+        { key: 'publicationStatus', label: 'Publication', type: 'select', options: ['DRAFT', 'REVIEW', 'APPROVED', 'PUBLISHED', 'ARCHIVED'], initial: 'DRAFT' },
       ],
       create: portalApi.createEditorArticle,
       update: (id, data) => portalApi.updateEditorArticle(id, data),
       remove: portalApi.deleteEditorArticle,
-      statusOptions: ['DRAFT', 'PUBLISHED'],
+      statusOptions: ['DRAFT', 'REVIEW', 'APPROVED', 'PUBLISHED', 'ARCHIVED'],
       upload: async (file: File) => {
         const res = await portalApi.uploadEditorMedia(file);
         return res.data.url;
@@ -530,6 +530,8 @@ function PortalPage({ role, item }: { role: Exclude<Role, 'admin'>; item: Portal
   const [profileSaved, setProfileSaved] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState('');
+  const [selectedRecords, setSelectedRecords] = useState<Set<string>>(new Set());
+  // const [bulkAction, setBulkAction] = useState('');
   const items = roleMenus[role];
 
   const refreshItem = async () => {
@@ -1611,6 +1613,37 @@ function PortalPage({ role, item }: { role: Exclude<Role, 'admin'>; item: Portal
                 >
                   Clear filters
                 </button>
+              )}
+              {selectedRecords.size > 0 && (
+                <div className="flex items-center gap-2 border-l border-slate-200 pl-3">
+                  <span className="text-sm text-slate-600">{selectedRecords.size} selected</span>
+                  {/* {item.remove && (
+                    <button
+                      type="button"
+                      onClick={() => bulkDeleteRecords()}
+                      className="inline-flex items-center gap-1 rounded-lg bg-rose-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-rose-700"
+                    >
+                      <Trash2 className="h-3.5 w-3.5" /> Delete
+                    </button>
+                  )} */}
+                  {/* {item.statusOptions && (
+                    <select
+                      value={bulkAction}
+                      onChange={(e) => bulkUpdateStatus(e.target.value)}
+                      className="rounded-lg border border-slate-300 px-2 py-1.5 text-xs outline-none focus:border-emerald-500"
+                    >
+                      <option value="">Change status...</option>
+                      {item.statusOptions.map((status) => <option key={status} value={status}>{status}</option>)}
+                    </select>
+                  )} */}
+                  <button
+                    type="button"
+                    onClick={() => setSelectedRecords(new Set())}
+                    className="text-xs font-medium text-slate-600 hover:text-slate-800"
+                  >
+                    Clear selection
+                  </button>
+                </div>
               )}
             </div>
           )}
