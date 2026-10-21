@@ -19,6 +19,13 @@ export default function AdminLogin() {
 
   const from = searchParams.get('from') || '/admin/dashboard';
 
+  // Check for session expired message
+  useEffect(() => {
+    if (searchParams.get('session') === 'expired') {
+      setError('Your session has expired due to inactivity. Please sign in again.');
+    }
+  }, [searchParams]);
+
   // Only an existing administrator session should bypass the admin login form.
   useEffect(() => {
     if (!isLoading && isAuthenticated && user?.role.toLowerCase() === 'admin') {

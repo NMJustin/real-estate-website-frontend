@@ -32,6 +32,8 @@ import {
 import { useAuth } from '@/context/AuthContext';
 import { portalApi } from '@/services/api';
 import { rwandaDistricts, getAllDistricts, getSectors } from '@/data/rwandaDistricts';
+import { useInactivityLogout } from '@/hooks/useInactivityLogout';
+import { InactivityWarningModal } from '@/components/auth/InactivityWarningModal';
 
 type Role = 'agent' | 'property_manager' | 'content_editor' | 'admin';
 type IconType = typeof Home;
@@ -478,7 +480,9 @@ function WorkspaceFrame({ role, children }: { role: Exclude<Role, 'admin'>; chil
 }
 
 function PortalPage({ role, item }: { role: Exclude<Role, 'admin'>; item: PortalItem | null }) {
-  const { user, updateProfile } = useAuth();
+  const router = useRouter();
+  const { user, updateProfile, logout } = useAuth();
+  const { showWarning, countdown, formatCountdown, stayLoggedIn, isSessionExpired } = useInactivityLogout();
   const [records, setRecords] = useState<PortalRecord[]>([]);
   const [counts, setCounts] = useState<Record<string, number | null>>({});
   const [dashboardRecords, setDashboardRecords] = useState<Record<string, PortalRecord[]>>({});
@@ -844,7 +848,18 @@ function PortalPage({ role, item }: { role: Exclude<Role, 'admin'>; item: Portal
   };
 
   return (
-    <div className="mx-auto max-w-7xl space-y-6">
+    <>
+      <InactivityWarningModal
+        show={showWarning}
+        countdown={countdown}
+        formatCountdown={formatCountdown}
+        onStayLoggedIn={stayLoggedIn}
+        onLogout={() => {
+          logout();
+          router.replace('/portal/login');
+        }}
+      />
+      <div className="mx-auto max-w-7xl space-y-6">
       {!item && role === 'property_manager' ? (
         <section className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-slate-950 via-slate-900 to-emerald-950 px-5 py-6 text-white shadow-lg sm:px-8 sm:py-7">
           <div className="pointer-events-none absolute -right-12 -top-28 h-72 w-72 rounded-full border-[42px] border-white/5" />
@@ -1519,7 +1534,8 @@ function PortalPage({ role, item }: { role: Exclude<Role, 'admin'>; item: Portal
           )}
         </section>
       )}
-    </div>
+      </div>
+    </>
   );
 }
 

@@ -27,6 +27,8 @@ import {
   Mail,
 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
+import { useInactivityLogout } from '@/hooks/useInactivityLogout';
+import { InactivityWarningModal } from '@/components/auth/InactivityWarningModal';
 
 const navItems = [
   { to: '/admin/dashboard', icon: LayoutDashboard, label: 'Dashboard' },
@@ -132,9 +134,25 @@ interface AdminLayoutProps {
 
 export function AdminLayout({ children }: AdminLayoutProps) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const { showWarning, countdown, formatCountdown, stayLoggedIn } = useInactivityLogout();
+  const { logout } = useAuth();
+  const navigate = useNavigate();
+
+  const handleLogout = () => {
+    logout();
+    navigate('/admin');
+  };
 
   return (
-    <div className="flex h-screen bg-slate-100 overflow-hidden">
+    <>
+      <InactivityWarningModal
+        show={showWarning}
+        countdown={countdown}
+        formatCountdown={formatCountdown}
+        onStayLoggedIn={stayLoggedIn}
+        onLogout={handleLogout}
+      />
+      <div className="flex h-screen bg-slate-100 overflow-hidden">
       {/* Desktop Sidebar — always visible */}
       <aside className="hidden lg:flex flex-col w-60 flex-shrink-0 border-r border-slate-700/40 shadow-xl">
         <Sidebar />
@@ -181,5 +199,6 @@ export function AdminLayout({ children }: AdminLayoutProps) {
         </main>
       </div>
     </div>
+    </>
   );
 }

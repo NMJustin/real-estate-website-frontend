@@ -150,6 +150,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const logout = useCallback(() => {
     if (typeof window !== 'undefined') {
       localStorage.removeItem(TOKEN_KEY);
+      localStorage.removeItem('inactivity_logout');
     }
     setToken(null);
     setUser(null);

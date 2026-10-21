@@ -1,9 +1,9 @@
 'use client'
 
-import { FormEvent, useEffect, useState } from 'react';
+import { FormEvent, useEffect, useState, Suspense } from 'react';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
-import { Building2, LockKeyhole, Mail } from 'lucide-react';
+import { useRouter, useSearchParams } from 'next/navigation';
+import { Building2, LockKeyhole, Mail, AlertCircle } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
 import { portalApi } from '@/services/api';
 
@@ -40,13 +40,21 @@ function PortalAuthShell({ children, title, description }: { children: React.Rea
   );
 }
 
-export function PortalLoginPage() {
+function PortalLoginPageContent() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { isAuthenticated, isLoading, user, userLogin, logout } = useAuth();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [submitting, setSubmitting] = useState(false);
+
+  // Check for session expired message
+  useEffect(() => {
+    if (searchParams.get('session') === 'expired') {
+      setError('Your session has expired due to inactivity. Please sign in again.');
+    }
+  }, [searchParams]);
 
   const submit = async (event: FormEvent) => {
     event.preventDefault();
@@ -71,7 +79,12 @@ export function PortalLoginPage() {
         </div>
       )}
       <form onSubmit={submit} className="mt-6 space-y-4">
-        {error && <p role="alert" className="rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-700">{error}</p>}
+        {error && (
+          <p role="alert" className="rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-700 flex items-start gap-2">
+            <AlertCircle className="h-4 w-4 mt-0.5 shrink-0" />
+            <span>{error}</span>
+          </p>
+        )}
         <label className="block text-sm font-medium text-slate-700">Email address
           <span className="relative mt-1.5 block">
             <Mail className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
@@ -90,6 +103,14 @@ export function PortalLoginPage() {
         </button>
       </form>
     </PortalAuthShell>
+  );
+}
+
+export function PortalLoginPage() {
+  return (
+    <Suspense fallback={<div className="min-h-screen flex items-center justify-center bg-slate-100"><div className="w-10 h-10 border-4 border-emerald-500 border-t-transparent rounded-full animate-spin" /></div>}>
+      <PortalLoginPageContent />
+    </Suspense>
   );
 }
 
