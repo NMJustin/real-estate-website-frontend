@@ -3,9 +3,10 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
-import { Search, SlidersHorizontal, ArrowUpDown, MapPin, BedDouble, Bath, Ruler, X } from 'lucide-react';
+import { Search, SlidersHorizontal, ArrowUpDown, MapPin, BedDouble, Bath, Ruler, X, LayoutGrid, Map, Columns } from 'lucide-react';
 import api from '@/services/api';
 import { TestPropertyBadge, TestPropertyNotice } from './TestPropertyBadge';
+import PropertyListingMap from '@/components/map/PropertyListingMap';
 
 type Property = {
   id: string;
@@ -26,6 +27,8 @@ type Property = {
   propertyImages?: { imageUrl: string; isPrimary?: boolean }[];
   featured?: boolean;
   listedDate?: string;
+  latitude?: number | null;
+  longitude?: number | null;
 };
 
 export default function Properties() {
@@ -34,7 +37,8 @@ export default function Properties() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [showFilters, setShowFilters] = useState(false);
-  
+  const [viewMode, setViewMode] = useState<'grid' | 'map' | 'split'>('grid');
+
   // Search and filter state
   const [searchTerm, setSearchTerm] = useState('');
   const [transactionType, setTransactionType] = useState(() => searchParams.get('transactionType')?.toUpperCase() || 'ALL');
@@ -224,6 +228,35 @@ export default function Properties() {
               <option value="featured">Featured</option>
             </select>
             <ArrowUpDown className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-400 pointer-events-none" />
+          </div>
+          <div className="flex items-center border border-slate-300 rounded-lg overflow-hidden">
+            <button
+              onClick={() => setViewMode('grid')}
+              className={`px-3 py-3 flex items-center gap-2 transition ${
+                viewMode === 'grid' ? 'bg-emerald-600 text-white' : 'bg-white text-slate-600 hover:bg-slate-50'
+              }`}
+              title="Grid View"
+            >
+              <LayoutGrid className="h-5 w-5" />
+            </button>
+            <button
+              onClick={() => setViewMode('map')}
+              className={`px-3 py-3 flex items-center gap-2 transition ${
+                viewMode === 'map' ? 'bg-emerald-600 text-white' : 'bg-white text-slate-600 hover:bg-slate-50'
+              }`}
+              title="Map View"
+            >
+              <Map className="h-5 w-5" />
+            </button>
+            <button
+              onClick={() => setViewMode('split')}
+              className={`px-3 py-3 flex items-center gap-2 transition ${
+                viewMode === 'split' ? 'bg-emerald-600 text-white' : 'bg-white text-slate-600 hover:bg-slate-50'
+              }`}
+              title="Split View"
+            >
+              <Columns className="h-5 w-5" />
+            </button>
           </div>
         </div>
 
@@ -430,7 +463,7 @@ export default function Properties() {
           )}
         </div>
 
-        {/* Property Grid */}
+        {/* Property Grid / Map / Split View */}
         {!error && filteredProperties.length === 0 ? (
           <div className="text-center py-12">
             <p className="text-slate-600">No properties match your search criteria.</p>
@@ -442,83 +475,168 @@ export default function Properties() {
             </button>
           </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {filteredProperties.map((property) => {
-              const primaryImage = property.propertyImages?.find(img => img.isPrimary) || property.propertyImages?.[0];
-              return (
-                <Link
-                  key={property.id}
-                  href={`/properties/${property.slug}`}
-                  className="bg-white rounded-xl border border-slate-200 overflow-hidden hover:shadow-lg transition-shadow group"
-                >
-                  {/* Image */}
-                  <div className="aspect-video bg-slate-200 relative">
-                    {primaryImage ? (
-                      <img
-                        src={primaryImage.imageUrl}
-                        alt={property.title}
-                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                      />
-                    ) : (
-                      <div className="w-full h-full flex items-center justify-center text-slate-400">
-                        No image
+          <>
+            {viewMode === 'grid' && (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {filteredProperties.map((property) => {
+                  const primaryImage = property.propertyImages?.find(img => img.isPrimary) || property.propertyImages?.[0];
+                  return (
+                    <Link
+                      key={property.id}
+                      href={`/properties/${property.slug}`}
+                      className="bg-white rounded-xl border border-slate-200 overflow-hidden hover:shadow-lg transition-shadow group"
+                    >
+                      {/* Image */}
+                      <div className="aspect-video bg-slate-200 relative">
+                        {primaryImage ? (
+                          <img
+                            src={primaryImage.imageUrl}
+                            alt={property.title}
+                            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                          />
+                        ) : (
+                          <div className="w-full h-full flex items-center justify-center text-slate-400">
+                            No image
+                          </div>
+                        )}
+                        {property.featured && (
+                          <div className="absolute top-3 left-3 bg-emerald-600 text-white text-xs font-semibold px-2 py-1 rounded">
+                            Featured
+                          </div>
+                        )}
+                        <TestPropertyBadge className="absolute left-3 top-12" />
+                        <div className="absolute top-3 right-3 bg-white/90 text-slate-900 text-xs font-semibold px-2 py-1 rounded">
+                          {property.transactionType === 'SALE' ? 'For Sale' : property.transactionType === 'RENT' ? 'For Rent' : property.transactionType === 'LEASE' ? 'For Lease' : property.transactionType}
+                        </div>
                       </div>
-                    )}
-                    {property.featured && (
-                      <div className="absolute top-3 left-3 bg-emerald-600 text-white text-xs font-semibold px-2 py-1 rounded">
-                        Featured
-                      </div>
-                    )}
-                    <TestPropertyBadge className="absolute left-3 top-12" />
-                    <div className="absolute top-3 right-3 bg-white/90 text-slate-900 text-xs font-semibold px-2 py-1 rounded">
-                      {property.transactionType === 'SALE' ? 'For Sale' : property.transactionType === 'RENT' ? 'For Rent' : property.transactionType === 'LEASE' ? 'For Lease' : property.transactionType}
-                    </div>
-                  </div>
 
-                  {/* Content */}
-                  <div className="p-5">
-                    <div className="flex items-center gap-2 text-sm text-slate-600 mb-2">
-                      <MapPin className="h-4 w-4" />
-                      <span className="truncate">{property.location || 'Location unavailable'}</span>
-                    </div>
-                    <h3 className="text-lg font-bold text-slate-900 mb-2 line-clamp-1">{property.title}</h3>
-                    <p className="text-xl font-bold text-emerald-700 mb-3">
-                      {property.price ? (() => {
-                        const price = Number(property.price);
-                        if (price >= 1000000) {
-                          return `RWF ${(price / 1000000).toFixed(0)}M`;
-                        } else if (price >= 1000) {
-                          return `RWF ${(price / 1000).toFixed(0)}K`;
-                        }
-                        return `RWF ${price.toLocaleString()}`;
-                      })() : 'Price on request'}
-                    </p>
-                    <div className="flex items-center gap-4 text-sm text-slate-600">
-                      <div className="flex items-center gap-1">
-                        <BedDouble className="h-4 w-4" />
-                        <span>{property.bedrooms ?? '—'} beds</span>
+                      {/* Content */}
+                      <div className="p-5">
+                        <div className="flex items-center gap-2 text-sm text-slate-600 mb-2">
+                          <MapPin className="h-4 w-4" />
+                          <span className="truncate">{property.location || 'Location unavailable'}</span>
+                        </div>
+                        <h3 className="text-lg font-bold text-slate-900 mb-2 line-clamp-1">{property.title}</h3>
+                        <p className="text-xl font-bold text-emerald-700 mb-3">
+                          {property.price ? (() => {
+                            const price = Number(property.price);
+                            if (price >= 1000000) {
+                              return `RWF ${(price / 1000000).toFixed(0)}M`;
+                            } else if (price >= 1000) {
+                              return `RWF ${(price / 1000).toFixed(0)}K`;
+                            }
+                            return `RWF ${price.toLocaleString()}`;
+                          })() : 'Price on request'}
+                        </p>
+                        <div className="flex items-center gap-4 text-sm text-slate-600">
+                          <div className="flex items-center gap-1">
+                            <BedDouble className="h-4 w-4" />
+                            <span>{property.bedrooms ?? '—'} beds</span>
+                          </div>
+                          <div className="flex items-center gap-1">
+                            <Bath className="h-4 w-4" />
+                            <span>{property.bathrooms ?? '—'} baths</span>
+                          </div>
+                          <div className="flex items-center gap-1">
+                            <Ruler className="h-4 w-4" />
+                            <span>{property.size ? (() => {
+                              const unit = property.sizeUnit || 'sqm';
+                              const unitDisplay = unit === 'sqm' ? 'm²' : unit === 'sqft' ? 'ft²' : unit === 'acres' ? 'acres' : unit === 'hectares' ? 'hectares' : unit;
+                              return `${property.size} ${unitDisplay}`;
+                            })() : '—'}</span>
+                          </div>
+                        </div>
+                        <div className="mt-4 pt-4 border-t border-slate-200">
+                          <span className="text-emerald-600 font-medium text-sm">View Property →</span>
+                        </div>
                       </div>
-                      <div className="flex items-center gap-1">
-                        <Bath className="h-4 w-4" />
-                        <span>{property.bathrooms ?? '—'} baths</span>
-                      </div>
-                      <div className="flex items-center gap-1">
-                        <Ruler className="h-4 w-4" />
-                        <span>{property.size ? (() => {
-                          const unit = property.sizeUnit || 'sqm';
-                          const unitDisplay = unit === 'sqm' ? 'm²' : unit === 'sqft' ? 'ft²' : unit === 'acres' ? 'acres' : unit === 'hectares' ? 'hectares' : unit;
-                          return `${property.size} ${unitDisplay}`;
-                        })() : '—'}</span>
-                      </div>
-                    </div>
-                    <div className="mt-4 pt-4 border-t border-slate-200">
-                      <span className="text-emerald-600 font-medium text-sm">View Property →</span>
-                    </div>
+                    </Link>
+                  );
+                })}
+              </div>
+            )}
+
+            {viewMode === 'map' && (
+              <div className="h-[600px] rounded-lg overflow-hidden border border-slate-200">
+                <PropertyListingMap properties={filteredProperties} />
+              </div>
+            )}
+
+            {viewMode === 'split' && (
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 h-[600px]">
+                <div className="h-full min-h-[500px] rounded-lg overflow-hidden border border-slate-200">
+                  <PropertyListingMap properties={filteredProperties} />
+                </div>
+                <div className="h-full overflow-y-auto pr-2">
+                  <div className="grid grid-cols-1 gap-4">
+                    {filteredProperties.map((property) => {
+                      const primaryImage = property.propertyImages?.find(img => img.isPrimary) || property.propertyImages?.[0];
+                      return (
+                        <Link
+                          key={property.id}
+                          href={`/properties/${property.slug}`}
+                          className="bg-white rounded-xl border border-slate-200 overflow-hidden hover:shadow-lg transition-shadow group flex"
+                        >
+                          {/* Image */}
+                          <div className="w-1/3 min-w-[150px] aspect-square bg-slate-200 relative">
+                            {primaryImage ? (
+                              <img
+                                src={primaryImage.imageUrl}
+                                alt={property.title}
+                                className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                              />
+                            ) : (
+                              <div className="w-full h-full flex items-center justify-center text-slate-400">
+                                No image
+                              </div>
+                            )}
+                          </div>
+
+                          {/* Content */}
+                          <div className="flex-1 p-4">
+                            <div className="flex items-center gap-2 text-sm text-slate-600 mb-1">
+                              <MapPin className="h-3 w-3" />
+                              <span className="truncate">{property.location || 'Location unavailable'}</span>
+                            </div>
+                            <h3 className="text-base font-bold text-slate-900 mb-1 line-clamp-1">{property.title}</h3>
+                            <p className="text-lg font-bold text-emerald-700 mb-2">
+                              {property.price ? (() => {
+                                const price = Number(property.price);
+                                if (price >= 1000000) {
+                                  return `RWF ${(price / 1000000).toFixed(0)}M`;
+                                } else if (price >= 1000) {
+                                  return `RWF ${(price / 1000).toFixed(0)}K`;
+                                }
+                                return `RWF ${price.toLocaleString()}`;
+                              })() : 'Price on request'}
+                            </p>
+                            <div className="flex items-center gap-3 text-xs text-slate-600">
+                              <div className="flex items-center gap-1">
+                                <BedDouble className="h-3 w-3" />
+                                <span>{property.bedrooms ?? '—'} beds</span>
+                              </div>
+                              <div className="flex items-center gap-1">
+                                <Bath className="h-3 w-3" />
+                                <span>{property.bathrooms ?? '—'} baths</span>
+                              </div>
+                              <div className="flex items-center gap-1">
+                                <Ruler className="h-3 w-3" />
+                                <span>{property.size ? (() => {
+                                  const unit = property.sizeUnit || 'sqm';
+                                  const unitDisplay = unit === 'sqm' ? 'm²' : unit === 'sqft' ? 'ft²' : unit === 'acres' ? 'acres' : unit === 'hectares' ? 'hectares' : unit;
+                                  return `${property.size} ${unitDisplay}`;
+                                })() : '—'}</span>
+                              </div>
+                            </div>
+                          </div>
+                        </Link>
+                      );
+                    })}
                   </div>
-                </Link>
-              );
-            })}
-          </div>
+                </div>
+              </div>
+            )}
+          </>
         )}
       </div>
     </main>
