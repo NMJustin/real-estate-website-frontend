@@ -55,7 +55,7 @@ export default function PropertyComparison({ properties, onRemove, onClose }: Pr
     return `${size.toLocaleString()} ${unit}`
   }
 
-  const renderRow = (label: string, getValue: (property: Property) => React.ReactNode): React.JSX.Element => (
+  const renderRow = (label: string, getValue: (property: Property) => React.ReactNode) => (
     <tr className="border-b border-slate-200">
       <td className="py-3 px-4 font-medium text-slate-700 bg-slate-50 sticky left-0">{label}</td>
       {visibleProperties.map((property) => (
