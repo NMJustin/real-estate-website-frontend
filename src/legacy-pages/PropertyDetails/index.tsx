@@ -9,6 +9,7 @@ import { ImageViewer } from '../../components/ImageViewer';
 import { TestPropertyNotice } from '../../components/property/TestPropertyBadge';
 import { usePropertyViewTracking, trackClickEvent } from '../../utils/analytics';
 import { PropertyStructuredData } from '@/components/seo/PropertyStructuredData';
+import PropertyMap from '@/components/map/PropertyMap';
 
 type InquiryForm = {
   name: string;
@@ -451,14 +452,13 @@ export default function PropertyDetails({ propertySlug: propSlug }: { propertySl
                     <span className="font-medium">About the Location:</span> {property.locationDescription}
                   </div>
                 )}
-                {/* Embedded Map */}
+                {/* Interactive Map */}
                 {property.latitude != null && property.longitude != null && (
                   <div className="mt-4">
-                    <iframe
-                      title="Property location map"
-                      src={`https://www.google.com/maps?q=${property.latitude},${property.longitude}&output=embed`}
-                      className="w-full h-80 rounded-lg border-0"
-                      loading="lazy"
+                    <PropertyMap
+                      latitude={property.latitude}
+                      longitude={property.longitude}
+                      address={location}
                     />
                   </div>
                 )}
