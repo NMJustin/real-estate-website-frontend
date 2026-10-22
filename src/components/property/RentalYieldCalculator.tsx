@@ -30,6 +30,7 @@ export default function RentalYieldCalculator({ propertyPrice, propertyCurrency 
       grossYield,
       netYield,
       annualRent,
+      annualExpenses,
       netAnnualIncome,
       totalPurchaseCost,
       cashFlow,
