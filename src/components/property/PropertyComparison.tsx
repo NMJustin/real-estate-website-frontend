@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import type { ReactNode } from 'react'
 import { X, ChevronLeft, ChevronRight } from 'lucide-react'
 
 interface Property {
@@ -55,7 +56,7 @@ export default function PropertyComparison({ properties, onRemove, onClose }: Pr
     return `${size.toLocaleString()} ${unit}`
   }
 
-  const renderRow = (label: string, getValue: (property: Property) => string | number | React.ReactElement) => (
+  const renderRow = (label: string, getValue: (property: Property) => ReactNode) => (
     <tr className="border-b border-slate-200">
       <td className="py-3 px-4 font-medium text-slate-700 bg-slate-50 sticky left-0">{label}</td>
       {visibleProperties.map((property) => (
