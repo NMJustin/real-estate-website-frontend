@@ -52,9 +52,9 @@ const clearAuthData = () => {
  *
  * Resolution order:
  *  1. Verified role stored in localStorage after a successful login
- *     (admin → /admin/login; portal roles → /portal/login)
+ *     (admin → /admin; portal roles → /portal/login)
  *  2. Current URL path context as a fallback
- *     (/admin/* → /admin/login; everything else → /portal/login)
+ *     (/admin/* → /admin; everything else → /portal/login)
  *
  * Exported so it can be unit-tested without DOM side-effects.
  * Never trusts unverified client-side role data for authorization —
@@ -63,14 +63,14 @@ const clearAuthData = () => {
 export const getLoginRedirectForRole = (storedRole: string | null, currentPathname: string): string => {
   if (typeof storedRole === 'string') {
     const role = storedRole.toLowerCase();
-    if (role === 'admin') return '/admin/login';
+    if (role === 'admin') return '/admin';
     if (role === 'agent' || role === 'property_manager' || role === 'content_editor') {
       return '/portal/login';
     }
   }
   // Fallback: infer from the current route context
   if (currentPathname.startsWith('/admin') || currentPathname.startsWith('/login')) {
-    return '/admin/login';
+    return '/admin';
   }
   // Default to portal login for all other authenticated routes
   return '/portal/login';

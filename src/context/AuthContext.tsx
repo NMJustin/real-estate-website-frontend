@@ -78,7 +78,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           const currentPathname = window.location.pathname;
           // Determine if we are on a protected route that requires redirection on session expiry
           const isProtectedContext = currentPathname.startsWith('/admin') || currentPathname.startsWith('/portal');
-          const isLoginPage = currentPathname === '/admin/login' || currentPathname === '/portal/login';
+          const isLoginPage = currentPathname === '/admin' || currentPathname === '/portal/login';
 
           let storedRole: string | null = null;
           try {
@@ -95,7 +95,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           if (isProtectedContext && !isLoginPage) {
             let target = '/portal/login';
             if (storedRole?.toLowerCase() === 'admin' || currentPathname.startsWith('/admin')) {
-              target = '/admin/login';
+              target = '/admin';
             }
             window.location.href = `${target}?session=expired`;
             return;
