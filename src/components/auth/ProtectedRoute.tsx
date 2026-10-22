@@ -24,7 +24,8 @@ export default function ProtectedRoute({ children }: ProtectedRouteProps) {
   }
 
   if (!isAuthenticated) {
-    return <Navigate to={`/admin?from=${encodeURIComponent(pathname)}`} replace />;
+    // Redirect to admin login with from parameter for redirect after login
+    return <Navigate to={`/admin/login?from=${encodeURIComponent(pathname)}`} replace />;
   }
 
   if (user?.role.toLowerCase() !== 'admin') {

@@ -3,9 +3,10 @@
 import { useEffect, useState, useCallback, useRef } from 'react'
 import { useRouter, usePathname } from 'next/navigation'
 import { useAuth } from '@/context/AuthContext'
+import { getLoginRedirectForRole } from '@/services/api'
 
-const INACTIVITY_TIMEOUT = 15 * 60 * 1000 // 15 minutes
-const WARNING_TIMEOUT = 13 * 60 * 1000 // 13 minutes
+const INACTIVITY_TIMEOUT = 5 * 60 * 1000 // 5 minutes
+const WARNING_TIMEOUT = 3 * 60 * 1000 // 3 minutes
 const STORAGE_KEY = 'inactivity_logout'
 const SYNC_EVENT = 'inactivity_sync'
 
@@ -17,7 +18,7 @@ interface InactivityState {
 export function useInactivityLogout() {
   const router = useRouter()
   const pathname = usePathname()
-  const { logout, isAuthenticated } = useAuth()
+  const { logout, isAuthenticated, user } = useAuth()
   const [showWarning, setShowWarning] = useState(false)
   const [countdown, setCountdown] = useState(0)
   const [isSessionExpired, setIsSessionExpired] = useState(false)
@@ -25,6 +26,48 @@ export function useInactivityLogout() {
   const warningTimerRef = useRef<NodeJS.Timeout | null>(null)
   const countdownIntervalRef = useRef<NodeJS.Timeout | null>(null)
   const lastActivityRef = useRef<number>(Date.now())
+
+  // Keep stable refs to external dependencies to avoid callback thrashing on renders
+  const logoutRef = useRef(logout)
+  logoutRef.current = logout
+  const routerRef = useRef(router)
+  routerRef.current = router
+  const pathnameRef = useRef(pathname)
+  pathnameRef.current = pathname
+  const userRef = useRef(user)
+  userRef.current = user
+
+  // Perform logout
+  const performLogout = useCallback(() => {
+    // Determine correct login page based on verified role or current route context
+    let storedRole: string | null = userRef.current?.role || null
+    if (!storedRole && typeof window !== 'undefined') {
+      try {
+        const item = localStorage.getItem('user_role')
+        storedRole = item ? JSON.parse(item) : null
+      } catch {
+        storedRole = null
+      }
+    }
+    const loginPage = getLoginRedirectForRole(storedRole, pathnameRef.current)
+
+    logoutRef.current()
+    setIsSessionExpired(true)
+    setShowWarning(false)
+
+    // Clear timers
+    if (inactivityTimerRef.current) {
+      clearTimeout(inactivityTimerRef.current)
+    }
+    if (warningTimerRef.current) {
+      clearTimeout(warningTimerRef.current)
+    }
+    if (countdownIntervalRef.current) {
+      clearInterval(countdownIntervalRef.current)
+    }
+
+    routerRef.current.push(`${loginPage}?session=expired`)
+  }, [])
 
   // Reset inactivity timer on genuine user activity
   const resetTimer = useCallback(() => {
@@ -67,12 +110,12 @@ export function useInactivityLogout() {
     }, INACTIVITY_TIMEOUT)
 
     // Hide warning if shown
-    if (showWarning) {
-      setShowWarning(false)
-      if (countdownIntervalRef.current) {
+    setShowWarning((prev) => {
+      if (prev && countdownIntervalRef.current) {
         clearInterval(countdownIntervalRef.current)
       }
-    }
+      return false
+    })
 
     // Sync with other tabs
     const state: InactivityState = {
@@ -81,28 +124,7 @@ export function useInactivityLogout() {
     }
     localStorage.setItem(STORAGE_KEY, JSON.stringify(state))
     window.dispatchEvent(new Event(STORAGE_KEY))
-  }, [isAuthenticated, showWarning])
-
-  // Perform logout
-  const performLogout = useCallback(() => {
-    logout()
-    setIsSessionExpired(true)
-    setShowWarning(false)
-
-    // Clear timers
-    if (inactivityTimerRef.current) {
-      clearTimeout(inactivityTimerRef.current)
-    }
-    if (warningTimerRef.current) {
-      clearTimeout(warningTimerRef.current)
-    }
-    if (countdownIntervalRef.current) {
-      clearInterval(countdownIntervalRef.current)
-    }
-
-    // Redirect to login with session expired message
-    router.push('/portal/login?session=expired')
-  }, [logout, router])
+  }, [isAuthenticated, performLogout])
 
   // Stay logged in (user clicked button)
   const stayLoggedIn = useCallback(() => {

@@ -42,7 +42,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setIsLoading(false);
       return;
     }
-    
+
     const storedToken = localStorage.getItem(TOKEN_KEY);
     if (!storedToken) {
       setIsLoading(false);
@@ -59,17 +59,50 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       })
       .then((body) => {
         const u = body.data;
+        const userRole = u.role?.name ?? u.role;
         setUser({
           id: u.id,
           name: u.name,
           email: u.email,
-          role: u.role?.name ?? u.role,
+          role: userRole,
           phone: u.phone ?? null,
         });
         setToken(storedToken);
+        // Store role for redirect on token expiration
+        if (typeof window !== 'undefined') {
+          localStorage.setItem('user_role', JSON.stringify(userRole));
+        }
       })
       .catch(() => {
+        if (typeof window !== 'undefined') {
+          const currentPathname = window.location.pathname;
+          // Determine if we are on a protected route that requires redirection on session expiry
+          const isProtectedContext = currentPathname.startsWith('/admin') || currentPathname.startsWith('/portal');
+          const isLoginPage = currentPathname === '/admin/login' || currentPathname === '/portal/login';
+
+          let storedRole: string | null = null;
+          try {
+            const roleStr = localStorage.getItem('user_role');
+            storedRole = roleStr ? JSON.parse(roleStr) : null;
+          } catch {
+            storedRole = null;
+          }
+
+          localStorage.removeItem(TOKEN_KEY);
+          localStorage.removeItem('user_role');
+          localStorage.removeItem('inactivity_logout');
+
+          if (isProtectedContext && !isLoginPage) {
+            let target = '/portal/login';
+            if (storedRole?.toLowerCase() === 'admin' || currentPathname.startsWith('/admin')) {
+              target = '/admin/login';
+            }
+            window.location.href = `${target}?session=expired`;
+            return;
+          }
+        }
         localStorage.removeItem(TOKEN_KEY);
+        localStorage.removeItem('user_role');
         setToken(null);
         setUser(null);
       })
@@ -87,6 +120,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const { token: jwt, user: userData } = body.data;
     if (typeof window !== 'undefined') {
       localStorage.setItem(TOKEN_KEY, jwt);
+      localStorage.setItem('user_role', JSON.stringify(userData.role?.name ?? userData.role));
     }
     setToken(jwt);
     setUser(userData);
@@ -103,6 +137,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const { token: jwt, user: userData } = body.data;
     if (typeof window !== 'undefined') {
       localStorage.setItem(TOKEN_KEY, jwt);
+      localStorage.setItem('user_role', JSON.stringify(userData.role?.name ?? userData.role));
     }
     setToken(jwt);
     const authenticatedUser: AdminUser = {
@@ -125,6 +160,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const { token: jwt, user: userData } = body.data;
     if (typeof window !== 'undefined') {
       localStorage.setItem(TOKEN_KEY, jwt);
+      localStorage.setItem('user_role', JSON.stringify(userData.role?.name ?? userData.role));
     }
     setToken(jwt);
     setUser(userData);
@@ -150,6 +186,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const logout = useCallback(() => {
     if (typeof window !== 'undefined') {
       localStorage.removeItem(TOKEN_KEY);
+      localStorage.removeItem('user_role');
       localStorage.removeItem('inactivity_logout');
     }
     setToken(null);

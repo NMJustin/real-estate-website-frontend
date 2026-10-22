@@ -25,6 +25,60 @@ const getToken = () => {
   return null;
 };
 
+const getUserRole = () => {
+  if (typeof window !== 'undefined') {
+    const userStr = localStorage.getItem('user_role');
+    return userStr ? JSON.parse(userStr) : null;
+  }
+  return null;
+};
+
+const setUserRole = (role: string) => {
+  if (typeof window !== 'undefined') {
+    localStorage.setItem('user_role', JSON.stringify(role));
+  }
+};
+
+const clearAuthData = () => {
+  if (typeof window !== 'undefined') {
+    localStorage.removeItem('admin_token');
+    localStorage.removeItem('user_role');
+    localStorage.removeItem('inactivity_logout');
+  }
+};
+
+/**
+ * Determines the correct login page for a session-expiry redirect.
+ *
+ * Resolution order:
+ *  1. Verified role stored in localStorage after a successful login
+ *     (admin → /admin/login; portal roles → /portal/login)
+ *  2. Current URL path context as a fallback
+ *     (/admin/* → /admin/login; everything else → /portal/login)
+ *
+ * Exported so it can be unit-tested without DOM side-effects.
+ * Never trusts unverified client-side role data for authorization —
+ * the backend continues to enforce permissions.
+ */
+export const getLoginRedirectForRole = (storedRole: string | null, currentPathname: string): string => {
+  if (typeof storedRole === 'string') {
+    const role = storedRole.toLowerCase();
+    if (role === 'admin') return '/admin/login';
+    if (role === 'agent' || role === 'property_manager' || role === 'content_editor') {
+      return '/portal/login';
+    }
+  }
+  // Fallback: infer from the current route context
+  if (currentPathname.startsWith('/admin') || currentPathname.startsWith('/login')) {
+    return '/admin/login';
+  }
+  // Default to portal login for all other authenticated routes
+  return '/portal/login';
+};
+
+const getLoginRedirect = (currentPathname: string): string =>
+  getLoginRedirectForRole(getUserRole(), currentPathname);
+
 const request = async <T>(path: string, options: RequestInit = {}): Promise<T> => {
 	const headers = new Headers(options.headers);
 	if (typeof options.body === 'string' && !headers.has('Content-Type')) {
@@ -40,26 +94,74 @@ const request = async <T>(path: string, options: RequestInit = {}): Promise<T> =
 // Authenticated request — injects Bearer token from localStorage
 const authRequest = async <T>(path: string, options: RequestInit = {}): Promise<T> => {
 	const token = getToken();
-	return request<T>(path, {
-		...options,
-		headers: {
-			...(token ? { Authorization: `Bearer ${token}` } : {}),
-			...(options.headers || {}),
-		},
-	});
+	const currentPathname = typeof window !== 'undefined' ? window.location.pathname : '';
+
+	const headers = new Headers(options.headers);
+	if (typeof options.body === 'string' && !headers.has('Content-Type')) {
+		headers.set('Content-Type', 'application/json');
+	}
+	if (token) {
+		headers.set('Authorization', `Bearer ${token}`);
+	}
+
+	const url = sanitizeUrl(API_BASE_URL, path);
+	const response = await fetch(url, { ...options, headers });
+	const body = await response.json().catch(() => ({}));
+
+	// Handle 401 Unauthorized - JWT expired or invalid
+	if (response.status === 401) {
+		const loginPage = getLoginRedirect(currentPathname);
+		clearAuthData();
+		if (typeof window !== 'undefined') {
+			window.location.href = `${loginPage}?session=expired`;
+		}
+		throw new Error('Session expired. Redirecting to login...');
+	}
+
+	// Handle 403 Forbidden - permission error (no redirect)
+	if (response.status === 403) {
+		throw new Error(body.message || 'You do not have permission to perform this action.');
+	}
+
+	if (!response.ok) {
+		throw new Error(body.message || `API request failed (${response.status})`);
+	}
+
+	return body;
 };
 
 const uploadMedia = async (file: File, path: string) => {
 	const token = getToken();
+	const currentPathname = typeof window !== 'undefined' ? window.location.pathname : '';
 	const formData = new FormData();
 	formData.append('file', file);
 	const url = sanitizeUrl(API_BASE_URL, path);
+	const headers: HeadersInit = {};
+	if (token) {
+		headers['Authorization'] = `Bearer ${token}`;
+	}
 	const response = await fetch(url, {
 		method: 'POST',
-		headers: token ? { Authorization: `Bearer ${token}` } : {},
+		headers,
 		body: formData,
 	});
 	const body = await response.json().catch(() => ({}));
+
+	// Handle 401 Unauthorized - JWT expired or invalid
+	if (response.status === 401) {
+		const loginPage = getLoginRedirect(currentPathname);
+		clearAuthData();
+		if (typeof window !== 'undefined') {
+			window.location.href = `${loginPage}?session=expired`;
+		}
+		throw new Error('Session expired. Redirecting to login...');
+	}
+
+	// Handle 403 Forbidden - permission error (no redirect)
+	if (response.status === 403) {
+		throw new Error(body.message || 'You do not have permission to upload media.');
+	}
+
 	if (!response.ok) throw new Error(body.message || 'Media upload failed.');
 	return body as { data: { url: string; mediaType: 'IMAGE' | 'VIDEO' } };
 };

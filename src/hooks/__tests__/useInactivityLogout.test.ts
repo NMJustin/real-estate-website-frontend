@@ -32,12 +32,12 @@ describe('useInactivityLogout', () => {
     expect(result.current.showWarning).toBe(false)
   })
 
-  it('should show warning after 13 minutes of inactivity', () => {
+  it('should show warning after 3 minutes of inactivity', () => {
     const { result } = renderHook(() => useInactivityLogout())
 
-    // Fast-forward 13 minutes
+    // Fast-forward 3 minutes
     act(() => {
-      jest.advanceTimersByTime(13 * 60 * 1000)
+      jest.advanceTimersByTime(3 * 60 * 1000)
     })
 
     expect(result.current.showWarning).toBe(true)
@@ -48,7 +48,7 @@ describe('useInactivityLogout', () => {
 
     // Fast-forward to warning time
     act(() => {
-      jest.advanceTimersByTime(13 * 60 * 1000)
+      jest.advanceTimersByTime(3 * 60 * 1000)
     })
 
     expect(result.current.showWarning).toBe(true)
@@ -67,7 +67,7 @@ describe('useInactivityLogout', () => {
 
     // Fast-forward to warning time
     act(() => {
-      jest.advanceTimersByTime(13 * 60 * 1000)
+      jest.advanceTimersByTime(3 * 60 * 1000)
     })
 
     expect(result.current.showWarning).toBe(true)

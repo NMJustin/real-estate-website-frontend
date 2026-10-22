@@ -45,6 +45,7 @@ export default function AdminLogin() {
     setSubmitting(true);
     try {
       await login(email.trim(), password);
+      // Redirect to the page user was trying to access, or default to admin dashboard
       navigate(from, { replace: true });
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Login failed. Please try again.');
