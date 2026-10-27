@@ -1,21 +1,13 @@
 import type { ComponentType } from 'react'
 import { notFound } from 'next/navigation'
-import CoreValues from '@/legacy-pages/About/CoreValues'
 import Mission from '@/legacy-pages/About/Mission'
 import OurCompany from '@/legacy-pages/About/OurCompany'
-import Vision from '@/legacy-pages/About/Vision'
-import WhyChooseUs from '@/legacy-pages/About/WhyChooseUs'
-import Agents from '@/legacy-pages/Agents'
-import AgentProfile from '@/legacy-pages/AgentProfile'
 import ContactUs from '@/legacy-pages/ContactUs'
 import CompareProperties from '@/legacy-pages/CustomerTools/CompareProperties'
 import Favorites from '@/legacy-pages/CustomerTools/Favorites'
 import MortgageCalculator from '@/legacy-pages/CustomerTools/MortgageCalculator'
 import RentalYieldCalculator from '@/legacy-pages/CustomerTools/RentalYieldCalculator'
 import FAQs from '@/legacy-pages/FAQs'
-import News from '@/legacy-pages/Insights/News'
-import Articles from '@/legacy-pages/Insights/Articles'
-import PropertyGuides from '@/legacy-pages/Insights/PropertyGuides'
 import CookiePolicy from '@/legacy-pages/Legal/CookiePolicy'
 import PrivacyPolicy from '@/legacy-pages/Legal/PrivacyPolicy'
 import PropertyDisclaimer from '@/legacy-pages/Legal/PropertyDisclaimer'
@@ -43,25 +35,16 @@ import PropertySearchServices from '@/legacy-pages/Services/PropertySearchServic
 import PropertyValuation from '@/legacy-pages/Services/PropertyValuation'
 import RealEstateAdvisory from '@/legacy-pages/Services/RealEstateAdvisory'
 import RealEstateConsultancy from '@/legacy-pages/Services/RealEstateConsultancy'
-import { RouteParamsProvider } from '@/navigation/legacy-router'
-import ArticleDetails from '@/components/content/ArticleDetails'
 import DynamicPage from '@/components/content/DynamicPage'
 
 const staticRoutes: Record<string, ComponentType> = {
-  '/about/core-values': CoreValues,
   '/about/mission': Mission,
   '/about/our-company': OurCompany,
-  '/about/vision': Vision,
-  '/about/why-choose-us': WhyChooseUs,
-  '/agents': Agents,
   '/contact-us': ContactUs,
   '/compare-properties': CompareProperties,
   '/cookie-policy': CookiePolicy,
   '/faqs': FAQs,
   '/favorites': Favorites,
-  '/insights/articles': Articles,
-  '/insights/news': News,
-  '/insights/property-guides': PropertyGuides,
   '/legal/cookie-policy': CookiePolicy,
   '/legal/privacy-policy': PrivacyPolicy,
   '/legal/property-listing-disclaimer': PropertyDisclaimer,
@@ -101,18 +84,6 @@ export function LegacyPublicRoute({ segments }: { segments: string[] }) {
   const Page = staticRoutes[path]
 
   if (Page) return <Page />
-
-  if (segments.length === 3 && segments[0] === 'insights' && segments[1] === 'articles') {
-    return <ArticleDetails slug={segments[2]} />
-  }
-
-  if (segments.length === 2 && segments[0] === 'agents') {
-    return (
-      <RouteParamsProvider params={{ agentName: segments[1] }}>
-        <AgentProfile />
-      </RouteParamsProvider>
-    )
-  }
 
   // Check for dynamic pages from database
   if (segments.length === 1) {
