@@ -1,9 +1,8 @@
 'use client'
 
-import { useEffect, useRef } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import L from 'leaflet'
 import 'leaflet/dist/leaflet.css'
-import Link from 'next/link'
 import { BedDouble, Bath, Ruler } from 'lucide-react'
 
 interface Property {
@@ -86,11 +85,17 @@ const createPopupContent = (property: Property): string => {
 }
 
 export default function PropertyListingMap({ properties, className = '' }: PropertyListingMapProps) {
+  const [isMounted, setIsMounted] = useState(false)
   const mapRef = useRef<HTMLDivElement>(null)
   const mapInstanceRef = useRef<L.Map | null>(null)
   const markersRef = useRef<L.Marker[]>([])
 
   useEffect(() => {
+    setIsMounted(true)
+  }, [])
+
+  useEffect(() => {
+    if (!isMounted || !mapRef.current) return
     if (!mapRef.current) return
 
     // Initialize map only once
@@ -143,6 +148,19 @@ export default function PropertyListingMap({ properties, className = '' }: Prope
       markersRef.current = []
     }
   }, [properties])
+
+  if (!isMounted) {
+    return (
+      <div
+        className={`w-full rounded-lg shadow-md ${className}`}
+        style={{ minHeight: '500px', height: '100%' }}
+      >
+        <div className="flex items-center justify-center h-full text-slate-500">
+          Loading map...
+        </div>
+      </div>
+    )
+  }
 
   return (
     <div
