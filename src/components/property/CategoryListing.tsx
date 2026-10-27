@@ -1,7 +1,7 @@
 ﻿'use client'
 
 import { useEffect, useState } from 'react';
-import { Link } from '@/navigation/legacy-router';
+import Link from 'next/link';
 import api from '../../services/api';
 import { TestPropertyBadge, TestPropertyNotice } from './TestPropertyBadge';
 
@@ -74,7 +74,7 @@ export function CategoryListing({ title, query }: CategoryListingProps) {
           {properties.map((property) => (
             <Link
               key={property.id}
-              to={`/properties/${property.slug}`}
+              href={`/properties/${property.slug}`}
               className="group overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm transition hover:-translate-y-1 hover:shadow-lg"
             >
               <div className="relative overflow-hidden">

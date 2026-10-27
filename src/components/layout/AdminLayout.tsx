@@ -1,7 +1,8 @@
 'use client'
 
 import React, { useState } from 'react';
-import { NavLink, useNavigate } from '@/navigation/legacy-router';
+import Link from 'next/link';
+import { usePathname, useRouter } from 'next/navigation';
 import {
   Building2,
   LayoutDashboard,
@@ -26,7 +27,7 @@ import {
   Building,
   Mail,
 } from 'lucide-react';
-import { useAuth } from '../../context/AuthContext';
+import { useAuth } from '@/context/AuthContext';
 import { useInactivityLogout } from '@/hooks/useInactivityLogout';
 import { InactivityWarningModal } from '@/components/auth/InactivityWarningModal';
 
@@ -51,11 +52,12 @@ const navItems = [
 
 function Sidebar({ onClose }: { onClose?: () => void }) {
   const { user, logout } = useAuth();
-  const navigate = useNavigate();
+  const router = useRouter();
+  const pathname = usePathname();
 
   const handleLogout = () => {
     logout();
-    navigate('/admin');
+    router.push('/admin');
   };
 
   return (
@@ -79,29 +81,26 @@ function Sidebar({ onClose }: { onClose?: () => void }) {
       <nav className="flex-1 overflow-y-auto py-4 px-3">
         <p className="px-3 mb-2 text-xs font-semibold text-slate-500 uppercase tracking-wider">Main Menu</p>
         <ul className="space-y-0.5">
-          {navItems.map(({ to, icon: Icon, label }) => (
-            <li key={to}>
-              <NavLink
-                to={to}
-                onClick={onClose}
-                className={({ isActive }) =>
-                  `flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors group ${
+          {navItems.map(({ to, icon: Icon, label }) => {
+            const isActive = pathname === to;
+            return (
+              <li key={to}>
+                <Link
+                  href={to}
+                  onClick={onClose}
+                  className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors group ${
                     isActive
                       ? 'bg-emerald-500/15 text-emerald-400 border border-emerald-500/20'
                       : 'text-slate-400 hover:bg-slate-800 hover:text-white'
-                  }`
-                }
-              >
-                {({ isActive }) => (
-                  <>
-                    <Icon className={`w-4.5 h-4.5 flex-shrink-0 ${isActive ? 'text-emerald-400' : 'text-slate-500 group-hover:text-slate-300'}`} />
-                    <span className="flex-1">{label}</span>
-                    {isActive && <ChevronRight className="w-3.5 h-3.5 text-emerald-400" />}
-                  </>
-                )}
-              </NavLink>
-            </li>
-          ))}
+                  }`}
+                >
+                  <Icon className={`w-4.5 h-4.5 flex-shrink-0 ${isActive ? 'text-emerald-400' : 'text-slate-500 group-hover:text-slate-300'}`} />
+                  <span className="flex-1">{label}</span>
+                  {isActive && <ChevronRight className="w-3.5 h-3.5 text-emerald-400" />}
+                </Link>
+              </li>
+            );
+          })}
         </ul>
       </nav>
 
@@ -136,11 +135,11 @@ export function AdminLayout({ children }: AdminLayoutProps) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const { showWarning, countdown, formatCountdown, stayLoggedIn } = useInactivityLogout();
   const { logout } = useAuth();
-  const navigate = useNavigate();
+  const router = useRouter();
 
   const handleLogout = () => {
     logout();
-    navigate('/admin');
+    router.push('/admin');
   };
 
   return (

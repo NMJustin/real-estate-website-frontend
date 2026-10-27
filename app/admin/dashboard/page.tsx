@@ -1,6 +1,6 @@
 ﻿import { AdminLayout } from '@/components/layout/AdminLayout'
 import ProtectedRoute from '@/components/auth/ProtectedRoute'
-import AdminDashboard from '@/legacy-pages/Admin/Dashboard'
+import AdminDashboard from '@/components/admin/AdminDashboard'
 
 export default function AdminDashboardPage() {
   return (

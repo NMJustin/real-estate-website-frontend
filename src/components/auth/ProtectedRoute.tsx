@@ -1,7 +1,6 @@
 'use client'
 
-import { usePathname } from 'next/navigation';
-import { Navigate } from '@/navigation/legacy-router';
+import { usePathname, useRouter } from 'next/navigation';
 import { useAuth } from '../../context/AuthContext';
 
 interface ProtectedRouteProps {
@@ -11,6 +10,7 @@ interface ProtectedRouteProps {
 export default function ProtectedRoute({ children }: ProtectedRouteProps) {
   const { isAuthenticated, isLoading, user } = useAuth();
   const pathname = usePathname();
+  const router = useRouter();
 
   if (isLoading) {
     return (
@@ -25,11 +25,13 @@ export default function ProtectedRoute({ children }: ProtectedRouteProps) {
 
   if (!isAuthenticated) {
     // Redirect to admin login with from parameter for redirect after login
-    return <Navigate to={`/admin?from=${encodeURIComponent(pathname)}`} replace />;
+    router.push(`/admin?from=${encodeURIComponent(pathname)}`);
+    return null;
   }
 
   if (user?.role.toLowerCase() !== 'admin') {
-    return <Navigate to="/portal/dashboard" replace />;
+    router.push('/portal/dashboard');
+    return null;
   }
 
   return <>{children}</>;

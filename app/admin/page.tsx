@@ -1,5 +1,5 @@
 import { Suspense } from 'react'
-import AdminLogin from '@/legacy-pages/Admin/Login'
+import AdminLogin from '@/components/admin/AdminLogin'
 
 export default function AdminLoginPage() {
   return (

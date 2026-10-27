@@ -1,5 +1,5 @@
 ﻿import React from 'react';
-import { Link } from '@/navigation/legacy-router';
+import Link from 'next/link';
 import { Card, CardBody, CardFooter } from './Card';
 import { Button } from './Button';
 import { TestPropertyBadge } from '../property/TestPropertyBadge';
@@ -91,7 +91,7 @@ export function PropertyCard({ property }: { property: PropertyProps }) {
       </CardBody>
       
       <CardFooter className="bg-white border-t-0 pt-0">
-        <Link to={`/properties/${property.slug}`} className="block w-full">
+        <Link href={`/properties/${property.slug}`} className="block w-full">
           <Button variant="secondary" className="w-full">View Details</Button>
         </Link>
       </CardFooter>

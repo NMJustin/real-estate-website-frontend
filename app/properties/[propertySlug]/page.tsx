@@ -1,6 +1,6 @@
 import { Suspense } from 'react'
 import { Metadata } from 'next'
-import PropertyDetails from '@/legacy-pages/PropertyDetails'
+import PropertyDetails from '@/components/content/PropertyDetails'
 import { generatePropertyMetadata } from '@/utils/metadata'
 
 export async function generateMetadata({
