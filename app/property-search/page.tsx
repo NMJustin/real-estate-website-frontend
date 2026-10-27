@@ -1,10 +1,19 @@
-import { Suspense } from 'react'
-import PropertySearch from '@/legacy-pages/PropertySearch'
+import { Metadata } from 'next'
+import { generatePageMetadata } from '@/utils/metadata'
+import PropertySearch from '@/components/content/PropertySearch'
+
+export const metadata: Metadata = generatePageMetadata({
+  title: 'Property Search - Ingata Real Estate Rwanda',
+  description: 'Search for properties in Rwanda with advanced filters. Find homes, apartments, commercial spaces, and land for sale or rent.',
+  path: '/property-search',
+  keywords: [
+    'property search Rwanda',
+    'find property Rwanda',
+    'real estate search',
+    'property filters',
+  ],
+})
 
 export default function PropertySearchPage() {
-  return (
-    <Suspense fallback={<main className="mx-auto max-w-7xl px-4 py-16 text-slate-500">Loading property search…</main>}>
-      <PropertySearch />
-    </Suspense>
-  )
+  return <PropertySearch />
 }
