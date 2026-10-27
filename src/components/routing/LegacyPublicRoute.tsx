@@ -4,10 +4,6 @@ import Mission from '@/legacy-pages/About/Mission'
 import OurCompany from '@/legacy-pages/About/OurCompany'
 import ContactUs from '@/legacy-pages/ContactUs'
 import FAQs from '@/legacy-pages/FAQs'
-import CookiePolicy from '@/legacy-pages/Legal/CookiePolicy'
-import PrivacyPolicy from '@/legacy-pages/Legal/PrivacyPolicy'
-import PropertyDisclaimer from '@/legacy-pages/Legal/PropertyDisclaimer'
-import TermsAndConditions from '@/legacy-pages/Legal/TermsAndConditions'
 import PropertyValuationRequest from '@/legacy-pages/PropertyValuationRequest'
 import RequestViewing from '@/legacy-pages/RequestViewing'
 import Apartments from '@/legacy-pages/Properties/Apartments'
@@ -37,13 +33,7 @@ const staticRoutes: Record<string, ComponentType> = {
   '/about/mission': Mission,
   '/about/our-company': OurCompany,
   '/contact-us': ContactUs,
-  '/cookie-policy': CookiePolicy,
   '/faqs': FAQs,
-  '/legal/cookie-policy': CookiePolicy,
-  '/legal/privacy-policy': PrivacyPolicy,
-  '/legal/property-listing-disclaimer': PropertyDisclaimer,
-  '/legal/terms-and-conditions': TermsAndConditions,
-  '/privacy-policy': PrivacyPolicy,
   '/properties/apartments': Apartments,
   '/properties/commercial': Commercial,
   '/properties/for-lease': ForLease,
@@ -55,7 +45,6 @@ const staticRoutes: Record<string, ComponentType> = {
   '/properties/offices': Offices,
   '/properties/residential': Residential,
   '/properties/warehouses': Warehouses,
-  '/property-disclaimer': PropertyDisclaimer,
   '/property-valuation': PropertyValuationRequest,
   '/request-viewing': RequestViewing,
   '/services/property-development-marketing': PropertyDevelopmentMarketing,
@@ -68,7 +57,6 @@ const staticRoutes: Record<string, ComponentType> = {
   '/services/property-valuation': PropertyValuation,
   '/services/real-estate-advisory': RealEstateAdvisory,
   '/services/real-estate-consultancy': RealEstateConsultancy,
-  '/terms-and-conditions': TermsAndConditions,
 }
 
 export function LegacyPublicRoute({ segments }: { segments: string[] }) {
