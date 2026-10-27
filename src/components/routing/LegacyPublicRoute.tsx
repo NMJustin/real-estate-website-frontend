@@ -6,17 +6,6 @@ import ContactUs from '@/legacy-pages/ContactUs'
 import FAQs from '@/legacy-pages/FAQs'
 import PropertyValuationRequest from '@/legacy-pages/PropertyValuationRequest'
 import RequestViewing from '@/legacy-pages/RequestViewing'
-import Apartments from '@/legacy-pages/Properties/Apartments'
-import Commercial from '@/legacy-pages/Properties/Commercial'
-import ForLease from '@/legacy-pages/Properties/ForLease'
-import ForRent from '@/legacy-pages/Properties/ForRent'
-import ForSale from '@/legacy-pages/Properties/ForSale'
-import Houses from '@/legacy-pages/Properties/Houses'
-import Land from '@/legacy-pages/Properties/Land'
-import NewDevelopments from '@/legacy-pages/Properties/NewDevelopments'
-import Offices from '@/legacy-pages/Properties/Offices'
-import Residential from '@/legacy-pages/Properties/Residential'
-import Warehouses from '@/legacy-pages/Properties/Warehouses'
 import PropertyDevelopmentMarketing from '@/legacy-pages/Services/PropertyDevelopmentMarketing'
 import PropertyLeasing from '@/legacy-pages/Services/PropertyLeasing'
 import PropertyManagement from '@/legacy-pages/Services/PropertyManagement'
@@ -34,17 +23,6 @@ const staticRoutes: Record<string, ComponentType> = {
   '/about/our-company': OurCompany,
   '/contact-us': ContactUs,
   '/faqs': FAQs,
-  '/properties/apartments': Apartments,
-  '/properties/commercial': Commercial,
-  '/properties/for-lease': ForLease,
-  '/properties/for-rent': ForRent,
-  '/properties/for-sale': ForSale,
-  '/properties/houses': Houses,
-  '/properties/land': Land,
-  '/properties/new-developments': NewDevelopments,
-  '/properties/offices': Offices,
-  '/properties/residential': Residential,
-  '/properties/warehouses': Warehouses,
   '/property-valuation': PropertyValuationRequest,
   '/request-viewing': RequestViewing,
   '/services/property-development-marketing': PropertyDevelopmentMarketing,
