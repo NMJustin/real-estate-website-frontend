@@ -3,10 +3,6 @@ import { notFound } from 'next/navigation'
 import Mission from '@/legacy-pages/About/Mission'
 import OurCompany from '@/legacy-pages/About/OurCompany'
 import ContactUs from '@/legacy-pages/ContactUs'
-import CompareProperties from '@/legacy-pages/CustomerTools/CompareProperties'
-import Favorites from '@/legacy-pages/CustomerTools/Favorites'
-import MortgageCalculator from '@/legacy-pages/CustomerTools/MortgageCalculator'
-import RentalYieldCalculator from '@/legacy-pages/CustomerTools/RentalYieldCalculator'
 import FAQs from '@/legacy-pages/FAQs'
 import CookiePolicy from '@/legacy-pages/Legal/CookiePolicy'
 import PrivacyPolicy from '@/legacy-pages/Legal/PrivacyPolicy'
@@ -41,15 +37,12 @@ const staticRoutes: Record<string, ComponentType> = {
   '/about/mission': Mission,
   '/about/our-company': OurCompany,
   '/contact-us': ContactUs,
-  '/compare-properties': CompareProperties,
   '/cookie-policy': CookiePolicy,
   '/faqs': FAQs,
-  '/favorites': Favorites,
   '/legal/cookie-policy': CookiePolicy,
   '/legal/privacy-policy': PrivacyPolicy,
   '/legal/property-listing-disclaimer': PropertyDisclaimer,
   '/legal/terms-and-conditions': TermsAndConditions,
-  '/mortgage-calculator': MortgageCalculator,
   '/privacy-policy': PrivacyPolicy,
   '/properties/apartments': Apartments,
   '/properties/commercial': Commercial,
@@ -64,7 +57,6 @@ const staticRoutes: Record<string, ComponentType> = {
   '/properties/warehouses': Warehouses,
   '/property-disclaimer': PropertyDisclaimer,
   '/property-valuation': PropertyValuationRequest,
-  '/rental-yield-calculator': RentalYieldCalculator,
   '/request-viewing': RequestViewing,
   '/services/property-development-marketing': PropertyDevelopmentMarketing,
   '/services/property-leasing': PropertyLeasing,
