@@ -1,5 +1,5 @@
-import FAQs from '@/legacy-pages/FAQs'
+import FAQsContent from '@/components/content/FAQsContent'
 
 export default function FAQsPage() {
-  return <FAQs />
+  return <FAQsContent />
 }

@@ -1,6 +1,6 @@
 import { Metadata } from 'next'
 import { generatePageMetadata } from '@/utils/metadata'
-import Contact from '@/legacy-pages/Contact'
+import ContactForm from '@/components/content/ContactForm'
 
 export const metadata: Metadata = generatePageMetadata({
   title: 'Contact Us - Get in Touch with Ingata Real Estate',
@@ -15,5 +15,5 @@ export const metadata: Metadata = generatePageMetadata({
 })
 
 export default function ContactPage() {
-  return <Contact />
+  return <ContactForm />
 }
