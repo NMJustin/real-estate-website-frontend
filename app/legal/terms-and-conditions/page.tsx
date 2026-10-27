@@ -1,6 +1,6 @@
 import { Metadata } from 'next'
 import { generatePageMetadata } from '@/utils/metadata'
-import TermsAndConditionsContent from '@/components/legal\TermsAndConditionsContent'
+import TermsAndConditionsContent from '@/components/legal/TermsAndConditionsContent'
 
 export const metadata: Metadata = generatePageMetadata({
   title: 'Terms & Conditions | Ingata Real Estate Rwanda',

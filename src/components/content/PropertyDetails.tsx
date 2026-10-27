@@ -854,7 +854,7 @@ export default function PropertyDetails({ propertySlug }: { propertySlug: string
       </main>
       {viewerOpen && (
         <ImageViewer
-          images={media.map((m) => m.imageUrl)}
+          images={media}
           initialIndex={viewerIndex}
           onClose={() => setViewerOpen(false)}
         />

@@ -291,7 +291,7 @@ export default function AdminDashboard() {
             <p className="mt-2 max-w-xl text-sm text-slate-300">Here’s the latest overview of your Ingata Real Estate activity.</p>
           </div>
           <div className="flex flex-wrap items-center gap-3">
-            <Link to="/admin/inquiries" aria-label={`${notificationCount} items require attention`} className="relative grid h-11 w-11 place-items-center rounded-xl border border-white/15 bg-white/10 text-white transition hover:bg-white/20">
+            <Link href="/admin/inquiries" aria-label={`${notificationCount} items require attention`} className="relative grid h-11 w-11 place-items-center rounded-xl border border-white/15 bg-white/10 text-white transition hover:bg-white/20">
               <Bell className="h-5 w-5" />
               {notificationCount > 0 && <span className="absolute -right-1 -top-1 grid min-h-5 min-w-5 place-items-center rounded-full bg-rose-500 px-1 text-[10px] font-bold">{notificationCount > 99 ? '99+' : notificationCount}</span>}
             </Link>
@@ -304,7 +304,7 @@ export default function AdminDashboard() {
                 <p className="truncate text-xs capitalize text-slate-300">{formatLabel(user?.role)}</p>
               </div>
             </div>
-            <Link to="/admin/properties/new" className="inline-flex h-11 items-center justify-center gap-2 rounded-xl bg-emerald-400 px-4 text-sm font-bold text-emerald-950 shadow-sm transition hover:bg-emerald-300">
+            <Link href="/admin/properties/new" className="inline-flex h-11 items-center justify-center gap-2 rounded-xl bg-emerald-400 px-4 text-sm font-bold text-emerald-950 shadow-sm transition hover:bg-emerald-300">
               <Plus className="h-4 w-4" /> Add Property
             </Link>
           </div>
@@ -403,11 +403,11 @@ export default function AdminDashboard() {
             <p className="text-xs font-semibold uppercase tracking-wider text-rose-700">Stay on top of it</p>
             <h2 className="mt-1 text-lg font-bold text-slate-900">Action required</h2>
           </div>
-          <Link to="/admin/listings" className="inline-flex items-center gap-1 text-sm font-semibold text-emerald-700 hover:text-emerald-800">Review requests <ArrowRight className="h-4 w-4" /></Link>
+          <Link href="/admin/listings" className="inline-flex items-center gap-1 text-sm font-semibold text-emerald-700 hover:text-emerald-800">Review requests <ArrowRight className="h-4 w-4" /></Link>
         </div>
         <div className="mt-4 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
           {actionItems.map((item) => (
-            <Link key={item.label} to={item.to} className="group flex items-center gap-3 rounded-xl border border-slate-200 p-3.5 transition hover:border-emerald-300 hover:bg-emerald-50/40">
+            <Link key={item.label} href={item.to} className="group flex items-center gap-3 rounded-xl border border-slate-200 p-3.5 transition hover:border-emerald-300 hover:bg-emerald-50/40">
               <span className={`grid h-10 w-10 shrink-0 place-items-center rounded-xl ${item.tone}`}><item.icon className="h-5 w-5" /></span>
               <span className="min-w-0 flex-1">
                 <span className="block truncate text-sm font-semibold text-slate-800">{item.label}</span>
@@ -426,7 +426,7 @@ export default function AdminDashboard() {
               <h2 className="font-bold text-slate-900">Recent Properties</h2>
               <p className="mt-0.5 text-xs text-slate-500">Latest additions to your portfolio</p>
             </div>
-            <Link to="/admin/properties" className="inline-flex shrink-0 items-center gap-1 text-sm font-semibold text-emerald-700 hover:text-emerald-800">View all <ArrowRight className="h-4 w-4" /></Link>
+            <Link href="/admin/properties" className="inline-flex shrink-0 items-center gap-1 text-sm font-semibold text-emerald-700 hover:text-emerald-800">View all <ArrowRight className="h-4 w-4" /></Link>
           </div>
           {recentProperties.length ? (
             <div className="divide-y divide-slate-100">
@@ -463,7 +463,7 @@ export default function AdminDashboard() {
               <Home className="mx-auto h-9 w-9 text-slate-300" />
               <p className="mt-3 text-sm font-semibold text-slate-700">No properties to show</p>
               <p className="mt-1 text-xs text-slate-500">Create your first listing to start building your portfolio.</p>
-              <Link to="/admin/properties/new" className="mt-4 inline-flex items-center gap-2 rounded-lg bg-emerald-600 px-4 py-2 text-sm font-semibold text-white hover:bg-emerald-700"><Plus className="h-4 w-4" /> Add Property</Link>
+              <Link href="/admin/properties/new" className="mt-4 inline-flex items-center gap-2 rounded-lg bg-emerald-600 px-4 py-2 text-sm font-semibold text-white hover:bg-emerald-700"><Plus className="h-4 w-4" /> Add Property</Link>
             </div>
           )}
         </section>
@@ -474,7 +474,7 @@ export default function AdminDashboard() {
               <h2 className="font-bold text-slate-900">Recent Inquiries</h2>
               <p className="mt-0.5 text-xs text-slate-500">Latest customer conversations</p>
             </div>
-            <Link to="/admin/inquiries" className="inline-flex shrink-0 items-center gap-1 text-sm font-semibold text-emerald-700 hover:text-emerald-800">View all <ArrowRight className="h-4 w-4" /></Link>
+            <Link href="/admin/inquiries" className="inline-flex shrink-0 items-center gap-1 text-sm font-semibold text-emerald-700 hover:text-emerald-800">View all <ArrowRight className="h-4 w-4" /></Link>
           </div>
           {data.recentInquiries.length ? (
             <div className="divide-y divide-slate-100">

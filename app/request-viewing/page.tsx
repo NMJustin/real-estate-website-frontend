@@ -1,4 +1,5 @@
 import { Metadata } from 'next'
+import { Suspense } from 'react'
 import { generatePageMetadata } from '@/utils/metadata'
 import RequestViewing from '@/components/content/RequestViewing'
 
@@ -15,5 +16,9 @@ export const metadata: Metadata = generatePageMetadata({
 })
 
 export default function RequestViewingPage() {
-  return <RequestViewing />
+  return (
+    <Suspense fallback={<div className="min-h-screen bg-brand-background" />}>
+      <RequestViewing />
+    </Suspense>
+  )
 }

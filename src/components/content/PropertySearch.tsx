@@ -37,27 +37,35 @@ const parseSavedSearches = (storedSearches: string | null): SavedPropertySearch[
   if (!storedSearches) return []
   const parsedSearches: unknown = JSON.parse(storedSearches)
   if (!Array.isArray(parsedSearches) || !parsedSearches.every(isSavedPropertySearch)) {
-    throw new Error('Saved searches data is invalid. Clear this browser's saved searches and try again.')
+    throw new Error('Saved searches data is invalid. Clear saved searches in this browser and try again.')
   }
   return parsedSearches
 }
 
 export default function PropertySearch() {
   const [searchParams] = useSearchParams()
+  const params = searchParams as any
 
   const [form, setForm] = useState<SearchForm>(() => {
     const initial = { ...initialForm }
-    if (searchParams.has('location')) initial.location = searchParams.get('location') || ''
-    if (searchParams.has('propertyType')) initial.propertyType = searchParams.get('propertyType') || ''
-    
-    const urlTransaction = searchParams.get('transactionType')
+    const getParam = (key: string): string => {
+      if (Array.isArray(params)) {
+        const entry = params.find(([k]: [string, string]) => k === key)
+        return entry ? entry[1] : ''
+      }
+      return params.get(key) || ''
+    }
+    initial.location = getParam('location')
+    initial.propertyType = getParam('propertyType')
+
+    const urlTransaction = getParam('transactionType')
     if (urlTransaction) {
       if (urlTransaction.toLowerCase() === 'buy') initial.transactionType = 'SALE'
       else if (urlTransaction.toLowerCase() === 'rent') initial.transactionType = 'RENT'
       else initial.transactionType = urlTransaction
     }
-    
-    const priceRange = searchParams.get('priceRange')
+
+    const priceRange = getParam('priceRange')
     if (priceRange) {
       const parts = priceRange.split('-')
       if (parts.length === 2) {
@@ -67,11 +75,9 @@ export default function PropertySearch() {
         initial.minPrice = priceRange.replace('+', '')
       }
     }
-    
-    if (searchParams.has('bedrooms')) {
-      initial.minBedrooms = searchParams.get('bedrooms') || ''
-    }
-    
+
+    initial.minBedrooms = getParam('bedrooms')
+
     return initial
   })
 
@@ -109,7 +115,7 @@ export default function PropertySearch() {
       try {
         const response = await api.getProperties(query) as { data: Property[] }
         setProperties(response.data || [])
-        if (searchParams.toString()) setHasSearched(true)
+        if (Array.isArray(params) ? params.length > 0 : params.size > 0) setHasSearched(true)
       }
       catch (requestError) { setError(requestError instanceof Error ? requestError.message : 'Unable to search properties') }
       finally { setLoading(false) }

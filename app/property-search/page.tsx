@@ -1,4 +1,5 @@
 import { Metadata } from 'next'
+import { Suspense } from 'react'
 import { generatePageMetadata } from '@/utils/metadata'
 import PropertySearch from '@/components/content/PropertySearch'
 
@@ -15,5 +16,9 @@ export const metadata: Metadata = generatePageMetadata({
 })
 
 export default function PropertySearchPage() {
-  return <PropertySearch />
+  return (
+    <Suspense fallback={<div className="min-h-screen bg-brand-background" />}>
+      <PropertySearch />
+    </Suspense>
+  )
 }

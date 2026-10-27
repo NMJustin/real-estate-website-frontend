@@ -1,4 +1,4 @@
-import { LegacyAdminRoute } from '@/components/routing/LegacyAdminRoute'
+import { redirect } from 'next/navigation'
 
 export default async function LegacyAdminPage({
   params,
@@ -6,5 +6,6 @@ export default async function LegacyAdminPage({
   params: Promise<{ segments: string[] }>
 }) {
   const { segments } = await params
-  return <LegacyAdminRoute segments={segments} />
+  // Redirect legacy admin routes to the admin dashboard
+  redirect('/admin/dashboard')
 }
