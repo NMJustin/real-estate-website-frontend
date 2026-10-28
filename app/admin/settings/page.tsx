@@ -130,6 +130,22 @@ const defaultSettings: AllSettings = {
   },
 };
 
+const toNumber = (val: unknown, fallback: number): number => {
+  if (typeof val === 'number' && !Number.isNaN(val)) return val;
+  if (typeof val === 'string' && val.trim() !== '') {
+    const parsed = Number(val);
+    if (!Number.isNaN(parsed)) return parsed;
+  }
+  return fallback;
+};
+
+const toBoolean = (val: unknown, fallback: boolean): boolean => {
+  if (typeof val === 'boolean') return val;
+  if (val === 'true') return true;
+  if (val === 'false') return false;
+  return fallback;
+};
+
 const mergeSavedSettings = (saved: Record<string, unknown>, defaults: AllSettings): AllSettings => ({
   contact: {
     ...defaults.contact,
@@ -155,9 +171,9 @@ const mergeSavedSettings = (saved: Record<string, unknown>, defaults: AllSetting
     servicesTitle: typeof saved.servicesTitle === 'string' ? saved.servicesTitle : defaults.homepage.servicesTitle,
     servicesDescription: typeof saved.servicesDescription === 'string' ? saved.servicesDescription : defaults.homepage.servicesDescription,
     featuredSectionTitle: typeof saved.featuredSectionTitle === 'string' ? saved.featuredSectionTitle : defaults.homepage.featuredSectionTitle,
-    showFeaturedSection: typeof saved.showFeaturedSection === 'boolean' ? saved.showFeaturedSection : defaults.homepage.showFeaturedSection,
-    showServicesSection: typeof saved.showServicesSection === 'boolean' ? saved.showServicesSection : defaults.homepage.showServicesSection,
-    showAboutSection: typeof saved.showAboutSection === 'boolean' ? saved.showAboutSection : defaults.homepage.showAboutSection,
+    showFeaturedSection: toBoolean(saved.showFeaturedSection ?? saved.show_featured_section, defaults.homepage.showFeaturedSection),
+    showServicesSection: toBoolean(saved.showServicesSection ?? saved.show_services_section, defaults.homepage.showServicesSection),
+    showAboutSection: toBoolean(saved.showAboutSection ?? saved.show_about_section, defaults.homepage.showAboutSection),
   },
   system: {
     ...defaults.system,
@@ -166,66 +182,18 @@ const mergeSavedSettings = (saved: Record<string, unknown>, defaults: AllSetting
     faviconUrl: typeof saved.faviconUrl === 'string' ? saved.faviconUrl : defaults.system.faviconUrl,
   },
   security: {
-    analyticsRetentionDays: typeof saved.analyticsRetentionDays === 'number'
-      ? saved.analyticsRetentionDays
-      : typeof saved.analytics_retention_days === 'number'
-      ? saved.analytics_retention_days
-      : defaults.security.analyticsRetentionDays,
-    sessionTimeoutMinutes: typeof saved.sessionTimeoutMinutes === 'number'
-      ? saved.sessionTimeoutMinutes
-      : typeof saved.session_timeout_minutes === 'number'
-      ? saved.session_timeout_minutes
-      : defaults.security.sessionTimeoutMinutes,
-    sessionWarningMinutes: typeof saved.sessionWarningMinutes === 'number'
-      ? saved.sessionWarningMinutes
-      : typeof saved.session_warning_minutes === 'number'
-      ? saved.session_warning_minutes
-      : defaults.security.sessionWarningMinutes,
-    minPasswordLength: typeof saved.minPasswordLength === 'number'
-      ? saved.minPasswordLength
-      : typeof saved.min_password_length === 'number'
-      ? saved.min_password_length
-      : defaults.security.minPasswordLength,
-    maxPasswordLength: typeof saved.maxPasswordLength === 'number'
-      ? saved.maxPasswordLength
-      : typeof saved.max_password_length === 'number'
-      ? saved.max_password_length
-      : defaults.security.maxPasswordLength,
-    maxAuthAttempts: typeof saved.maxAuthAttempts === 'number'
-      ? saved.maxAuthAttempts
-      : typeof saved.max_auth_attempts === 'number'
-      ? saved.max_auth_attempts
-      : defaults.security.maxAuthAttempts,
-    authRateLimitWindowMinutes: typeof saved.authRateLimitWindowMinutes === 'number'
-      ? saved.authRateLimitWindowMinutes
-      : typeof saved.auth_rate_limit_window_minutes === 'number'
-      ? saved.auth_rate_limit_window_minutes
-      : defaults.security.authRateLimitWindowMinutes,
-    contactRateLimitPerHour: typeof saved.contactRateLimitPerHour === 'number'
-      ? saved.contactRateLimitPerHour
-      : typeof saved.contact_rate_limit_per_hour === 'number'
-      ? saved.contact_rate_limit_per_hour
-      : defaults.security.contactRateLimitPerHour,
-    searchRateLimitPerMinute: typeof saved.searchRateLimitPerMinute === 'number'
-      ? saved.searchRateLimitPerMinute
-      : typeof saved.search_rate_limit_per_minute === 'number'
-      ? saved.search_rate_limit_per_minute
-      : defaults.security.searchRateLimitPerMinute,
-    globalRateLimit: typeof saved.globalRateLimit === 'number'
-      ? saved.globalRateLimit
-      : typeof saved.global_rate_limit === 'number'
-      ? saved.global_rate_limit
-      : defaults.security.globalRateLimit,
-    csrfProtectionEnabled: typeof saved.csrfProtectionEnabled === 'boolean'
-      ? saved.csrfProtectionEnabled
-      : typeof saved.csrf_protection_enabled === 'boolean'
-      ? saved.csrf_protection_enabled
-      : defaults.security.csrfProtectionEnabled,
-    crossTabSyncEnabled: typeof saved.crossTabSyncEnabled === 'boolean'
-      ? saved.crossTabSyncEnabled
-      : typeof saved.cross_tab_sync_enabled === 'boolean'
-      ? saved.cross_tab_sync_enabled
-      : defaults.security.crossTabSyncEnabled,
+    analyticsRetentionDays: toNumber(saved.analyticsRetentionDays ?? saved.analytics_retention_days, defaults.security.analyticsRetentionDays),
+    sessionTimeoutMinutes: toNumber(saved.sessionTimeoutMinutes ?? saved.session_timeout_minutes, defaults.security.sessionTimeoutMinutes),
+    sessionWarningMinutes: toNumber(saved.sessionWarningMinutes ?? saved.session_warning_minutes, defaults.security.sessionWarningMinutes),
+    minPasswordLength: toNumber(saved.minPasswordLength ?? saved.min_password_length, defaults.security.minPasswordLength),
+    maxPasswordLength: toNumber(saved.maxPasswordLength ?? saved.max_password_length, defaults.security.maxPasswordLength),
+    maxAuthAttempts: toNumber(saved.maxAuthAttempts ?? saved.max_auth_attempts, defaults.security.maxAuthAttempts),
+    authRateLimitWindowMinutes: toNumber(saved.authRateLimitWindowMinutes ?? saved.auth_rate_limit_window_minutes, defaults.security.authRateLimitWindowMinutes),
+    contactRateLimitPerHour: toNumber(saved.contactRateLimitPerHour ?? saved.contact_rate_limit_per_hour, defaults.security.contactRateLimitPerHour),
+    searchRateLimitPerMinute: toNumber(saved.searchRateLimitPerMinute ?? saved.search_rate_limit_per_minute, defaults.security.searchRateLimitPerMinute),
+    globalRateLimit: toNumber(saved.globalRateLimit ?? saved.global_rate_limit, defaults.security.globalRateLimit),
+    csrfProtectionEnabled: toBoolean(saved.csrfProtectionEnabled ?? saved.csrf_protection_enabled, defaults.security.csrfProtectionEnabled),
+    crossTabSyncEnabled: toBoolean(saved.crossTabSyncEnabled ?? saved.cross_tab_sync_enabled, defaults.security.crossTabSyncEnabled),
   },
 });
 
@@ -328,11 +296,13 @@ export default function Settings() {
         setMessage('Settings saved successfully!');
         setTimeout(() => setMessage(''), 3000);
       } else {
-        setError('Failed to save settings');
+        const failureMsg = (response as { message?: string })?.message || 'Failed to save settings';
+        setError(failureMsg);
       }
     } catch (err) {
       console.error('Failed to save settings:', err);
-      setError('Failed to save settings. Please try again.');
+      const errMsg = err instanceof Error ? err.message : 'Failed to save settings. Please try again.';
+      setError(errMsg);
     } finally {
       setSaving(false);
     }
