@@ -79,11 +79,11 @@ function InquiryForm() {
   return (
     <form onSubmit={submit} className="space-y-4">
       <h2 className="text-2xl font-bold text-brand-navy">Ask about a property</h2>
-      {(['propertyId', 'name', 'email', 'phone', 'message'] as const).map((field) => (
+      {(['propertyId', 'name', 'email', 'phone'] as const).map((field) => (
         <label key={field} className="block text-brand-charcoal">
           {field === 'propertyId' ? 'Property ID or reference' : field}
           <input
-            required={['name', 'email', 'message'].includes(field)}
+            required={['name', 'email'].includes(field)}
             type={field === 'email' ? 'email' : 'text'}
             value={form[field]}
             onChange={(event) => setForm({ ...form, [field]: event.target.value })}
@@ -91,6 +91,15 @@ function InquiryForm() {
           />
         </label>
       ))}
+      <label className="block text-brand-charcoal">
+        Message
+        <textarea
+          required
+          value={form.message}
+          onChange={(event) => setForm({ ...form, message: event.target.value })}
+          className="search-input min-h-32"
+        />
+      </label>
       <button className="bg-brand-emerald text-brand-white rounded-lg px-6 py-3">Send inquiry</button>
       {status && <p className="text-brand-emerald">{status}</p>}
     </form>
