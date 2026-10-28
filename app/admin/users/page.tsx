@@ -22,6 +22,8 @@ import {
   UserX,
 } from 'lucide-react';
 import { adminApi } from '@/services/api';
+import { PasswordComplexityRequirements } from '@/components/ui/PasswordComplexityRequirements';
+import { getStoredPasswordPolicy, validatePassword } from '@/utils/passwordValidation';
 
 interface Role {
   id: number;
@@ -234,10 +236,12 @@ export default function UsersPage() {
       setEditError('Enter a valid email address.');
       return;
     }
-    const minLen = getMinPasswordLength();
-    if (editFormData.password && editFormData.password.length < minLen) {
-      setEditError(`Password must be at least ${minLen} characters long.`);
-      return;
+    if (editFormData.password.trim()) {
+      const passwordValidation = validatePassword(editFormData.password.trim(), getStoredPasswordPolicy());
+      if (!passwordValidation.isValid) {
+        setEditError(passwordValidation.errors.join(' '));
+        return;
+      }
     }
 
     setEditSaving(true);
@@ -297,9 +301,9 @@ export default function UsersPage() {
       setCreateError('Enter a valid email address.');
       return;
     }
-    const minLen = getMinPasswordLength();
-    if (!createFormData.password || createFormData.password.length < minLen) {
-      setCreateError(`Password must be at least ${minLen} characters long.`);
+    const createValidation = validatePassword(createFormData.password, getStoredPasswordPolicy());
+    if (!createValidation.isValid) {
+      setCreateError(createValidation.errors.join(' '));
       return;
     }
     if (!createFormData.roleId) {
@@ -740,6 +744,12 @@ export default function UsersPage() {
                     className="w-full rounded-lg border border-slate-300 py-2 pl-9 pr-3 text-sm text-slate-900 focus:border-emerald-500 focus:outline-none focus:ring-1 focus:ring-emerald-500"
                   />
                 </div>
+                {editFormData.password.length > 0 && (
+                  <PasswordComplexityRequirements
+                    password={editFormData.password}
+                    config={getStoredPasswordPolicy()}
+                  />
+                )}
               </div>
 
               <div className="mt-6 flex justify-end gap-3 pt-3 border-t border-slate-200">
@@ -850,12 +860,16 @@ export default function UsersPage() {
                   <input
                     type="password"
                     required
-                    placeholder={`Minimum ${getMinPasswordLength()} characters`}
+                    placeholder={`Enter password`}
                     value={createFormData.password}
                     onChange={(e) => setCreateFormData(prev => ({ ...prev, password: e.target.value }))}
                     className="w-full rounded-lg border border-slate-300 py-2 pl-9 pr-3 text-sm text-slate-900 focus:border-emerald-500 focus:outline-none focus:ring-1 focus:ring-emerald-500"
                   />
                 </div>
+                <PasswordComplexityRequirements
+                  password={createFormData.password}
+                  config={getStoredPasswordPolicy()}
+                />
               </div>
 
               <div>

@@ -6,6 +6,8 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { Building2, LockKeyhole, Mail, AlertCircle } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
 import { portalApi } from '@/services/api';
+import { PasswordComplexityRequirements } from '@/components/ui/PasswordComplexityRequirements';
+import { validatePassword } from '@/utils/passwordValidation';
 
 const getRoleHome = (role: string) => {
   switch (role.toLowerCase()) {
@@ -176,6 +178,11 @@ export function ResetPasswordPage() {
       setError('The passwords do not match.');
       return;
     }
+    const validation = validatePassword(password);
+    if (!validation.isValid) {
+      setError(validation.errors.join(' '));
+      return;
+    }
     setSubmitting(true);
     try {
       const response = await portalApi.resetPassword(token, password);
@@ -188,13 +195,14 @@ export function ResetPasswordPage() {
   };
 
   return (
-    <PortalAuthShell title="Set a new password" description="Choose a new password with at least 8 characters. Reset links expire after 30 minutes.">
+    <PortalAuthShell title="Set a new password" description="Choose a new password that meets standard security complexity requirements. Reset links expire after 30 minutes.">
       <form onSubmit={submit} className="mt-6 space-y-4">
         {error && <p role="alert" className="rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-700">{error}</p>}
         {message && <p role="status" className="rounded-lg border border-emerald-200 bg-emerald-50 p-3 text-sm text-emerald-800">{message}</p>}
         <label className="block text-sm font-medium text-slate-700">New password
           <input type="password" required minLength={8} maxLength={128} autoComplete="new-password" value={password} onChange={(e) => setPassword(e.target.value)} className="mt-1.5 w-full rounded-lg border border-slate-300 px-3 py-2.5 outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100" />
         </label>
+        <PasswordComplexityRequirements password={password} />
         <label className="block text-sm font-medium text-slate-700">Confirm new password
           <input type="password" required minLength={8} maxLength={128} autoComplete="new-password" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} className="mt-1.5 w-full rounded-lg border border-slate-300 px-3 py-2.5 outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100" />
         </label>
