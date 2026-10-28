@@ -2,18 +2,18 @@
 
 import { useState, useEffect } from 'react'
 
-interface Property {
+export interface Property {
   id: string
   title: string
-  price: number
-  currency: string
-  location: string
+  price: number | string
+  currency?: string
+  location?: string
   district?: string
-  propertyType: string
-  transactionType: string
+  propertyType?: string
+  transactionType?: string
   bedrooms?: number
   bathrooms?: number
-  size?: number
+  size?: number | string
   sizeUnit?: string
   propertyImages?: { imageUrl: string; isPrimary?: boolean }[]
   amenities?: string[]
@@ -24,11 +24,22 @@ interface Property {
 
 const COMPARISON_STORAGE_KEY = 'ingata_property_comparison'
 
+const notifyChange = (updated: Property[]) => {
+  if (typeof window !== 'undefined') {
+    try {
+      localStorage.setItem(COMPARISON_STORAGE_KEY, JSON.stringify(updated))
+      window.dispatchEvent(new CustomEvent('ingata_property_comparison_changed', { detail: updated }))
+    } catch (e) {
+      console.error('Failed to notify comparison change:', e)
+    }
+  }
+}
+
 export function usePropertyComparison() {
   const [comparingProperties, setComparingProperties] = useState<Property[]>([])
   const [isComparisonOpen, setIsComparisonOpen] = useState(false)
 
-  // Load comparison from localStorage on mount
+  // Load comparison from localStorage on mount & listen for sync events
   useEffect(() => {
     try {
       const stored = localStorage.getItem(COMPARISON_STORAGE_KEY)
@@ -38,41 +49,56 @@ export function usePropertyComparison() {
     } catch (error) {
       console.error('Failed to load comparison from localStorage:', error)
     }
-  }, [])
 
-  // Save comparison to localStorage whenever it changes
-  useEffect(() => {
-    try {
-      localStorage.setItem(COMPARISON_STORAGE_KEY, JSON.stringify(comparingProperties))
-    } catch (error) {
-      console.error('Failed to save comparison to localStorage:', error)
+    const handleSync = (e: Event) => {
+      const customEvent = e as CustomEvent<Property[]>
+      if (customEvent.detail) {
+        setComparingProperties(customEvent.detail)
+      } else {
+        try {
+          const stored = localStorage.getItem(COMPARISON_STORAGE_KEY)
+          if (stored) {
+            setComparingProperties(JSON.parse(stored))
+          } else {
+            setComparingProperties([])
+          }
+        } catch {}
+      }
     }
-  }, [comparingProperties])
+
+    window.addEventListener('ingata_property_comparison_changed', handleSync)
+    return () => window.removeEventListener('ingata_property_comparison_changed', handleSync)
+  }, [])
 
   const addToComparison = (property: Property) => {
     if (comparingProperties.length >= 5) {
       return { success: false, message: 'You can compare up to 5 properties at a time' }
     }
 
-    if (comparingProperties.some(p => p.id === property.id)) {
+    if (comparingProperties.some((p) => p.id === property.id)) {
       return { success: false, message: 'This property is already in comparison' }
     }
 
-    setComparingProperties([...comparingProperties, property])
+    const updated = [...comparingProperties, property]
+    setComparingProperties(updated)
+    notifyChange(updated)
     return { success: true, message: 'Property added to comparison' }
   }
 
   const removeFromComparison = (propertyId: string) => {
-    setComparingProperties(comparingProperties.filter(p => p.id !== propertyId))
+    const updated = comparingProperties.filter((p) => p.id !== propertyId)
+    setComparingProperties(updated)
+    notifyChange(updated)
   }
 
   const clearComparison = () => {
     setComparingProperties([])
+    notifyChange([])
   }
 
   const toggleComparison = (property: Property) => {
-    const isComparing = comparingProperties.some(p => p.id === property.id)
-    if (isComparing) {
+    const isComp = comparingProperties.some((p) => p.id === property.id)
+    if (isComp) {
       removeFromComparison(property.id)
       return { success: true, message: 'Property removed from comparison' }
     } else {
@@ -81,7 +107,7 @@ export function usePropertyComparison() {
   }
 
   const isComparing = (propertyId: string) => {
-    return comparingProperties.some(p => p.id === propertyId)
+    return comparingProperties.some((p) => p.id === propertyId)
   }
 
   return {

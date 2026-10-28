@@ -133,13 +133,16 @@ export default function ContactForm() {
               <p>Office: {contactDetails.address}</p>
             </div>
             <div className="flex gap-4 mt-6">
-              <a href="https://www.facebook.com/" target="_blank" rel="noreferrer" className="text-brand-emerald">
+              <a href="https://www.facebook.com" target="_blank" rel="noreferrer" className="text-brand-emerald">
                 Facebook
               </a>
-              <a href="https://www.instagram.com/" target="_blank" rel="noreferrer" className="text-brand-emerald">
+              <a href="https://x.com/GlobalOncg25" target="_blank" rel="noreferrer" className="text-brand-emerald">
+                X (Twitter)
+              </a>
+              <a href="https://www.instagram.com" target="_blank" rel="noreferrer" className="text-brand-emerald">
                 Instagram
               </a>
-              <a href="https://www.linkedin.com/" target="_blank" rel="noreferrer" className="text-brand-emerald">
+              <a href="https://www.linkedin.com/company/ingata-technologies-ltd/" target="_blank" rel="noreferrer" className="text-brand-emerald">
                 LinkedIn
               </a>
             </div>

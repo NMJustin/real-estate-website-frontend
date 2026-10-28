@@ -25,6 +25,13 @@ const getToken = () => {
   return null;
 };
 
+const getRefreshToken = () => {
+  if (typeof window !== 'undefined') {
+    return localStorage.getItem('refresh_token');
+  }
+  return null;
+};
+
 const getUserRole = () => {
   if (typeof window !== 'undefined') {
     const userStr = localStorage.getItem('user_role');
@@ -42,9 +49,48 @@ const setUserRole = (role: string) => {
 const clearAuthData = () => {
   if (typeof window !== 'undefined') {
     localStorage.removeItem('admin_token');
+    localStorage.removeItem('refresh_token');
     localStorage.removeItem('user_role');
     localStorage.removeItem('inactivity_logout');
   }
+};
+
+let refreshPromise: Promise<string | null> | null = null;
+
+const refreshAccessToken = async (): Promise<string | null> => {
+  const refreshToken = getRefreshToken();
+  if (!refreshToken) return null;
+
+  if (!refreshPromise) {
+    refreshPromise = (async () => {
+      try {
+        const url = sanitizeUrl(API_BASE_URL, '/auth/refresh');
+        const res = await fetch(url, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ refreshToken }),
+        });
+        const data = await res.json().catch(() => ({}));
+        if (!res.ok || !data.data?.token) {
+          return null;
+        }
+        const newAccessToken = data.data.token as string;
+        const newRefreshToken = data.data.refreshToken as string | undefined;
+        if (typeof window !== 'undefined') {
+          localStorage.setItem('admin_token', newAccessToken);
+          if (newRefreshToken) {
+            localStorage.setItem('refresh_token', newRefreshToken);
+          }
+        }
+        return newAccessToken;
+      } catch {
+        return null;
+      } finally {
+        refreshPromise = null;
+      }
+    })();
+  }
+  return refreshPromise;
 };
 
 /**
@@ -108,8 +154,17 @@ const authRequest = async <T>(path: string, options: RequestInit = {}): Promise<
 	const response = await fetch(url, { ...options, headers });
 	const body = await response.json().catch(() => ({}));
 
-	// Handle 401 Unauthorized - JWT expired or invalid
+	// Handle 401 Unauthorized - JWT expired or invalid: attempt token refresh
 	if (response.status === 401) {
+		const newToken = await refreshAccessToken();
+		if (newToken) {
+			headers.set('Authorization', `Bearer ${newToken}`);
+			const retryResponse = await fetch(url, { ...options, headers });
+			if (retryResponse.ok) {
+				return await retryResponse.json().catch(() => ({}));
+			}
+		}
+
 		const loginPage = getLoginRedirect(currentPathname);
 		clearAuthData();
 		if (typeof window !== 'undefined') {
@@ -136,7 +191,7 @@ const uploadMedia = async (file: File, path: string) => {
 	const formData = new FormData();
 	formData.append('file', file);
 	const url = sanitizeUrl(API_BASE_URL, path);
-	const headers: HeadersInit = {};
+	const headers: Record<string, string> = {};
 	if (token) {
 		headers['Authorization'] = `Bearer ${token}`;
 	}
@@ -147,8 +202,22 @@ const uploadMedia = async (file: File, path: string) => {
 	});
 	const body = await response.json().catch(() => ({}));
 
-	// Handle 401 Unauthorized - JWT expired or invalid
+	// Handle 401 Unauthorized - JWT expired or invalid: attempt token refresh
 	if (response.status === 401) {
+		const newToken = await refreshAccessToken();
+		if (newToken) {
+			headers['Authorization'] = `Bearer ${newToken}`;
+			const retryResponse = await fetch(url, {
+				method: 'POST',
+				headers,
+				body: formData,
+			});
+			if (retryResponse.ok) {
+				const retryBody = await retryResponse.json().catch(() => ({}));
+				return retryBody as { data: { url: string; mediaType: 'IMAGE' | 'VIDEO' } };
+			}
+		}
+
 		const loginPage = getLoginRedirect(currentPathname);
 		clearAuthData();
 		if (typeof window !== 'undefined') {
@@ -288,6 +357,7 @@ const uploadDevelopmentMedia = async (file: File) => {
 
 // ─── Public API ───────────────────────────────────────────────────────────────
 export const api = {
+	refreshToken: (refreshToken: string) => request('/auth/refresh', { method: 'POST', body: JSON.stringify({ refreshToken }) }),
 	getProperties: (query?: Record<string, QueryValue>) => request(`/properties${buildQuery(query)}`),
 	savePropertySearch: (data: Record<string, unknown>) => request('/property-searches', { method: 'POST', body: JSON.stringify(data) }),
 	getPropertiesByTransaction: (transactionType: string) => request(`/properties${buildQuery({ transactionType })}`),

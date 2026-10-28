@@ -1,8 +1,13 @@
-﻿import React from 'react';
+'use client'
+
+import React from 'react';
 import Link from 'next/link';
+import { Heart, Scale } from 'lucide-react';
 import { Card, CardBody, CardFooter } from './Card';
 import { Button } from './Button';
 import { TestPropertyBadge } from '../property/TestPropertyBadge';
+import { usePropertyComparison } from '@/hooks/usePropertyComparison';
+import { useFavorites } from '@/hooks/useFavorites';
 
 export interface PropertyProps {
   id: string;
@@ -22,11 +27,44 @@ export interface PropertyProps {
 }
 
 export function PropertyCard({ property }: { property: PropertyProps }) {
+  const { toggleComparison, isComparing } = usePropertyComparison();
+  const { toggleFavorite, isFavorited } = useFavorites();
+
+  const isCompared = isComparing(property.id);
+  const isFav = isFavorited(property.id);
+
   const statusColors = {
     'For Sale': 'bg-emerald-100 text-emerald-800',
     'For Rent': 'bg-blue-100 text-blue-800',
     'Pending': 'bg-amber-100 text-amber-800',
     'Sold': 'bg-gray-100 text-gray-800',
+  };
+
+  const handleCompareClick = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    toggleComparison({
+      id: property.id,
+      title: property.title,
+      price: property.price,
+      currency: 'RWF',
+      location: property.location,
+      propertyType: property.type,
+      transactionType: property.status === 'For Rent' ? 'RENT' : 'SALE',
+      bedrooms: property.bedrooms,
+      bathrooms: property.bathrooms,
+      size: property.size,
+      propertyImages: [{ imageUrl: property.image }],
+      amenities: property.features,
+      status: property.status,
+      slug: property.slug,
+    });
+  };
+
+  const handleFavoriteClick = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    toggleFavorite(property.id);
   };
 
   return (
@@ -56,9 +94,38 @@ export function PropertyCard({ property }: { property: PropertyProps }) {
             </span>
           )}
         </div>
-        <button type="button" aria-label="Save property" className="absolute top-4 right-4 w-8 h-8 bg-white/80 hover:bg-white backdrop-blur-sm rounded-full flex items-center justify-center text-brand-charcoal transition-colors">
-          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"></path></svg>
-        </button>
+
+        <div className="absolute top-4 right-4 flex items-center gap-2">
+          {/* Compare Button */}
+          <button
+            type="button"
+            onClick={handleCompareClick}
+            aria-label={isCompared ? 'Remove from comparison' : 'Compare property'}
+            title={isCompared ? 'Remove from comparison' : 'Compare property'}
+            className={`w-8 h-8 rounded-full flex items-center justify-center backdrop-blur-sm transition-all shadow-sm ${
+              isCompared
+                ? 'bg-brand-emerald text-white ring-2 ring-emerald-300'
+                : 'bg-white/80 hover:bg-white text-brand-charcoal'
+            }`}
+          >
+            <Scale className="w-4 h-4" />
+          </button>
+
+          {/* Favorite Button */}
+          <button
+            type="button"
+            onClick={handleFavoriteClick}
+            aria-label={isFav ? 'Remove from favorites' : 'Save to favorites'}
+            title={isFav ? 'Remove from favorites' : 'Save to favorites'}
+            className={`w-8 h-8 rounded-full flex items-center justify-center backdrop-blur-sm transition-all shadow-sm ${
+              isFav
+                ? 'bg-rose-50 text-rose-600 ring-2 ring-rose-200'
+                : 'bg-white/80 hover:bg-white text-brand-charcoal'
+            }`}
+          >
+            <Heart className={`w-4 h-4 ${isFav ? 'fill-rose-500 text-rose-500' : ''}`} />
+          </button>
+        </div>
       </div>
       
       <CardBody className="flex-1 flex flex-col">

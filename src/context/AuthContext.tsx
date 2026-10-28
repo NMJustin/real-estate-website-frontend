@@ -3,6 +3,7 @@ import { getApiBaseUrl, sanitizeUrl, isApiConfigValid } from '../config/api';
 
 const API_BASE = getApiBaseUrl();
 const TOKEN_KEY = 'admin_token';
+const REFRESH_TOKEN_KEY = 'refresh_token';
 
 interface AdminUser {
   id: string;
@@ -73,8 +74,43 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           localStorage.setItem('user_role', JSON.stringify(userRole));
         }
       })
-      .catch(() => {
+      .catch(async () => {
+        // Attempt refresh before expiring session
         if (typeof window !== 'undefined') {
+          const storedRefreshToken = localStorage.getItem(REFRESH_TOKEN_KEY);
+          if (storedRefreshToken) {
+            try {
+              const refreshRes = await fetch(sanitizeUrl(API_BASE, '/auth/refresh'), {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ refreshToken: storedRefreshToken }),
+              });
+              const refreshBody = await refreshRes.json();
+              if (refreshRes.ok && refreshBody.data?.token) {
+                const refreshedJwt = refreshBody.data.token;
+                const newRefreshToken = refreshBody.data.refreshToken;
+                const refreshedUser = refreshBody.data.user;
+                localStorage.setItem(TOKEN_KEY, refreshedJwt);
+                if (newRefreshToken) {
+                  localStorage.setItem(REFRESH_TOKEN_KEY, newRefreshToken);
+                }
+                const refreshedRole = refreshedUser?.role?.name ?? refreshedUser?.role;
+                localStorage.setItem('user_role', JSON.stringify(refreshedRole));
+                setToken(refreshedJwt);
+                setUser({
+                  id: refreshedUser.id,
+                  name: refreshedUser.name,
+                  email: refreshedUser.email,
+                  role: refreshedRole,
+                  phone: refreshedUser.phone ?? null,
+                });
+                return;
+              }
+            } catch {
+              // Refresh failed, proceed to logout cleanup
+            }
+          }
+
           const currentPathname = window.location.pathname;
           // Determine if we are on a protected route that requires redirection on session expiry
           const isProtectedContext = currentPathname.startsWith('/admin') || currentPathname.startsWith('/portal');
@@ -89,6 +125,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           }
 
           localStorage.removeItem(TOKEN_KEY);
+          localStorage.removeItem(REFRESH_TOKEN_KEY);
           localStorage.removeItem('user_role');
           localStorage.removeItem('inactivity_logout');
 
@@ -102,6 +139,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           }
         }
         localStorage.removeItem(TOKEN_KEY);
+        localStorage.removeItem(REFRESH_TOKEN_KEY);
         localStorage.removeItem('user_role');
         setToken(null);
         setUser(null);
@@ -117,9 +155,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     });
     const body = await res.json();
     if (!res.ok) throw new Error(body.message || 'Login failed');
-    const { token: jwt, user: userData } = body.data;
+    const { token: jwt, refreshToken, user: userData } = body.data;
     if (typeof window !== 'undefined') {
       localStorage.setItem(TOKEN_KEY, jwt);
+      if (refreshToken) {
+        localStorage.setItem(REFRESH_TOKEN_KEY, refreshToken);
+      }
       localStorage.setItem('user_role', JSON.stringify(userData.role?.name ?? userData.role));
     }
     setToken(jwt);
@@ -134,9 +175,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     });
     const body = await res.json();
     if (!res.ok) throw new Error(body.message || 'Login failed');
-    const { token: jwt, user: userData } = body.data;
+    const { token: jwt, refreshToken, user: userData } = body.data;
     if (typeof window !== 'undefined') {
       localStorage.setItem(TOKEN_KEY, jwt);
+      if (refreshToken) {
+        localStorage.setItem(REFRESH_TOKEN_KEY, refreshToken);
+      }
       localStorage.setItem('user_role', JSON.stringify(userData.role?.name ?? userData.role));
     }
     setToken(jwt);
@@ -157,9 +201,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     });
     const body = await res.json();
     if (!res.ok) throw new Error(body.message || 'Registration failed');
-    const { token: jwt, user: userData } = body.data;
+    const { token: jwt, refreshToken, user: userData } = body.data;
     if (typeof window !== 'undefined') {
       localStorage.setItem(TOKEN_KEY, jwt);
+      if (refreshToken) {
+        localStorage.setItem(REFRESH_TOKEN_KEY, refreshToken);
+      }
       localStorage.setItem('user_role', JSON.stringify(userData.role?.name ?? userData.role));
     }
     setToken(jwt);
@@ -186,6 +233,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const logout = useCallback(() => {
     if (typeof window !== 'undefined') {
       localStorage.removeItem(TOKEN_KEY);
+      localStorage.removeItem(REFRESH_TOKEN_KEY);
       localStorage.removeItem('user_role');
       localStorage.removeItem('inactivity_logout');
     }

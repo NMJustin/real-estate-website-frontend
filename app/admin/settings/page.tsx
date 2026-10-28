@@ -91,10 +91,10 @@ const defaultSettings: AllSettings = {
     email: 'ingatatechnologiesltd@gmail.com',
     whatsapp: '+250796593119',
     address: 'KG 11 Ave, Zindiro, AZAM Rond Point, Gasabo-Kigali',
-    facebook: 'https://facebook.com',
-    twitter: 'https://twitter.com',
-    instagram: 'https://instagram.com',
-    linkedin: 'https://linkedin.com',
+    facebook: 'https://www.facebook.com',
+    twitter: 'https://x.com/GlobalOncg25',
+    instagram: 'https://www.instagram.com',
+    linkedin: 'https://www.linkedin.com/company/ingata-technologies-ltd/',
   },
   homepage: {
     heroTitle: 'Find a Place to Call Home',
@@ -556,7 +556,7 @@ export default function Settings() {
                     value={settings.contact.facebook}
                     onChange={(e) => handleContactChange('facebook', e.target.value)}
                     className="w-full rounded-lg border border-slate-300 bg-white py-2.5 px-4 text-sm text-slate-900 outline-none transition focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100"
-                    placeholder="https://facebook.com/..."
+                    placeholder="https://www.facebook.com/..."
                   />
                 </div>
 
@@ -569,7 +569,7 @@ export default function Settings() {
                     value={settings.contact.twitter}
                     onChange={(e) => handleContactChange('twitter', e.target.value)}
                     className="w-full rounded-lg border border-slate-300 bg-white py-2.5 px-4 text-sm text-slate-900 outline-none transition focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100"
-                    placeholder="https://twitter.com/..."
+                    placeholder="https://x.com/..."
                   />
                 </div>
 
@@ -582,7 +582,7 @@ export default function Settings() {
                     value={settings.contact.instagram}
                     onChange={(e) => handleContactChange('instagram', e.target.value)}
                     className="w-full rounded-lg border border-slate-300 bg-white py-2.5 px-4 text-sm text-slate-900 outline-none transition focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100"
-                    placeholder="https://instagram.com/..."
+                    placeholder="https://www.instagram.com/..."
                   />
                 </div>
 
@@ -595,7 +595,7 @@ export default function Settings() {
                     value={settings.contact.linkedin}
                     onChange={(e) => handleContactChange('linkedin', e.target.value)}
                     className="w-full rounded-lg border border-slate-300 bg-white py-2.5 px-4 text-sm text-slate-900 outline-none transition focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100"
-                    placeholder="https://linkedin.com/company/..."
+                    placeholder="https://www.linkedin.com/company/..."
                   />
                 </div>
               </div>

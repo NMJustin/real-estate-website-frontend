@@ -3,13 +3,15 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
-import { BedDouble, Bath, MapPin, Ruler, ArrowLeft, Maximize2, Share2, Phone, Mail, Calendar, Check, Video, Home, Shield, Wifi, Car, Droplets, Zap, Flame } from 'lucide-react';
+import { BedDouble, Bath, MapPin, Ruler, ArrowLeft, Maximize2, Share2, Phone, Mail, Calendar, Check, Video, Home, Shield, Wifi, Car, Droplets, Zap, Flame, Heart, Scale } from 'lucide-react';
 import api from '@/services/api';
 import { ImageViewer } from '@/components/ImageViewer';
 import { TestPropertyNotice } from '@/components/property/TestPropertyBadge';
 import { usePropertyViewTracking, trackClickEvent } from '@/utils/analytics';
 import { PropertyStructuredData } from '@/components/seo/PropertyStructuredData';
 import PropertyMap from '@/components/map/PropertyMap';
+import { usePropertyComparison } from '@/hooks/usePropertyComparison';
+import { useFavorites } from '@/hooks/useFavorites';
 
 type InquiryForm = {
   name: string;
@@ -251,55 +253,162 @@ export default function PropertyDetails({ propertySlug }: { propertySlug: string
     'furnished': Home,
   };
 
+  const { toggleComparison, isComparing } = usePropertyComparison();
+  const { toggleFavorite, isFavorited } = useFavorites();
+
+  const isCompared = property ? isComparing(property.id) : false;
+  const isFav = property ? isFavorited(property.id) : false;
+
+  const handleCompare = () => {
+    if (!property) return;
+    toggleComparison({
+      id: property.id,
+      title: property.title,
+      price: property.price || 0,
+      currency: property.currency || 'RWF',
+      location: property.location || '',
+      district: property.district || '',
+      propertyType: property.propertyType,
+      transactionType: property.transactionType,
+      bedrooms: property.bedrooms || undefined,
+      bathrooms: property.bathrooms || undefined,
+      size: property.size || undefined,
+      sizeUnit: property.sizeUnit || undefined,
+      propertyImages: media.map((m) => ({ imageUrl: m.imageUrl })),
+      amenities: property.amenities || property.features || [],
+      status: property.status,
+      slug: property.slug || '',
+    });
+  };
+
+  const handleFavorite = () => {
+    if (!property) return;
+    toggleFavorite(property.id);
+  };
+
   return (
     <>
       <PropertyStructuredData property={property} />
       <main className="bg-slate-50 py-8 sm:py-12">
       <div className="mx-auto max-w-7xl px-4 sm:px-6">
         <TestPropertyNotice className="mb-6" />
-        <div className="flex items-center justify-between mb-6">
-          <Link href="/properties" className="inline-flex items-center gap-1 text-sm font-medium text-emerald-700">
+        <div className="flex flex-wrap items-center justify-between gap-4 mb-6">
+          <Link href="/properties" className="inline-flex items-center gap-1.5 text-sm font-medium text-emerald-700 hover:text-emerald-800">
             <ArrowLeft className="h-4 w-4" />Back to properties
           </Link>
-          <button
-            onClick={handleShare}
-            className="flex items-center gap-2 text-sm font-medium text-slate-600 hover:text-emerald-700"
-          >
-            <Share2 className="h-4 w-4" />Share
-          </button>
+
+          <div className="flex items-center gap-2 sm:gap-3">
+            {/* Compare Button */}
+            <button
+              onClick={handleCompare}
+              className={`flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium rounded-lg border transition-all ${
+                isCompared
+                  ? 'bg-emerald-50 text-emerald-700 border-emerald-300'
+                  : 'bg-white text-slate-700 border-slate-200 hover:bg-slate-50'
+              }`}
+              title={isCompared ? 'Remove from comparison' : 'Compare property'}
+            >
+              <Scale className={`h-4 w-4 ${isCompared ? 'text-emerald-600' : 'text-slate-500'}`} />
+              <span>{isCompared ? 'Comparing' : 'Compare'}</span>
+            </button>
+
+            {/* Favorite / Save Button */}
+            <button
+              onClick={handleFavorite}
+              className={`flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium rounded-lg border transition-all ${
+                isFav
+                  ? 'bg-rose-50 text-rose-600 border-rose-300'
+                  : 'bg-white text-slate-700 border-slate-200 hover:bg-slate-50'
+              }`}
+              title={isFav ? 'Saved in favorites' : 'Save to favorites'}
+            >
+              <Heart className={`h-4 w-4 ${isFav ? 'fill-rose-500 text-rose-500' : 'text-slate-500'}`} />
+              <span>{isFav ? 'Saved' : 'Save'}</span>
+            </button>
+
+            {/* Share Button */}
+            <button
+              onClick={handleShare}
+              className="flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium bg-white text-slate-700 border border-slate-200 hover:bg-slate-50 rounded-lg transition-all"
+            >
+              <Share2 className="h-4 w-4 text-slate-500" />
+              <span>Share</span>
+            </button>
+          </div>
         </div>
         
         <div className="mt-5 grid gap-8 lg:grid-cols-[minmax(0,2fr)_minmax(320px,1fr)]">
           <div>
-            {/* Image Gallery */}
-            <div className="grid gap-4 sm:grid-cols-2 relative">
-              {media.length ? media.map((item, index) => (
-                <div key={item.id} className="relative group cursor-pointer" onClick={() => openViewer(index)}>
-                  {item.mediaType === 'VIDEO' ? (
-                    <div className="aspect-video w-full rounded-xl bg-slate-900 object-cover relative">
-                      <video src={item.imageUrl} controls className="w-full h-full rounded-xl object-cover">
-                        <source src={item.imageUrl} />
-                      </video>
-                      <div className="absolute top-2 left-2 bg-black/70 text-white text-xs px-2 py-1 rounded flex items-center gap-1">
-                        <Video className="h-3 w-3" />Video
-                      </div>
-                    </div>
-                  ) : (
-                    <div className="relative">
-                      <img src={item.imageUrl} alt={property.title} className="aspect-video w-full rounded-xl object-cover" />
-                      {item.caption && (
-                        <div className="absolute bottom-0 left-0 right-0 bg-black/60 text-white text-xs p-2 rounded-b-xl">
-                          {item.caption}
+            {/* Enhanced Image Gallery */}
+            <div className="space-y-3">
+              {media.length > 0 ? (
+                <>
+                  {/* Hero Main Image with Zoom badge */}
+                  <div
+                    className="relative group cursor-pointer aspect-[16/9] w-full rounded-2xl overflow-hidden bg-slate-900 shadow-md border border-slate-200"
+                    onClick={() => openViewer(0)}
+                  >
+                    {media[0].mediaType === 'VIDEO' ? (
+                      <div className="w-full h-full relative">
+                        <video src={media[0].imageUrl} controls className="w-full h-full object-cover">
+                          <source src={media[0].imageUrl} />
+                        </video>
+                        <div className="absolute top-3 left-3 bg-black/70 text-white text-xs px-2.5 py-1 rounded-md flex items-center gap-1.5 backdrop-blur-sm">
+                          <Video className="h-3.5 w-3.5" /> Video
                         </div>
-                      )}
+                      </div>
+                    ) : (
+                      <>
+                        <img
+                          src={media[0].imageUrl}
+                          alt={property.title}
+                          className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                        />
+                        {media[0].caption && (
+                          <div className="absolute bottom-0 inset-x-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent text-white text-sm p-4">
+                            {media[0].caption}
+                          </div>
+                        )}
+                      </>
+                    )}
+
+                    {/* Interactive Zoom Overlay Banner */}
+                    <div className="absolute bottom-3 right-3 bg-black/70 hover:bg-black/90 text-white text-xs font-semibold px-3 py-1.5 rounded-lg flex items-center gap-1.5 backdrop-blur-md transition-all shadow-md group-hover:bg-emerald-600">
+                      <Maximize2 className="w-3.5 h-3.5" />
+                      <span>Click to Zoom & View Gallery ({media.length})</span>
+                    </div>
+                  </div>
+
+                  {/* Thumbnail Row */}
+                  {media.length > 1 && (
+                    <div className="grid grid-cols-4 sm:grid-cols-5 gap-2 sm:gap-3">
+                      {media.slice(0, 5).map((item, index) => {
+                        const isLastItemWithMore = index === 4 && media.length > 5;
+                        return (
+                          <div
+                            key={item.id || index}
+                            onClick={() => openViewer(index)}
+                            className="relative aspect-video rounded-xl overflow-hidden cursor-pointer bg-slate-100 group border border-slate-200 shadow-sm"
+                          >
+                            <img
+                              src={item.imageUrl}
+                              alt={item.caption || `Thumbnail ${index + 1}`}
+                              className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
+                            />
+                            {isLastItemWithMore && (
+                              <div className="absolute inset-0 bg-black/60 backdrop-blur-[2px] flex items-center justify-center text-white text-xs sm:text-sm font-bold">
+                                +{media.length - 4} More
+                              </div>
+                            )}
+                            <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors" />
+                          </div>
+                        );
+                      })}
                     </div>
                   )}
-                  <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition flex items-center justify-center opacity-0 group-hover:opacity-100 rounded-xl">
-                    <Maximize2 className="w-8 h-8 text-white" />
-                  </div>
-                </div>
-              )) : (
-                <div className="aspect-video rounded-xl bg-slate-200 flex items-center justify-center text-slate-400">
+                </>
+              ) : (
+                <div className="aspect-video rounded-2xl bg-slate-200 flex items-center justify-center text-slate-400">
                   No images available
                 </div>
               )}
