@@ -269,7 +269,7 @@ export default function AdminDashboard() {
   ];
 
   const actionItems = [
-    { label: 'Property requests', count: pendingListingRequests, hint: 'Review submitted listings', to: '/admin/listings', icon: Building2, tone: 'bg-blue-50 text-blue-700' },
+    { label: 'Property requests', count: pendingListingRequests, hint: 'Review submitted listings', to: '/admin/listing-requests', icon: Building2, tone: 'bg-blue-50 text-blue-700' },
     { label: 'Inquiries', count: stats.pendingInquiries, hint: 'Respond to new leads', to: '/admin/inquiries', icon: MessageSquare, tone: 'bg-amber-50 text-amber-700' },
     { label: 'Viewings', count: stats.pendingViewings, hint: 'Review viewing requests', to: '/admin/viewings', icon: Calendar, tone: 'bg-violet-50 text-violet-700' },
     { label: 'Valuations', count: stats.pendingValuations, hint: 'Review valuation requests', to: '/admin/valuations', icon: TrendingUp, tone: 'bg-rose-50 text-rose-700' },
@@ -403,7 +403,7 @@ export default function AdminDashboard() {
             <p className="text-xs font-semibold uppercase tracking-wider text-rose-700">Stay on top of it</p>
             <h2 className="mt-1 text-lg font-bold text-slate-900">Action required</h2>
           </div>
-          <Link href="/admin/listings" className="inline-flex items-center gap-1 text-sm font-semibold text-emerald-700 hover:text-emerald-800">Review requests <ArrowRight className="h-4 w-4" /></Link>
+          <Link href="/admin/listing-requests" className="inline-flex items-center gap-1 text-sm font-semibold text-emerald-700 hover:text-emerald-800">Review requests <ArrowRight className="h-4 w-4" /></Link>
         </div>
         <div className="mt-4 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
           {actionItems.map((item) => (

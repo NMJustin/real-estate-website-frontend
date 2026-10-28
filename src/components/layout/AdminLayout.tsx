@@ -37,7 +37,7 @@ const navItems = [
   { to: '/admin/categories', icon: Tag, label: 'Categories' },
   { to: '/admin/property-features', icon: CheckCircle, label: 'Property Features' },
   { to: '/admin/developments', icon: Building, label: 'Developments' },
-  { to: '/admin/listings', icon: ClipboardList, label: 'Property Requests' },
+  { to: '/admin/listing-requests', icon: ClipboardList, label: 'Property Requests' },
   { to: '/admin/inquiries', icon: MessageSquare, label: 'Inquiries' },
   { to: '/admin/contact', icon: Mail, label: 'Messages' },
   { to: '/admin/viewings', icon: Calendar, label: 'Viewings' },
@@ -82,7 +82,12 @@ function Sidebar({ onClose }: { onClose?: () => void }) {
         <p className="px-3 mb-2 text-xs font-semibold text-slate-500 uppercase tracking-wider">Main Menu</p>
         <ul className="space-y-0.5">
           {navItems.map(({ to, icon: Icon, label }) => {
-            const isActive = pathname === to;
+            const isActive =
+              pathname === to ||
+              (to === '/admin/listing-requests' &&
+                (pathname === '/admin/listings' ||
+                  pathname === '/admin/property-requests' ||
+                  pathname?.startsWith('/admin/listing-requests')));
             return (
               <li key={to}>
                 <Link
@@ -136,11 +141,16 @@ export function AdminLayout({ children }: AdminLayoutProps) {
   const { showWarning, countdown, formatCountdown, stayLoggedIn } = useInactivityLogout();
   const { logout } = useAuth();
   const router = useRouter();
+  const pathname = usePathname();
 
   const handleLogout = () => {
     logout();
     router.push('/admin');
   };
+
+  if (pathname === '/admin') {
+    return <>{children}</>;
+  }
 
   return (
     <>

@@ -10,6 +10,16 @@ import {
   Mail,
   MapPin,
   Share2,
+  Shield,
+  ShieldCheck,
+  Lock,
+  Clock,
+  Activity,
+  KeyRound,
+  CheckCircle,
+  AlertTriangle,
+  Database,
+  RefreshCw,
 } from 'lucide-react';
 import { adminApi } from '@/services/api';
 
@@ -48,11 +58,76 @@ interface SystemSettings {
   faviconUrl: string;
 }
 
+interface SecuritySettings {
+  analyticsRetentionDays: number;
+  inactivityTimeoutMinutes: number;
+  warningTimeoutMinutes: number;
+  maxAuthAttempts: number;
+  authWindowMinutes: number;
+  contactRateLimitPerHour: number;
+  searchRateLimitPerMin: number;
+  globalRateLimit: number;
+  minPasswordLength: number;
+  maxPasswordLength: number;
+  csrfProtectionEnabled: boolean;
+  crossTabSyncEnabled: boolean;
+}
+
 interface AllSettings {
   contact: ContactSettings;
   homepage: HomepageSettings;
   system: SystemSettings;
+  security: SecuritySettings;
 }
+
+const defaultSettings: AllSettings = {
+  contact: {
+    phone: '+250 796 593 119',
+    email: 'ingatatechnologiesltd@gmail.com',
+    whatsapp: '+250796593119',
+    address: 'KG 11 Ave, Zindiro, AZAM Rond Point, Gasabo-Kigali',
+    facebook: 'https://facebook.com',
+    twitter: 'https://twitter.com',
+    instagram: 'https://instagram.com',
+    linkedin: 'https://linkedin.com',
+  },
+  homepage: {
+    heroTitle: 'Find a Place to Call Home',
+    heroSubtitle: 'Discover residential, commercial and investment properties that match your needs and goals.',
+    heroCtaText: 'Explore Properties',
+    heroCtaLink: '/properties',
+    aboutTitle: 'About Ingata Real Estate',
+    aboutDescription: 'Ingata Real Estate is a real estate company providing property sales, rentals, property management, marketing and related real estate services.',
+    aboutCtaText: 'Learn More About Us',
+    aboutCtaLink: '/about/our-company',
+    servicesTitle: 'Our Services',
+    servicesDescription: 'Comprehensive real estate solutions tailored for you.',
+    showFeaturedSection: true,
+    featuredSectionTitle: 'Featured Properties',
+    showServicesSection: true,
+    showAboutSection: true,
+  },
+  system: {
+    siteName: 'Ingata Real Estate',
+    siteTagline: 'Your Trusted Real Estate Partner',
+    logoUrl: '',
+    faviconUrl: '',
+  },
+  security: {
+    analyticsRetentionDays: 365,
+    inactivityTimeoutMinutes: 5,
+    warningTimeoutMinutes: 3,
+    maxAuthAttempts: 5,
+    authWindowMinutes: 15,
+    contactRateLimitPerHour: 3,
+    searchRateLimitPerMin: 30,
+    globalRateLimit: 100,
+    minPasswordLength: 8,
+    maxPasswordLength: 128,
+    csrfProtectionEnabled: true,
+    crossTabSyncEnabled: true,
+  },
+};
 
 const mergeSavedSettings = (saved: Record<string, unknown>, defaults: AllSettings): AllSettings => ({
   contact: {
@@ -89,47 +164,21 @@ const mergeSavedSettings = (saved: Record<string, unknown>, defaults: AllSetting
     logoUrl: typeof saved.logoUrl === 'string' ? saved.logoUrl : defaults.system.logoUrl,
     faviconUrl: typeof saved.faviconUrl === 'string' ? saved.faviconUrl : defaults.system.faviconUrl,
   },
+  security: {
+    ...defaults.security,
+    analyticsRetentionDays: typeof saved.analyticsRetentionDays === 'number'
+      ? saved.analyticsRetentionDays
+      : typeof saved.analytics_retention_days === 'number'
+      ? saved.analytics_retention_days
+      : defaults.security.analyticsRetentionDays,
+  },
 });
 
 export default function Settings() {
-  const [settings, setSettings] = useState<AllSettings>({
-    contact: {
-      phone: '+250 796 593 119',
-      email: 'ingatatechnologiesltd@gmail.com',
-      whatsapp: '+250796593119',
-      address: 'KG 11 Ave, Zindiro, AZAM Rond Point, Gasabo-Kigali',
-      facebook: 'https://facebook.com',
-      twitter: 'https://twitter.com',
-      instagram: 'https://instagram.com',
-      linkedin: 'https://linkedin.com',
-    },
-    homepage: {
-      heroTitle: 'Find a Place to Call Home',
-      heroSubtitle: 'Discover residential, commercial and investment properties that match your needs and goals.',
-      heroCtaText: 'Explore Properties',
-      heroCtaLink: '/properties',
-      aboutTitle: 'About Ingata Real Estate',
-      aboutDescription: 'Ingata Real Estate is a real estate company providing property sales, rentals, property management, marketing and related real estate services.',
-      aboutCtaText: 'Learn More About Us',
-      aboutCtaLink: '/about/our-company',
-      servicesTitle: 'Our Services',
-      servicesDescription: 'Comprehensive real estate solutions tailored for you.',
-      showFeaturedSection: true,
-      featuredSectionTitle: 'Featured Properties',
-      showServicesSection: true,
-      showAboutSection: true,
-    },
-    system: {
-      siteName: 'Ingata Real Estate',
-      siteTagline: 'Your Trusted Real Estate Partner',
-      logoUrl: '',
-      faviconUrl: '',
-    },
-  });
-
+  const [settings, setSettings] = useState<AllSettings>(defaultSettings);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-  const [activeTab, setActiveTab] = useState<'contact' | 'homepage' | 'system'>('contact');
+  const [activeTab, setActiveTab] = useState<'contact' | 'homepage' | 'system' | 'security'>('contact');
   const [message, setMessage] = useState('');
   const [error, setError] = useState('');
 
@@ -183,6 +232,7 @@ export default function Settings() {
         showFeaturedSection: settings.homepage.showFeaturedSection,
         showServicesSection: settings.homepage.showServicesSection,
         showAboutSection: settings.homepage.showAboutSection,
+        analyticsRetentionDays: Number(settings.security.analyticsRetentionDays) || 365,
       });
       if ((response as { success: boolean }).success) {
         setMessage('Settings saved successfully!');
@@ -219,6 +269,13 @@ export default function Settings() {
     }));
   };
 
+  const handleSecurityChange = (field: keyof SecuritySettings, value: number) => {
+    setSettings(prev => ({
+      ...prev,
+      security: { ...prev.security, [field]: value }
+    }));
+  };
+
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
@@ -235,7 +292,7 @@ export default function Settings() {
           <h1 className="text-2xl font-bold text-slate-900">Settings</h1>
         </div>
         <p className="mt-1 text-sm text-slate-500">
-          Manage contact information and homepage content.
+          Manage contact information, homepage content, system identity, and security policies.
         </p>
       </div>
 
@@ -271,6 +328,17 @@ export default function Settings() {
           >
             System Settings
           </button>
+          <button
+            onClick={() => setActiveTab('security')}
+            className={`pb-3 border-b-2 font-medium text-sm transition-colors whitespace-nowrap flex items-center gap-2 ${
+              activeTab === 'security'
+                ? 'border-emerald-600 text-emerald-600'
+                : 'border-transparent text-slate-500 hover:text-slate-700'
+            }`}
+          >
+            <Shield className="h-4 w-4" />
+            Security & Policies
+          </button>
         </nav>
       </div>
 
@@ -304,6 +372,7 @@ export default function Settings() {
         </div>
       )}
 
+      {/* CONTACT TAB */}
       {activeTab === 'contact' && (
         <div className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
           <div className="mb-6">
@@ -365,7 +434,7 @@ export default function Settings() {
 
               <div>
                 <label className="block text-sm font-medium text-slate-700 mb-2">
-                  Office Address
+                  Physical Address
                 </label>
                 <div className="relative">
                   <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-400" />
@@ -374,77 +443,68 @@ export default function Settings() {
                     value={settings.contact.address}
                     onChange={(e) => handleContactChange('address', e.target.value)}
                     className="w-full rounded-lg border border-slate-300 bg-white py-2.5 pl-10 pr-4 text-sm text-slate-900 outline-none transition focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100"
-                    placeholder="Full office address"
+                    placeholder="City, District, Country"
                   />
                 </div>
               </div>
             </div>
 
-            <div>
-              <h3 className="text-sm font-semibold text-slate-900 mb-4">Social Media Links</h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="border-t border-slate-200 pt-6">
+              <h3 className="text-md font-semibold text-slate-900 mb-4 flex items-center gap-2">
+                <Share2 className="h-5 w-5 text-slate-400" />
+                Social Media Links
+              </h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
                   <label className="block text-sm font-medium text-slate-700 mb-2">
-                    Facebook
+                    Facebook URL
                   </label>
-                  <div className="relative">
-                    <Share2 className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-400" />
-                    <input
-                      type="url"
-                      value={settings.contact.facebook}
-                      onChange={(e) => handleContactChange('facebook', e.target.value)}
-                      className="w-full rounded-lg border border-slate-300 bg-white py-2.5 pl-10 pr-4 text-sm text-slate-900 outline-none transition focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100"
-                      placeholder="https://facebook.com/pagename"
-                    />
-                  </div>
+                  <input
+                    type="url"
+                    value={settings.contact.facebook}
+                    onChange={(e) => handleContactChange('facebook', e.target.value)}
+                    className="w-full rounded-lg border border-slate-300 bg-white py-2.5 px-4 text-sm text-slate-900 outline-none transition focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100"
+                    placeholder="https://facebook.com/..."
+                  />
                 </div>
 
                 <div>
                   <label className="block text-sm font-medium text-slate-700 mb-2">
-                    Twitter
+                    X (Twitter) URL
                   </label>
-                  <div className="relative">
-                    <Share2 className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-400" />
-                    <input
-                      type="url"
-                      value={settings.contact.twitter}
-                      onChange={(e) => handleContactChange('twitter', e.target.value)}
-                      className="w-full rounded-lg border border-slate-300 bg-white py-2.5 pl-10 pr-4 text-sm text-slate-900 outline-none transition focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100"
-                      placeholder="https://twitter.com/username"
-                    />
-                  </div>
+                  <input
+                    type="url"
+                    value={settings.contact.twitter}
+                    onChange={(e) => handleContactChange('twitter', e.target.value)}
+                    className="w-full rounded-lg border border-slate-300 bg-white py-2.5 px-4 text-sm text-slate-900 outline-none transition focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100"
+                    placeholder="https://twitter.com/..."
+                  />
                 </div>
 
                 <div>
                   <label className="block text-sm font-medium text-slate-700 mb-2">
-                    Instagram
+                    Instagram URL
                   </label>
-                  <div className="relative">
-                    <Share2 className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-400" />
-                    <input
-                      type="url"
-                      value={settings.contact.instagram}
-                      onChange={(e) => handleContactChange('instagram', e.target.value)}
-                      className="w-full rounded-lg border border-slate-300 bg-white py-2.5 pl-10 pr-4 text-sm text-slate-900 outline-none transition focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100"
-                      placeholder="https://instagram.com/username"
-                    />
-                  </div>
+                  <input
+                    type="url"
+                    value={settings.contact.instagram}
+                    onChange={(e) => handleContactChange('instagram', e.target.value)}
+                    className="w-full rounded-lg border border-slate-300 bg-white py-2.5 px-4 text-sm text-slate-900 outline-none transition focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100"
+                    placeholder="https://instagram.com/..."
+                  />
                 </div>
 
                 <div>
                   <label className="block text-sm font-medium text-slate-700 mb-2">
-                    LinkedIn
+                    LinkedIn URL
                   </label>
-                  <div className="relative">
-                    <Share2 className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-400" />
-                    <input
-                      type="url"
-                      value={settings.contact.linkedin}
-                      onChange={(e) => handleContactChange('linkedin', e.target.value)}
-                      className="w-full rounded-lg border border-slate-300 bg-white py-2.5 pl-10 pr-4 text-sm text-slate-900 outline-none transition focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100"
-                      placeholder="https://linkedin.com/company"
-                    />
-                  </div>
+                  <input
+                    type="url"
+                    value={settings.contact.linkedin}
+                    onChange={(e) => handleContactChange('linkedin', e.target.value)}
+                    className="w-full rounded-lg border border-slate-300 bg-white py-2.5 px-4 text-sm text-slate-900 outline-none transition focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100"
+                    placeholder="https://linkedin.com/company/..."
+                  />
                 </div>
               </div>
             </div>
@@ -454,26 +514,28 @@ export default function Settings() {
             <button
               onClick={handleSave}
               disabled={saving}
-              className="rounded-lg bg-emerald-600 px-4 py-2.5 text-sm font-medium text-white hover:bg-emerald-700 disabled:opacity-60"
+              className="inline-flex items-center gap-2 rounded-lg bg-emerald-600 px-4 py-2.5 text-sm font-medium text-white hover:bg-emerald-700 disabled:opacity-60"
             >
+              <Save className="h-4 w-4" />
               {saving ? 'Saving...' : 'Save Changes'}
             </button>
           </div>
         </div>
       )}
 
+      {/* HOMEPAGE TAB */}
       {activeTab === 'homepage' && (
         <div className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
           <div className="mb-6">
             <h2 className="text-lg font-semibold text-slate-900 mb-2">Homepage Content</h2>
             <p className="text-sm text-slate-500">
-              Customize the homepage hero section, about section, and services display.
+              Customize text and visibility of sections on the landing page.
             </p>
           </div>
 
           <div className="space-y-6">
             <div>
-              <h3 className="text-sm font-semibold text-slate-900 mb-4">Hero Section</h3>
+              <h3 className="text-md font-semibold text-slate-900 mb-4">Hero Section</h3>
               <div className="space-y-4">
                 <div>
                   <label className="block text-sm font-medium text-slate-700 mb-2">
@@ -486,17 +548,19 @@ export default function Settings() {
                     className="w-full rounded-lg border border-slate-300 px-3 py-2.5 text-sm outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100"
                   />
                 </div>
+
                 <div>
                   <label className="block text-sm font-medium text-slate-700 mb-2">
                     Hero Subtitle
                   </label>
                   <textarea
+                    rows={2}
                     value={settings.homepage.heroSubtitle}
                     onChange={(e) => handleHomepageChange('heroSubtitle', e.target.value)}
-                    rows={2}
                     className="w-full rounded-lg border border-slate-300 px-3 py-2.5 text-sm outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100"
                   />
                 </div>
+
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
                     <label className="block text-sm font-medium text-slate-700 mb-2">
@@ -511,7 +575,7 @@ export default function Settings() {
                   </div>
                   <div>
                     <label className="block text-sm font-medium text-slate-700 mb-2">
-                      CTA Link
+                      CTA Button Link
                     </label>
                     <input
                       type="text"
@@ -524,8 +588,8 @@ export default function Settings() {
               </div>
             </div>
 
-            <div>
-              <h3 className="text-sm font-semibold text-slate-900 mb-4">About Section</h3>
+            <div className="border-t border-slate-200 pt-6">
+              <h3 className="text-md font-semibold text-slate-900 mb-4">About Section</h3>
               <div className="space-y-4">
                 <div>
                   <label className="block text-sm font-medium text-slate-700 mb-2">
@@ -538,21 +602,23 @@ export default function Settings() {
                     className="w-full rounded-lg border border-slate-300 px-3 py-2.5 text-sm outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100"
                   />
                 </div>
+
                 <div>
                   <label className="block text-sm font-medium text-slate-700 mb-2">
                     About Description
                   </label>
                   <textarea
+                    rows={3}
                     value={settings.homepage.aboutDescription}
                     onChange={(e) => handleHomepageChange('aboutDescription', e.target.value)}
-                    rows={3}
                     className="w-full rounded-lg border border-slate-300 px-3 py-2.5 text-sm outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100"
                   />
                 </div>
+
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
                     <label className="block text-sm font-medium text-slate-700 mb-2">
-                      CTA Text
+                      CTA Button Text
                     </label>
                     <input
                       type="text"
@@ -563,7 +629,7 @@ export default function Settings() {
                   </div>
                   <div>
                     <label className="block text-sm font-medium text-slate-700 mb-2">
-                      CTA Link
+                      CTA Button Link
                     </label>
                     <input
                       type="text"
@@ -576,36 +642,8 @@ export default function Settings() {
               </div>
             </div>
 
-            <div>
-              <h3 className="text-sm font-semibold text-slate-900 mb-4">Services Section</h3>
-              <div className="space-y-4">
-                <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-2">
-                    Services Title
-                  </label>
-                  <input
-                    type="text"
-                    value={settings.homepage.servicesTitle}
-                    onChange={(e) => handleHomepageChange('servicesTitle', e.target.value)}
-                    className="w-full rounded-lg border border-slate-300 px-3 py-2.5 text-sm outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-2">
-                    Services Description
-                  </label>
-                  <textarea
-                    value={settings.homepage.servicesDescription}
-                    onChange={(e) => handleHomepageChange('servicesDescription', e.target.value)}
-                    rows={2}
-                    className="w-full rounded-lg border border-slate-300 px-3 py-2.5 text-sm outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100"
-                  />
-                </div>
-              </div>
-            </div>
-
-            <div>
-              <h3 className="text-sm font-semibold text-slate-900 mb-4">Section Visibility</h3>
+            <div className="border-t border-slate-200 pt-6">
+              <h3 className="text-md font-semibold text-slate-900 mb-4">Section Visibility</h3>
               <div className="space-y-3">
                 <div className="flex items-center gap-2">
                   <input
@@ -619,19 +657,6 @@ export default function Settings() {
                     Show Featured Properties Section
                   </label>
                 </div>
-                {settings.homepage.showFeaturedSection && (
-                  <div>
-                    <label className="block text-sm font-medium text-slate-700 mb-2">
-                      Featured Section Title
-                    </label>
-                    <input
-                      type="text"
-                      value={settings.homepage.featuredSectionTitle}
-                      onChange={(e) => handleHomepageChange('featuredSectionTitle', e.target.value)}
-                      className="w-full rounded-lg border border-slate-300 px-3 py-2.5 text-sm outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100"
-                    />
-                  </div>
-                )}
                 <div className="flex items-center gap-2">
                   <input
                     type="checkbox"
@@ -664,20 +689,22 @@ export default function Settings() {
             <button
               onClick={handleSave}
               disabled={saving}
-              className="rounded-lg bg-emerald-600 px-4 py-2.5 text-sm font-medium text-white hover:bg-emerald-700 disabled:opacity-60"
+              className="inline-flex items-center gap-2 rounded-lg bg-emerald-600 px-4 py-2.5 text-sm font-medium text-white hover:bg-emerald-700 disabled:opacity-60"
             >
+              <Save className="h-4 w-4" />
               {saving ? 'Saving...' : 'Save Changes'}
             </button>
           </div>
         </div>
       )}
 
+      {/* SYSTEM TAB */}
       {activeTab === 'system' && (
         <div className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
           <div className="mb-6">
             <h2 className="text-lg font-semibold text-slate-900 mb-2">System Settings</h2>
             <p className="text-sm text-slate-500">
-              Configure site-wide settings and branding.
+              Configure site-wide identity and branding.
             </p>
           </div>
 
@@ -738,10 +765,263 @@ export default function Settings() {
             <button
               onClick={handleSave}
               disabled={saving}
-              className="rounded-lg bg-emerald-600 px-4 py-2.5 text-sm font-medium text-white hover:bg-emerald-700 disabled:opacity-60"
+              className="inline-flex items-center gap-2 rounded-lg bg-emerald-600 px-4 py-2.5 text-sm font-medium text-white hover:bg-emerald-700 disabled:opacity-60"
             >
+              <Save className="h-4 w-4" />
               {saving ? 'Saving...' : 'Save Changes'}
             </button>
+          </div>
+        </div>
+      )}
+
+      {/* SECURITY SETTINGS TAB */}
+      {activeTab === 'security' && (
+        <div className="space-y-6">
+          {/* Security Status Cards */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            <div className="rounded-xl border border-emerald-200 bg-emerald-50/50 p-4">
+              <div className="flex items-center gap-3">
+                <div className="rounded-lg bg-emerald-100 p-2.5 text-emerald-700">
+                  <Clock className="h-5 w-5" />
+                </div>
+                <div>
+                  <p className="text-xs font-semibold uppercase tracking-wider text-emerald-800">Inactivity Protection</p>
+                  <p className="text-sm font-bold text-slate-900 mt-0.5">{settings.security.inactivityTimeoutMinutes}m Auto-Logout</p>
+                </div>
+              </div>
+              <p className="mt-2 text-xs text-slate-600">
+                Warning modal appears {settings.security.warningTimeoutMinutes}m before session timeout with live countdown.
+              </p>
+            </div>
+
+            <div className="rounded-xl border border-blue-200 bg-blue-50/50 p-4">
+              <div className="flex items-center gap-3">
+                <div className="rounded-lg bg-blue-100 p-2.5 text-blue-700">
+                  <Activity className="h-5 w-5" />
+                </div>
+                <div>
+                  <p className="text-xs font-semibold uppercase tracking-wider text-blue-800">Rate Limiting</p>
+                  <p className="text-sm font-bold text-slate-900 mt-0.5">Active & Throttled</p>
+                </div>
+              </div>
+              <p className="mt-2 text-xs text-slate-600">
+                {settings.security.maxAuthAttempts} auth attempts / 15m; {settings.security.contactRateLimitPerHour} inquiries / hr per IP.
+              </p>
+            </div>
+
+            <div className="rounded-xl border border-purple-200 bg-purple-50/50 p-4">
+              <div className="flex items-center gap-3">
+                <div className="rounded-lg bg-purple-100 p-2.5 text-purple-700">
+                  <ShieldCheck className="h-5 w-5" />
+                </div>
+                <div>
+                  <p className="text-xs font-semibold uppercase tracking-wider text-purple-800">Access Control</p>
+                  <p className="text-sm font-bold text-slate-900 mt-0.5">RBAC & Scoped</p>
+                </div>
+              </div>
+              <p className="mt-2 text-xs text-slate-600">
+                Granular media upload permissions and property manager ownership verification.
+              </p>
+            </div>
+
+            <div className="rounded-xl border border-teal-200 bg-teal-50/50 p-4">
+              <div className="flex items-center gap-3">
+                <div className="rounded-lg bg-teal-100 p-2.5 text-teal-700">
+                  <Database className="h-5 w-5" />
+                </div>
+                <div>
+                  <p className="text-xs font-semibold uppercase tracking-wider text-teal-800">Data Privacy</p>
+                  <p className="text-sm font-bold text-slate-900 mt-0.5">GDPR & CSRF Guard</p>
+                </div>
+              </div>
+              <p className="mt-2 text-xs text-slate-600">
+                Double-submit CSRF validation and automated analytics retention lifecycle.
+              </p>
+            </div>
+          </div>
+
+          {/* Security Policy Configuration Card */}
+          <div className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm space-y-6">
+            <div>
+              <h2 className="text-lg font-semibold text-slate-900 mb-1 flex items-center gap-2">
+                <Shield className="h-5 w-5 text-emerald-600" />
+                Security Policies & Architecture
+              </h2>
+              <p className="text-sm text-slate-500">
+                Review and configure system protection parameters based on active security features.
+              </p>
+            </div>
+
+            {/* 1. Analytics & Data Retention */}
+            <div className="border-t border-slate-200 pt-5">
+              <h3 className="text-sm font-bold uppercase tracking-wider text-slate-900 mb-3 flex items-center gap-2">
+                <Database className="h-4 w-4 text-emerald-600" />
+                1. Data Privacy & Analytics Retention
+              </h3>
+              <div className="rounded-lg border border-slate-200 bg-slate-50 p-4 space-y-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 items-center">
+                  <div>
+                    <label className="block text-sm font-semibold text-slate-800 mb-1">
+                      Analytics Retention Period (Days)
+                    </label>
+                    <p className="text-xs text-slate-500">
+                      Page views and property clicks older than this threshold are purged for data minimization.
+                    </p>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <input
+                      type="number"
+                      min={30}
+                      max={1825}
+                      value={settings.security.analyticsRetentionDays}
+                      onChange={(e) => handleSecurityChange('analyticsRetentionDays', Number(e.target.value))}
+                      className="w-36 rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm font-semibold text-slate-900 outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100"
+                    />
+                    <span className="text-sm font-medium text-slate-600">days</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* 2. Session & Idle Timeout */}
+            <div className="border-t border-slate-200 pt-5">
+              <h3 className="text-sm font-bold uppercase tracking-wider text-slate-900 mb-3 flex items-center gap-2">
+                <Clock className="h-4 w-4 text-emerald-600" />
+                2. Session & Inactivity Protection
+              </h3>
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                <div className="rounded-lg border border-slate-200 p-4 bg-white">
+                  <span className="block text-xs font-semibold text-slate-500 uppercase">Inactivity Limit</span>
+                  <p className="mt-1 text-lg font-bold text-slate-900">5 Minutes</p>
+                  <p className="mt-1 text-xs text-slate-500">
+                    Automatic logout triggered when no mouse, scroll, or keyboard event occurs.
+                  </p>
+                </div>
+                <div className="rounded-lg border border-slate-200 p-4 bg-white">
+                  <span className="block text-xs font-semibold text-slate-500 uppercase">Warning Window</span>
+                  <p className="mt-1 text-lg font-bold text-slate-900">3 Minutes</p>
+                  <p className="mt-1 text-xs text-slate-500">
+                    Live modal popup prompting user to extend session or sign out securely.
+                  </p>
+                </div>
+                <div className="rounded-lg border border-slate-200 p-4 bg-white">
+                  <span className="block text-xs font-semibold text-slate-500 uppercase">Multi-Tab Sync</span>
+                  <p className="mt-1 text-lg font-bold text-emerald-600 flex items-center gap-1.5">
+                    <CheckCircle className="h-4 w-4" /> Synchronized
+                  </p>
+                  <p className="mt-1 text-xs text-slate-500">
+                    Activity and logout events sync across tabs via BroadcastChannel & LocalStorage.
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            {/* 3. API Rate Limiting Thresholds */}
+            <div className="border-t border-slate-200 pt-5">
+              <h3 className="text-sm font-bold uppercase tracking-wider text-slate-900 mb-3 flex items-center gap-2">
+                <Activity className="h-4 w-4 text-emerald-600" />
+                3. Rate Limiting & Anti-Abuse Safeguards
+              </h3>
+              <div className="overflow-hidden rounded-lg border border-slate-200">
+                <table className="min-w-full divide-y divide-slate-200 text-sm">
+                  <thead className="bg-slate-50">
+                    <tr>
+                      <th className="px-4 py-2.5 text-left font-semibold text-slate-600">Endpoint Category</th>
+                      <th className="px-4 py-2.5 text-left font-semibold text-slate-600">Window</th>
+                      <th className="px-4 py-2.5 text-left font-semibold text-slate-600">Threshold</th>
+                      <th className="px-4 py-2.5 text-left font-semibold text-slate-600">Protection Target</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-200 bg-white">
+                    <tr>
+                      <td className="px-4 py-3 font-medium text-slate-900">Authentication (/auth/*)</td>
+                      <td className="px-4 py-3 text-slate-600">15 minutes</td>
+                      <td className="px-4 py-3 font-semibold text-rose-700">5 requests / IP</td>
+                      <td className="px-4 py-3 text-slate-500">Credential brute-force prevention</td>
+                    </tr>
+                    <tr>
+                      <td className="px-4 py-3 font-medium text-slate-900">Inquiries & Contact Messages</td>
+                      <td className="px-4 py-3 text-slate-600">60 minutes</td>
+                      <td className="px-4 py-3 font-semibold text-amber-700">3 submissions / IP</td>
+                      <td className="px-4 py-3 text-slate-500">Spam bot & email flooding mitigation</td>
+                    </tr>
+                    <tr>
+                      <td className="px-4 py-3 font-medium text-slate-900">Property Search Queries</td>
+                      <td className="px-4 py-3 text-slate-600">1 minute</td>
+                      <td className="px-4 py-3 font-semibold text-blue-700">30 requests / IP</td>
+                      <td className="px-4 py-3 text-slate-500">Database query scraping protection</td>
+                    </tr>
+                    <tr>
+                      <td className="px-4 py-3 font-medium text-slate-900">Global API Endpoints</td>
+                      <td className="px-4 py-3 text-slate-600">15 minutes</td>
+                      <td className="px-4 py-3 font-semibold text-slate-700">100 requests / IP</td>
+                      <td className="px-4 py-3 text-slate-500">Denial-of-Service (DoS) mitigation</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            {/* 4. Password & Credential Standards */}
+            <div className="border-t border-slate-200 pt-5">
+              <h3 className="text-sm font-bold uppercase tracking-wider text-slate-900 mb-3 flex items-center gap-2">
+                <KeyRound className="h-4 w-4 text-emerald-600" />
+                4. Password & Authorization Controls
+              </h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="rounded-lg border border-slate-200 bg-slate-50 p-4">
+                  <div className="flex items-center gap-2 font-semibold text-slate-800 text-sm">
+                    <Lock className="h-4 w-4 text-slate-600" /> Password Strength Rule
+                  </div>
+                  <ul className="mt-2 space-y-1.5 text-xs text-slate-600">
+                    <li className="flex items-center gap-1.5">
+                      <CheckCircle className="h-3.5 w-3.5 text-emerald-600 shrink-0" />
+                      Minimum length: 8 characters required
+                    </li>
+                    <li className="flex items-center gap-1.5">
+                      <CheckCircle className="h-3.5 w-3.5 text-emerald-600 shrink-0" />
+                      Maximum length: 128 characters cap
+                    </li>
+                    <li className="flex items-center gap-1.5">
+                      <CheckCircle className="h-3.5 w-3.5 text-emerald-600 shrink-0" />
+                      BCrypt salted hash storage
+                    </li>
+                  </ul>
+                </div>
+
+                <div className="rounded-lg border border-slate-200 bg-slate-50 p-4">
+                  <div className="flex items-center gap-2 font-semibold text-slate-800 text-sm">
+                    <ShieldCheck className="h-4 w-4 text-slate-600" /> Granular Permissions
+                  </div>
+                  <ul className="mt-2 space-y-1.5 text-xs text-slate-600">
+                    <li className="flex items-center gap-1.5">
+                      <CheckCircle className="h-3.5 w-3.5 text-emerald-600 shrink-0" />
+                      Property managers: Full upload permission by role
+                    </li>
+                    <li className="flex items-center gap-1.5">
+                      <CheckCircle className="h-3.5 w-3.5 text-emerald-600 shrink-0" />
+                      Agents & Owners: Individual explicit admin grant
+                    </li>
+                    <li className="flex items-center gap-1.5">
+                      <CheckCircle className="h-3.5 w-3.5 text-emerald-600 shrink-0" />
+                      Ownership middleware verifies property-manager association
+                    </li>
+                  </ul>
+                </div>
+              </div>
+            </div>
+
+            {/* Save Button */}
+            <div className="mt-6 flex justify-end gap-3 pt-4 border-t border-slate-200">
+              <button
+                onClick={handleSave}
+                disabled={saving}
+                className="inline-flex items-center gap-2 rounded-lg bg-emerald-600 px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-emerald-700 disabled:opacity-60"
+              >
+                <Save className="h-4 w-4" />
+                {saving ? 'Saving...' : 'Save Security Settings'}
+              </button>
+            </div>
           </div>
         </div>
       )}
