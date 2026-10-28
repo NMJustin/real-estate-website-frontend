@@ -67,6 +67,20 @@ const formatDate = (date: string | null) => {
   return parsedDate.toLocaleDateString();
 };
 
+const getMinPasswordLength = () => {
+  if (typeof window !== 'undefined') {
+    try {
+      const raw = localStorage.getItem('site_security_settings');
+      if (raw) {
+        const parsed = JSON.parse(raw);
+        const len = Number(parsed.minPasswordLength ?? parsed.min_password_length);
+        if (Number.isFinite(len) && len > 0) return len;
+      }
+    } catch {}
+  }
+  return 8;
+};
+
 const uniqueRoles = (roles: Role[]) => {
   const unique = new Map<string, Role>();
   for (const role of roles) {
@@ -220,8 +234,9 @@ export default function UsersPage() {
       setEditError('Enter a valid email address.');
       return;
     }
-    if (editFormData.password && editFormData.password.length < 8) {
-      setEditError('Password must be at least 8 characters long.');
+    const minLen = getMinPasswordLength();
+    if (editFormData.password && editFormData.password.length < minLen) {
+      setEditError(`Password must be at least ${minLen} characters long.`);
       return;
     }
 
@@ -282,8 +297,9 @@ export default function UsersPage() {
       setCreateError('Enter a valid email address.');
       return;
     }
-    if (!createFormData.password || createFormData.password.length < 8) {
-      setCreateError('Password must be at least 8 characters long.');
+    const minLen = getMinPasswordLength();
+    if (!createFormData.password || createFormData.password.length < minLen) {
+      setCreateError(`Password must be at least ${minLen} characters long.`);
       return;
     }
     if (!createFormData.roleId) {
@@ -712,7 +728,7 @@ export default function UsersPage() {
               {/* Reset Password */}
               <div>
                 <label className="block text-xs font-semibold uppercase tracking-wider text-slate-700">
-                  New Password <span className="font-normal text-slate-400 lowercase">(optional, min 8 chars)</span>
+                  New Password <span className="font-normal text-slate-400 lowercase">(optional, min {getMinPasswordLength()} chars)</span>
                 </label>
                 <div className="relative mt-1.5">
                   <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
@@ -834,7 +850,7 @@ export default function UsersPage() {
                   <input
                     type="password"
                     required
-                    placeholder="Minimum 8 characters"
+                    placeholder={`Minimum ${getMinPasswordLength()} characters`}
                     value={createFormData.password}
                     onChange={(e) => setCreateFormData(prev => ({ ...prev, password: e.target.value }))}
                     className="w-full rounded-lg border border-slate-300 py-2 pl-9 pr-3 text-sm text-slate-900 focus:border-emerald-500 focus:outline-none focus:ring-1 focus:ring-emerald-500"

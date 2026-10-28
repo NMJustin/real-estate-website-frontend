@@ -5,10 +5,31 @@ import { useRouter, usePathname } from 'next/navigation'
 import { useAuth } from '@/context/AuthContext'
 import { getLoginRedirectForRole } from '@/services/api'
 
-const INACTIVITY_TIMEOUT = 5 * 60 * 1000 // 5 minutes
-const WARNING_TIMEOUT = 3 * 60 * 1000 // 3 minutes
 const STORAGE_KEY = 'inactivity_logout'
 const SYNC_EVENT = 'inactivity_sync'
+
+export function getInactivityTimeouts(): { inactivityTimeout: number; warningTimeout: number } {
+  if (typeof window !== 'undefined') {
+    try {
+      const raw = localStorage.getItem('site_security_settings');
+      if (raw) {
+        const parsed = JSON.parse(raw);
+        const timeoutMinutes = Number(parsed.sessionTimeoutMinutes ?? parsed.session_timeout_minutes);
+        const warningMinutes = Number(parsed.sessionWarningMinutes ?? parsed.session_warning_minutes);
+        if (Number.isFinite(timeoutMinutes) && timeoutMinutes > 0) {
+          const timeoutMs = timeoutMinutes * 60 * 1000;
+          const warnMs = Number.isFinite(warningMinutes) && warningMinutes > 0 && warningMinutes < timeoutMinutes
+            ? warningMinutes * 60 * 1000
+            : Math.max(30 * 1000, timeoutMs - 2 * 60 * 1000);
+          return { inactivityTimeout: timeoutMs, warningTimeout: warnMs };
+        }
+      }
+    } catch {
+      // fallback
+    }
+  }
+  return { inactivityTimeout: 5 * 60 * 1000, warningTimeout: 3 * 60 * 1000 };
+}
 
 interface InactivityState {
   logoutTime: number | null
@@ -87,10 +108,13 @@ export function useInactivityLogout() {
       clearInterval(countdownIntervalRef.current)
     }
 
-    // Set warning timer (13 minutes)
+    const { inactivityTimeout, warningTimeout } = getInactivityTimeouts()
+
+    // Set warning timer
     warningTimerRef.current = setTimeout(() => {
       setShowWarning(true)
-      setCountdown(2 * 60) // 2 minutes in seconds
+      const warningDurationSec = Math.max(10, Math.round((inactivityTimeout - warningTimeout) / 1000))
+      setCountdown(warningDurationSec)
 
       // Start countdown
       countdownIntervalRef.current = setInterval(() => {
@@ -102,12 +126,12 @@ export function useInactivityLogout() {
           return prev - 1
         })
       }, 1000)
-    }, WARNING_TIMEOUT)
+    }, warningTimeout)
 
-    // Set logout timer (15 minutes)
+    // Set logout timer
     inactivityTimerRef.current = setTimeout(() => {
       performLogout()
-    }, INACTIVITY_TIMEOUT)
+    }, inactivityTimeout)
 
     // Hide warning if shown
     setShowWarning((prev) => {
@@ -119,7 +143,7 @@ export function useInactivityLogout() {
 
     // Sync with other tabs
     const state: InactivityState = {
-      logoutTime: now + INACTIVITY_TIMEOUT,
+      logoutTime: now + inactivityTimeout,
       warningShown: false,
     }
     localStorage.setItem(STORAGE_KEY, JSON.stringify(state))
@@ -188,7 +212,8 @@ export function useInactivityLogout() {
         if (newState.logoutTime && newState.logoutTime > now) {
           // Another tab reset the timer, sync local state
           const timeRemaining = newState.logoutTime - now
-          if (timeRemaining > WARNING_TIMEOUT) {
+          const { warningTimeout } = getInactivityTimeouts()
+          if (timeRemaining > warningTimeout) {
             // Reset local timer
             resetTimer()
           } else if (timeRemaining > 0) {

@@ -20,6 +20,7 @@ import {
   AlertTriangle,
   Database,
   RefreshCw,
+  RotateCcw,
 } from 'lucide-react';
 import { adminApi } from '@/services/api';
 
@@ -60,15 +61,15 @@ interface SystemSettings {
 
 interface SecuritySettings {
   analyticsRetentionDays: number;
-  inactivityTimeoutMinutes: number;
-  warningTimeoutMinutes: number;
-  maxAuthAttempts: number;
-  authWindowMinutes: number;
-  contactRateLimitPerHour: number;
-  searchRateLimitPerMin: number;
-  globalRateLimit: number;
+  sessionTimeoutMinutes: number;
+  sessionWarningMinutes: number;
   minPasswordLength: number;
   maxPasswordLength: number;
+  maxAuthAttempts: number;
+  authRateLimitWindowMinutes: number;
+  contactRateLimitPerHour: number;
+  searchRateLimitPerMinute: number;
+  globalRateLimit: number;
   csrfProtectionEnabled: boolean;
   crossTabSyncEnabled: boolean;
 }
@@ -115,15 +116,15 @@ const defaultSettings: AllSettings = {
   },
   security: {
     analyticsRetentionDays: 365,
-    inactivityTimeoutMinutes: 5,
-    warningTimeoutMinutes: 3,
-    maxAuthAttempts: 5,
-    authWindowMinutes: 15,
-    contactRateLimitPerHour: 3,
-    searchRateLimitPerMin: 30,
-    globalRateLimit: 100,
+    sessionTimeoutMinutes: 5,
+    sessionWarningMinutes: 3,
     minPasswordLength: 8,
     maxPasswordLength: 128,
+    maxAuthAttempts: 5,
+    authRateLimitWindowMinutes: 15,
+    contactRateLimitPerHour: 3,
+    searchRateLimitPerMinute: 30,
+    globalRateLimit: 100,
     csrfProtectionEnabled: true,
     crossTabSyncEnabled: true,
   },
@@ -165,12 +166,66 @@ const mergeSavedSettings = (saved: Record<string, unknown>, defaults: AllSetting
     faviconUrl: typeof saved.faviconUrl === 'string' ? saved.faviconUrl : defaults.system.faviconUrl,
   },
   security: {
-    ...defaults.security,
     analyticsRetentionDays: typeof saved.analyticsRetentionDays === 'number'
       ? saved.analyticsRetentionDays
       : typeof saved.analytics_retention_days === 'number'
       ? saved.analytics_retention_days
       : defaults.security.analyticsRetentionDays,
+    sessionTimeoutMinutes: typeof saved.sessionTimeoutMinutes === 'number'
+      ? saved.sessionTimeoutMinutes
+      : typeof saved.session_timeout_minutes === 'number'
+      ? saved.session_timeout_minutes
+      : defaults.security.sessionTimeoutMinutes,
+    sessionWarningMinutes: typeof saved.sessionWarningMinutes === 'number'
+      ? saved.sessionWarningMinutes
+      : typeof saved.session_warning_minutes === 'number'
+      ? saved.session_warning_minutes
+      : defaults.security.sessionWarningMinutes,
+    minPasswordLength: typeof saved.minPasswordLength === 'number'
+      ? saved.minPasswordLength
+      : typeof saved.min_password_length === 'number'
+      ? saved.min_password_length
+      : defaults.security.minPasswordLength,
+    maxPasswordLength: typeof saved.maxPasswordLength === 'number'
+      ? saved.maxPasswordLength
+      : typeof saved.max_password_length === 'number'
+      ? saved.max_password_length
+      : defaults.security.maxPasswordLength,
+    maxAuthAttempts: typeof saved.maxAuthAttempts === 'number'
+      ? saved.maxAuthAttempts
+      : typeof saved.max_auth_attempts === 'number'
+      ? saved.max_auth_attempts
+      : defaults.security.maxAuthAttempts,
+    authRateLimitWindowMinutes: typeof saved.authRateLimitWindowMinutes === 'number'
+      ? saved.authRateLimitWindowMinutes
+      : typeof saved.auth_rate_limit_window_minutes === 'number'
+      ? saved.auth_rate_limit_window_minutes
+      : defaults.security.authRateLimitWindowMinutes,
+    contactRateLimitPerHour: typeof saved.contactRateLimitPerHour === 'number'
+      ? saved.contactRateLimitPerHour
+      : typeof saved.contact_rate_limit_per_hour === 'number'
+      ? saved.contact_rate_limit_per_hour
+      : defaults.security.contactRateLimitPerHour,
+    searchRateLimitPerMinute: typeof saved.searchRateLimitPerMinute === 'number'
+      ? saved.searchRateLimitPerMinute
+      : typeof saved.search_rate_limit_per_minute === 'number'
+      ? saved.search_rate_limit_per_minute
+      : defaults.security.searchRateLimitPerMinute,
+    globalRateLimit: typeof saved.globalRateLimit === 'number'
+      ? saved.globalRateLimit
+      : typeof saved.global_rate_limit === 'number'
+      ? saved.global_rate_limit
+      : defaults.security.globalRateLimit,
+    csrfProtectionEnabled: typeof saved.csrfProtectionEnabled === 'boolean'
+      ? saved.csrfProtectionEnabled
+      : typeof saved.csrf_protection_enabled === 'boolean'
+      ? saved.csrf_protection_enabled
+      : defaults.security.csrfProtectionEnabled,
+    crossTabSyncEnabled: typeof saved.crossTabSyncEnabled === 'boolean'
+      ? saved.crossTabSyncEnabled
+      : typeof saved.cross_tab_sync_enabled === 'boolean'
+      ? saved.cross_tab_sync_enabled
+      : defaults.security.crossTabSyncEnabled,
   },
 });
 
@@ -192,7 +247,15 @@ export default function Settings() {
       const response = await adminApi.getSettings();
       const result = response as { success: boolean; data: Record<string, unknown> };
       if (result.success && result.data) {
-        setSettings((current) => mergeSavedSettings(result.data, current));
+        setSettings((current) => {
+          const merged = mergeSavedSettings(result.data, current);
+          if (typeof window !== 'undefined') {
+            try {
+              localStorage.setItem('site_security_settings', JSON.stringify(merged.security));
+            } catch {}
+          }
+          return merged;
+        });
       }
     } catch (err) {
       console.error('Failed to load settings:', err);
@@ -203,6 +266,16 @@ export default function Settings() {
   };
 
   const handleSave = async () => {
+    // Validate security relationships
+    if (settings.security.sessionWarningMinutes >= settings.security.sessionTimeoutMinutes) {
+      setError('Session early warning window must be less than the total inactivity timeout.');
+      return;
+    }
+    if (settings.security.minPasswordLength >= settings.security.maxPasswordLength) {
+      setError('Minimum password length must be less than maximum password length.');
+      return;
+    }
+
     try {
       setSaving(true);
       setError('');
@@ -233,8 +306,25 @@ export default function Settings() {
         showServicesSection: settings.homepage.showServicesSection,
         showAboutSection: settings.homepage.showAboutSection,
         analyticsRetentionDays: Number(settings.security.analyticsRetentionDays) || 365,
+        sessionTimeoutMinutes: Number(settings.security.sessionTimeoutMinutes) || 5,
+        sessionWarningMinutes: Number(settings.security.sessionWarningMinutes) || 3,
+        minPasswordLength: Number(settings.security.minPasswordLength) || 8,
+        maxPasswordLength: Number(settings.security.maxPasswordLength) || 128,
+        maxAuthAttempts: Number(settings.security.maxAuthAttempts) || 5,
+        authRateLimitWindowMinutes: Number(settings.security.authRateLimitWindowMinutes) || 15,
+        contactRateLimitPerHour: Number(settings.security.contactRateLimitPerHour) || 3,
+        searchRateLimitPerMinute: Number(settings.security.searchRateLimitPerMinute) || 30,
+        globalRateLimit: Number(settings.security.globalRateLimit) || 100,
+        csrfProtectionEnabled: Boolean(settings.security.csrfProtectionEnabled),
+        crossTabSyncEnabled: Boolean(settings.security.crossTabSyncEnabled),
       });
+
       if ((response as { success: boolean }).success) {
+        if (typeof window !== 'undefined') {
+          try {
+            localStorage.setItem('site_security_settings', JSON.stringify(settings.security));
+          } catch {}
+        }
         setMessage('Settings saved successfully!');
         setTimeout(() => setMessage(''), 3000);
       } else {
@@ -269,11 +359,27 @@ export default function Settings() {
     }));
   };
 
-  const handleSecurityChange = (field: keyof SecuritySettings, value: number) => {
+  const handleSecurityNumberChange = (field: keyof SecuritySettings, value: number) => {
     setSettings(prev => ({
       ...prev,
       security: { ...prev.security, [field]: value }
     }));
+  };
+
+  const handleSecurityBooleanChange = (field: keyof SecuritySettings, value: boolean) => {
+    setSettings(prev => ({
+      ...prev,
+      security: { ...prev.security, [field]: value }
+    }));
+  };
+
+  const handleResetSecurityDefaults = () => {
+    setSettings(prev => ({
+      ...prev,
+      security: { ...defaultSettings.security }
+    }));
+    setMessage('Security settings reset to recommended defaults. Click "Save Changes" to apply.');
+    setTimeout(() => setMessage(''), 4000);
   };
 
   if (loading) {
@@ -777,7 +883,7 @@ export default function Settings() {
       {/* SECURITY SETTINGS TAB */}
       {activeTab === 'security' && (
         <div className="space-y-6">
-          {/* Security Status Cards */}
+          {/* Top Dynamic Stat Cards */}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
             <div className="rounded-xl border border-emerald-200 bg-emerald-50/50 p-4">
               <div className="flex items-center gap-3">
@@ -785,12 +891,12 @@ export default function Settings() {
                   <Clock className="h-5 w-5" />
                 </div>
                 <div>
-                  <p className="text-xs font-semibold uppercase tracking-wider text-emerald-800">Inactivity Protection</p>
-                  <p className="text-sm font-bold text-slate-900 mt-0.5">{settings.security.inactivityTimeoutMinutes}m Auto-Logout</p>
+                  <p className="text-xs font-semibold uppercase tracking-wider text-emerald-800">Inactivity Timeout</p>
+                  <p className="text-sm font-bold text-slate-900 mt-0.5">{settings.security.sessionTimeoutMinutes} min</p>
                 </div>
               </div>
               <p className="mt-2 text-xs text-slate-600">
-                Warning modal appears {settings.security.warningTimeoutMinutes}m before session timeout with live countdown.
+                Warning triggers {settings.security.sessionWarningMinutes} min before logout.
               </p>
             </div>
 
@@ -800,27 +906,31 @@ export default function Settings() {
                   <Activity className="h-5 w-5" />
                 </div>
                 <div>
-                  <p className="text-xs font-semibold uppercase tracking-wider text-blue-800">Rate Limiting</p>
-                  <p className="text-sm font-bold text-slate-900 mt-0.5">Active & Throttled</p>
+                  <p className="text-xs font-semibold uppercase tracking-wider text-blue-800">Auth Rate Limit</p>
+                  <p className="text-sm font-bold text-slate-900 mt-0.5">
+                    {settings.security.maxAuthAttempts} req / {settings.security.authRateLimitWindowMinutes} min
+                  </p>
                 </div>
               </div>
               <p className="mt-2 text-xs text-slate-600">
-                {settings.security.maxAuthAttempts} auth attempts / 15m; {settings.security.contactRateLimitPerHour} inquiries / hr per IP.
+                Contact: {settings.security.contactRateLimitPerHour}/hr, Search: {settings.security.searchRateLimitPerMinute}/min.
               </p>
             </div>
 
             <div className="rounded-xl border border-purple-200 bg-purple-50/50 p-4">
               <div className="flex items-center gap-3">
                 <div className="rounded-lg bg-purple-100 p-2.5 text-purple-700">
-                  <ShieldCheck className="h-5 w-5" />
+                  <Lock className="h-5 w-5" />
                 </div>
                 <div>
-                  <p className="text-xs font-semibold uppercase tracking-wider text-purple-800">Access Control</p>
-                  <p className="text-sm font-bold text-slate-900 mt-0.5">RBAC & Scoped</p>
+                  <p className="text-xs font-semibold uppercase tracking-wider text-purple-800">Password Policy</p>
+                  <p className="text-sm font-bold text-slate-900 mt-0.5">
+                    {settings.security.minPasswordLength} – {settings.security.maxPasswordLength} chars
+                  </p>
                 </div>
               </div>
               <p className="mt-2 text-xs text-slate-600">
-                Granular media upload permissions and property manager ownership verification.
+                Enforced on user registration and password updates.
               </p>
             </div>
 
@@ -830,193 +940,316 @@ export default function Settings() {
                   <Database className="h-5 w-5" />
                 </div>
                 <div>
-                  <p className="text-xs font-semibold uppercase tracking-wider text-teal-800">Data Privacy</p>
-                  <p className="text-sm font-bold text-slate-900 mt-0.5">GDPR & CSRF Guard</p>
+                  <p className="text-xs font-semibold uppercase tracking-wider text-teal-800">Analytics Retention</p>
+                  <p className="text-sm font-bold text-slate-900 mt-0.5">{settings.security.analyticsRetentionDays} days</p>
                 </div>
               </div>
               <p className="mt-2 text-xs text-slate-600">
-                Double-submit CSRF validation and automated analytics retention lifecycle.
+                Automated data cleanup threshold for privacy minimization.
               </p>
             </div>
           </div>
 
-          {/* Security Policy Configuration Card */}
+          {/* Form Card */}
           <div className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm space-y-6">
-            <div>
-              <h2 className="text-lg font-semibold text-slate-900 mb-1 flex items-center gap-2">
-                <Shield className="h-5 w-5 text-emerald-600" />
-                Security Policies & Architecture
-              </h2>
-              <p className="text-sm text-slate-500">
-                Review and configure system protection parameters based on active security features.
-              </p>
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+              <div>
+                <h2 className="text-lg font-semibold text-slate-900 mb-1 flex items-center gap-2">
+                  <Shield className="h-5 w-5 text-emerald-600" />
+                  Security Configuration
+                </h2>
+                <p className="text-sm text-slate-500">
+                  Configure session intervals, credential strength, rate limits, and data retention rules.
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={handleResetSecurityDefaults}
+                className="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50 transition"
+              >
+                <RotateCcw className="h-3.5 w-3.5 text-slate-500" /> Reset Defaults
+              </button>
             </div>
 
-            {/* 1. Analytics & Data Retention */}
+            {/* SECTION 1: Session & Inactivity Protection */}
             <div className="border-t border-slate-200 pt-5">
-              <h3 className="text-sm font-bold uppercase tracking-wider text-slate-900 mb-3 flex items-center gap-2">
-                <Database className="h-4 w-4 text-emerald-600" />
-                1. Data Privacy & Analytics Retention
+              <h3 className="text-sm font-bold uppercase tracking-wider text-slate-900 mb-1 flex items-center gap-2">
+                <Clock className="h-4 w-4 text-emerald-600" />
+                1. Session & Inactivity Controls
               </h3>
-              <div className="rounded-lg border border-slate-200 bg-slate-50 p-4 space-y-4">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 items-center">
-                  <div>
-                    <label className="block text-sm font-semibold text-slate-800 mb-1">
-                      Analytics Retention Period (Days)
-                    </label>
-                    <p className="text-xs text-slate-500">
-                      Page views and property clicks older than this threshold are purged for data minimization.
-                    </p>
-                  </div>
+              <p className="text-xs text-slate-500 mb-4">
+                Define idle timeout duration and the pre-logout alert window for active admin and portal sessions.
+              </p>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 bg-slate-50/70 p-4 rounded-xl border border-slate-200">
+                <div>
+                  <label className="block text-sm font-semibold text-slate-800 mb-1">
+                    Inactivity Timeout (Minutes)
+                  </label>
+                  <p className="text-xs text-slate-500 mb-2">
+                    Time without interaction before the user is automatically logged out (Recommended: 5-30 min).
+                  </p>
                   <div className="flex items-center gap-3">
                     <input
                       type="number"
-                      min={30}
-                      max={1825}
-                      value={settings.security.analyticsRetentionDays}
-                      onChange={(e) => handleSecurityChange('analyticsRetentionDays', Number(e.target.value))}
-                      className="w-36 rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm font-semibold text-slate-900 outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100"
+                      min={1}
+                      max={180}
+                      value={settings.security.sessionTimeoutMinutes}
+                      onChange={(e) => handleSecurityNumberChange('sessionTimeoutMinutes', Number(e.target.value))}
+                      className="w-32 rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm font-semibold text-slate-900 outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100"
                     />
-                    <span className="text-sm font-medium text-slate-600">days</span>
+                    <span className="text-sm text-slate-600 font-medium">minutes</span>
                   </div>
                 </div>
+
+                <div>
+                  <label className="block text-sm font-semibold text-slate-800 mb-1">
+                    Early Warning Dialog (Minutes)
+                  </label>
+                  <p className="text-xs text-slate-500 mb-2">
+                    Minutes before timeout when the warning popup appears with live countdown (Must be less than timeout).
+                  </p>
+                  <div className="flex items-center gap-3">
+                    <input
+                      type="number"
+                      min={1}
+                      max={60}
+                      value={settings.security.sessionWarningMinutes}
+                      onChange={(e) => handleSecurityNumberChange('sessionWarningMinutes', Number(e.target.value))}
+                      className="w-32 rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm font-semibold text-slate-900 outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100"
+                    />
+                    <span className="text-sm text-slate-600 font-medium">minutes before</span>
+                  </div>
+                </div>
+
+                <div className="md:col-span-2 pt-2 border-t border-slate-200 flex items-center justify-between">
+                  <div>
+                    <span className="block text-sm font-semibold text-slate-800">Cross-Tab Session Synchronization</span>
+                    <span className="block text-xs text-slate-500">
+                      Sync activity and session logout across all open browser tabs via localStorage & BroadcastChannel.
+                    </span>
+                  </div>
+                  <input
+                    type="checkbox"
+                    checked={settings.security.crossTabSyncEnabled}
+                    onChange={(e) => handleSecurityBooleanChange('crossTabSyncEnabled', e.target.checked)}
+                    className="h-5 w-5 rounded border-slate-300 text-emerald-600 focus:ring-emerald-500"
+                  />
+                </div>
               </div>
             </div>
 
-            {/* 2. Session & Idle Timeout */}
+            {/* SECTION 2: Password & Authentication Policy */}
             <div className="border-t border-slate-200 pt-5">
-              <h3 className="text-sm font-bold uppercase tracking-wider text-slate-900 mb-3 flex items-center gap-2">
-                <Clock className="h-4 w-4 text-emerald-600" />
-                2. Session & Inactivity Protection
-              </h3>
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                <div className="rounded-lg border border-slate-200 p-4 bg-white">
-                  <span className="block text-xs font-semibold text-slate-500 uppercase">Inactivity Limit</span>
-                  <p className="mt-1 text-lg font-bold text-slate-900">5 Minutes</p>
-                  <p className="mt-1 text-xs text-slate-500">
-                    Automatic logout triggered when no mouse, scroll, or keyboard event occurs.
-                  </p>
-                </div>
-                <div className="rounded-lg border border-slate-200 p-4 bg-white">
-                  <span className="block text-xs font-semibold text-slate-500 uppercase">Warning Window</span>
-                  <p className="mt-1 text-lg font-bold text-slate-900">3 Minutes</p>
-                  <p className="mt-1 text-xs text-slate-500">
-                    Live modal popup prompting user to extend session or sign out securely.
-                  </p>
-                </div>
-                <div className="rounded-lg border border-slate-200 p-4 bg-white">
-                  <span className="block text-xs font-semibold text-slate-500 uppercase">Multi-Tab Sync</span>
-                  <p className="mt-1 text-lg font-bold text-emerald-600 flex items-center gap-1.5">
-                    <CheckCircle className="h-4 w-4" /> Synchronized
-                  </p>
-                  <p className="mt-1 text-xs text-slate-500">
-                    Activity and logout events sync across tabs via BroadcastChannel & LocalStorage.
-                  </p>
-                </div>
-              </div>
-            </div>
-
-            {/* 3. API Rate Limiting Thresholds */}
-            <div className="border-t border-slate-200 pt-5">
-              <h3 className="text-sm font-bold uppercase tracking-wider text-slate-900 mb-3 flex items-center gap-2">
-                <Activity className="h-4 w-4 text-emerald-600" />
-                3. Rate Limiting & Anti-Abuse Safeguards
-              </h3>
-              <div className="overflow-hidden rounded-lg border border-slate-200">
-                <table className="min-w-full divide-y divide-slate-200 text-sm">
-                  <thead className="bg-slate-50">
-                    <tr>
-                      <th className="px-4 py-2.5 text-left font-semibold text-slate-600">Endpoint Category</th>
-                      <th className="px-4 py-2.5 text-left font-semibold text-slate-600">Window</th>
-                      <th className="px-4 py-2.5 text-left font-semibold text-slate-600">Threshold</th>
-                      <th className="px-4 py-2.5 text-left font-semibold text-slate-600">Protection Target</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-slate-200 bg-white">
-                    <tr>
-                      <td className="px-4 py-3 font-medium text-slate-900">Authentication (/auth/*)</td>
-                      <td className="px-4 py-3 text-slate-600">15 minutes</td>
-                      <td className="px-4 py-3 font-semibold text-rose-700">5 requests / IP</td>
-                      <td className="px-4 py-3 text-slate-500">Credential brute-force prevention</td>
-                    </tr>
-                    <tr>
-                      <td className="px-4 py-3 font-medium text-slate-900">Inquiries & Contact Messages</td>
-                      <td className="px-4 py-3 text-slate-600">60 minutes</td>
-                      <td className="px-4 py-3 font-semibold text-amber-700">3 submissions / IP</td>
-                      <td className="px-4 py-3 text-slate-500">Spam bot & email flooding mitigation</td>
-                    </tr>
-                    <tr>
-                      <td className="px-4 py-3 font-medium text-slate-900">Property Search Queries</td>
-                      <td className="px-4 py-3 text-slate-600">1 minute</td>
-                      <td className="px-4 py-3 font-semibold text-blue-700">30 requests / IP</td>
-                      <td className="px-4 py-3 text-slate-500">Database query scraping protection</td>
-                    </tr>
-                    <tr>
-                      <td className="px-4 py-3 font-medium text-slate-900">Global API Endpoints</td>
-                      <td className="px-4 py-3 text-slate-600">15 minutes</td>
-                      <td className="px-4 py-3 font-semibold text-slate-700">100 requests / IP</td>
-                      <td className="px-4 py-3 text-slate-500">Denial-of-Service (DoS) mitigation</td>
-                    </tr>
-                  </tbody>
-                </table>
-              </div>
-            </div>
-
-            {/* 4. Password & Credential Standards */}
-            <div className="border-t border-slate-200 pt-5">
-              <h3 className="text-sm font-bold uppercase tracking-wider text-slate-900 mb-3 flex items-center gap-2">
+              <h3 className="text-sm font-bold uppercase tracking-wider text-slate-900 mb-1 flex items-center gap-2">
                 <KeyRound className="h-4 w-4 text-emerald-600" />
-                4. Password & Authorization Controls
+                2. Password & Credential Policy
               </h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="rounded-lg border border-slate-200 bg-slate-50 p-4">
-                  <div className="flex items-center gap-2 font-semibold text-slate-800 text-sm">
-                    <Lock className="h-4 w-4 text-slate-600" /> Password Strength Rule
+              <p className="text-xs text-slate-500 mb-4">
+                Set password length constraints enforced when creating users or resetting passwords.
+              </p>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 bg-slate-50/70 p-4 rounded-xl border border-slate-200">
+                <div>
+                  <label className="block text-sm font-semibold text-slate-800 mb-1">
+                    Minimum Password Length
+                  </label>
+                  <p className="text-xs text-slate-500 mb-2">
+                    Minimum number of characters required for passwords (Minimum standard: 8 characters).
+                  </p>
+                  <div className="flex items-center gap-3">
+                    <input
+                      type="number"
+                      min={6}
+                      max={32}
+                      value={settings.security.minPasswordLength}
+                      onChange={(e) => handleSecurityNumberChange('minPasswordLength', Number(e.target.value))}
+                      className="w-32 rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm font-semibold text-slate-900 outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100"
+                    />
+                    <span className="text-sm text-slate-600 font-medium">characters</span>
                   </div>
-                  <ul className="mt-2 space-y-1.5 text-xs text-slate-600">
-                    <li className="flex items-center gap-1.5">
-                      <CheckCircle className="h-3.5 w-3.5 text-emerald-600 shrink-0" />
-                      Minimum length: 8 characters required
-                    </li>
-                    <li className="flex items-center gap-1.5">
-                      <CheckCircle className="h-3.5 w-3.5 text-emerald-600 shrink-0" />
-                      Maximum length: 128 characters cap
-                    </li>
-                    <li className="flex items-center gap-1.5">
-                      <CheckCircle className="h-3.5 w-3.5 text-emerald-600 shrink-0" />
-                      BCrypt salted hash storage
-                    </li>
-                  </ul>
                 </div>
 
-                <div className="rounded-lg border border-slate-200 bg-slate-50 p-4">
-                  <div className="flex items-center gap-2 font-semibold text-slate-800 text-sm">
-                    <ShieldCheck className="h-4 w-4 text-slate-600" /> Granular Permissions
+                <div>
+                  <label className="block text-sm font-semibold text-slate-800 mb-1">
+                    Maximum Password Length
+                  </label>
+                  <p className="text-xs text-slate-500 mb-2">
+                    Maximum allowed password length to mitigate long-string hash computation attacks (Default: 128).
+                  </p>
+                  <div className="flex items-center gap-3">
+                    <input
+                      type="number"
+                      min={32}
+                      max={256}
+                      value={settings.security.maxPasswordLength}
+                      onChange={(e) => handleSecurityNumberChange('maxPasswordLength', Number(e.target.value))}
+                      className="w-32 rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm font-semibold text-slate-900 outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100"
+                    />
+                    <span className="text-sm text-slate-600 font-medium">characters</span>
                   </div>
-                  <ul className="mt-2 space-y-1.5 text-xs text-slate-600">
-                    <li className="flex items-center gap-1.5">
-                      <CheckCircle className="h-3.5 w-3.5 text-emerald-600 shrink-0" />
-                      Property managers: Full upload permission by role
-                    </li>
-                    <li className="flex items-center gap-1.5">
-                      <CheckCircle className="h-3.5 w-3.5 text-emerald-600 shrink-0" />
-                      Agents & Owners: Individual explicit admin grant
-                    </li>
-                    <li className="flex items-center gap-1.5">
-                      <CheckCircle className="h-3.5 w-3.5 text-emerald-600 shrink-0" />
-                      Ownership middleware verifies property-manager association
-                    </li>
-                  </ul>
+                </div>
+
+                <div className="md:col-span-2 pt-2 border-t border-slate-200 flex items-center justify-between">
+                  <div>
+                    <span className="block text-sm font-semibold text-slate-800">CSRF Double-Submit Token Defense</span>
+                    <span className="block text-xs text-slate-500">
+                      Validate anti-CSRF request headers on all state-altering mutation endpoints (POST/PUT/DELETE).
+                    </span>
+                  </div>
+                  <input
+                    type="checkbox"
+                    checked={settings.security.csrfProtectionEnabled}
+                    onChange={(e) => handleSecurityBooleanChange('csrfProtectionEnabled', e.target.checked)}
+                    className="h-5 w-5 rounded border-slate-300 text-emerald-600 focus:ring-emerald-500"
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* SECTION 3: Rate Limiting & Abuse Prevention */}
+            <div className="border-t border-slate-200 pt-5">
+              <h3 className="text-sm font-bold uppercase tracking-wider text-slate-900 mb-1 flex items-center gap-2">
+                <Activity className="h-4 w-4 text-emerald-600" />
+                3. Rate Limiting & Throttling Parameters
+              </h3>
+              <p className="text-xs text-slate-500 mb-4">
+                Tune request rate limits across authentication, public leads, searches, and global endpoints.
+              </p>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 bg-slate-50/70 p-4 rounded-xl border border-slate-200">
+                <div>
+                  <label className="block text-xs font-semibold text-slate-800 uppercase mb-1">
+                    Max Auth Attempts
+                  </label>
+                  <p className="text-xs text-slate-500 mb-2">Max failed logins per window.</p>
+                  <div className="flex items-center gap-2">
+                    <input
+                      type="number"
+                      min={1}
+                      max={50}
+                      value={settings.security.maxAuthAttempts}
+                      onChange={(e) => handleSecurityNumberChange('maxAuthAttempts', Number(e.target.value))}
+                      className="w-24 rounded-lg border border-slate-300 bg-white px-3 py-1.5 text-sm font-semibold text-slate-900 outline-none focus:border-emerald-500"
+                    />
+                    <span className="text-xs text-slate-600 font-medium">attempts</span>
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-xs font-semibold text-slate-800 uppercase mb-1">
+                    Auth Limit Window
+                  </label>
+                  <p className="text-xs text-slate-500 mb-2">Window tracking auth attempts.</p>
+                  <div className="flex items-center gap-2">
+                    <input
+                      type="number"
+                      min={1}
+                      max={120}
+                      value={settings.security.authRateLimitWindowMinutes}
+                      onChange={(e) => handleSecurityNumberChange('authRateLimitWindowMinutes', Number(e.target.value))}
+                      className="w-24 rounded-lg border border-slate-300 bg-white px-3 py-1.5 text-sm font-semibold text-slate-900 outline-none focus:border-emerald-500"
+                    />
+                    <span className="text-xs text-slate-600 font-medium">minutes</span>
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-xs font-semibold text-slate-800 uppercase mb-1">
+                    Contact / Inquiries Limit
+                  </label>
+                  <p className="text-xs text-slate-500 mb-2">Form submissions per IP per hour.</p>
+                  <div className="flex items-center gap-2">
+                    <input
+                      type="number"
+                      min={1}
+                      max={100}
+                      value={settings.security.contactRateLimitPerHour}
+                      onChange={(e) => handleSecurityNumberChange('contactRateLimitPerHour', Number(e.target.value))}
+                      className="w-24 rounded-lg border border-slate-300 bg-white px-3 py-1.5 text-sm font-semibold text-slate-900 outline-none focus:border-emerald-500"
+                    />
+                    <span className="text-xs text-slate-600 font-medium">per hour</span>
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-xs font-semibold text-slate-800 uppercase mb-1">
+                    Property Search Limit
+                  </label>
+                  <p className="text-xs text-slate-500 mb-2">Search queries per IP per minute.</p>
+                  <div className="flex items-center gap-2">
+                    <input
+                      type="number"
+                      min={5}
+                      max={300}
+                      value={settings.security.searchRateLimitPerMinute}
+                      onChange={(e) => handleSecurityNumberChange('searchRateLimitPerMinute', Number(e.target.value))}
+                      className="w-24 rounded-lg border border-slate-300 bg-white px-3 py-1.5 text-sm font-semibold text-slate-900 outline-none focus:border-emerald-500"
+                    />
+                    <span className="text-xs text-slate-600 font-medium">per min</span>
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-xs font-semibold text-slate-800 uppercase mb-1">
+                    Global API Rate Limit
+                  </label>
+                  <p className="text-xs text-slate-500 mb-2">Total requests per IP per 15 min.</p>
+                  <div className="flex items-center gap-2">
+                    <input
+                      type="number"
+                      min={10}
+                      max={2000}
+                      value={settings.security.globalRateLimit}
+                      onChange={(e) => handleSecurityNumberChange('globalRateLimit', Number(e.target.value))}
+                      className="w-24 rounded-lg border border-slate-300 bg-white px-3 py-1.5 text-sm font-semibold text-slate-900 outline-none focus:border-emerald-500"
+                    />
+                    <span className="text-xs text-slate-600 font-medium">per 15m</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* SECTION 4: Data Privacy & Analytics Retention */}
+            <div className="border-t border-slate-200 pt-5">
+              <h3 className="text-sm font-bold uppercase tracking-wider text-slate-900 mb-1 flex items-center gap-2">
+                <Database className="h-4 w-4 text-emerald-600" />
+                4. Data Privacy & Analytics Retention Policy
+              </h3>
+              <p className="text-xs text-slate-500 mb-4">
+                Automated lifecycle retention for analytics page views, property impressions, and event tracking records.
+              </p>
+
+              <div className="bg-slate-50/70 p-4 rounded-xl border border-slate-200 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                <div>
+                  <label className="block text-sm font-semibold text-slate-800 mb-1">
+                    Analytics Retention Period (Days)
+                  </label>
+                  <p className="text-xs text-slate-500">
+                    Records older than this period are purged automatically during routine maintenance runs.
+                  </p>
+                </div>
+                <div className="flex items-center gap-3">
+                  <input
+                    type="number"
+                    min={7}
+                    max={3650}
+                    value={settings.security.analyticsRetentionDays}
+                    onChange={(e) => handleSecurityNumberChange('analyticsRetentionDays', Number(e.target.value))}
+                    className="w-32 rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm font-semibold text-slate-900 outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100"
+                  />
+                  <span className="text-sm text-slate-600 font-medium">days</span>
                 </div>
               </div>
             </div>
 
             {/* Save Button */}
-            <div className="mt-6 flex justify-end gap-3 pt-4 border-t border-slate-200">
+            <div className="mt-8 flex items-center justify-end gap-3 pt-4 border-t border-slate-200">
               <button
+                type="button"
                 onClick={handleSave}
                 disabled={saving}
-                className="inline-flex items-center gap-2 rounded-lg bg-emerald-600 px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-emerald-700 disabled:opacity-60"
+                className="inline-flex items-center gap-2 rounded-xl bg-emerald-600 px-6 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-emerald-700 disabled:opacity-60"
               >
                 <Save className="h-4 w-4" />
                 {saving ? 'Saving...' : 'Save Security Settings'}
