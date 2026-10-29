@@ -11,16 +11,14 @@ import PropertyComparisonBar from '../property/PropertyComparisonBar'
 export function SiteShell({ children }: { children: ReactNode }) {
   const isAdminRoute = usePathname().startsWith('/admin')
 
-  if (isAdminRoute) return <>{children}</>
-
   return (
     <div className="min-h-screen flex flex-col font-sans">
-      <PageViewTracker />
-      <ConsentManager />
-      <Header />
+      {!isAdminRoute && <PageViewTracker />}
+      {!isAdminRoute && <ConsentManager />}
+      {!isAdminRoute && <Header />}
       <main className="flex-1 w-full flex flex-col">{children}</main>
-      <Footer />
-      <PropertyComparisonBar />
+      {!isAdminRoute && <Footer />}
+      {!isAdminRoute && <PropertyComparisonBar />}
     </div>
   )
 }
