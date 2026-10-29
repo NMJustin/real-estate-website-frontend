@@ -96,11 +96,11 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     const response = await fetch(`${apiUrl}/properties?limit=1000&status=AVAILABLE`, {
       next: { revalidate: 3600 }, // Revalidate every hour
     })
-    
+
     if (response.ok) {
       const data = await response.json()
       const properties = data.data || []
-      
+
       propertyPages = properties.map((property: any) => ({
         url: `${baseUrl}/properties/${property.slug}`,
         lastModified: property.updatedAt ? new Date(property.updatedAt) : new Date(),
@@ -112,5 +112,30 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     console.error('Error fetching properties for sitemap:', error)
   }
 
-  return [...staticPages, ...categoryPages, ...propertyPages]
+  // Fetch dynamic pages from backend
+  let dynamicPages: MetadataRoute.Sitemap = []
+  try {
+    const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api'
+    const response = await fetch(`${apiUrl}/pages`, {
+      next: { revalidate: 3600 }, // Revalidate every hour
+    })
+
+    if (response.ok) {
+      const data = await response.json()
+      const pages = data.data || []
+
+      dynamicPages = pages
+        .filter((page: any) => page.isPublished)
+        .map((page: any) => ({
+          url: `${baseUrl}/${page.slug}`,
+          lastModified: page.updatedAt ? new Date(page.updatedAt) : new Date(),
+          changeFrequency: 'monthly' as const,
+          priority: 0.7,
+        }))
+    }
+  } catch (error) {
+    console.error('Error fetching pages for sitemap:', error)
+  }
+
+  return [...staticPages, ...categoryPages, ...propertyPages, ...dynamicPages]
 }

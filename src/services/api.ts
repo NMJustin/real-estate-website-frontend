@@ -591,6 +591,18 @@ export const adminApi = {
 		authRequest(`/admin/developments/${id}`, { method: 'PATCH', body: JSON.stringify(data) }),
 	deleteDevelopment: (id: string) =>
 		authRequest(`/admin/developments/${id}`, { method: 'DELETE' }),
+
+	// Pages
+	getAdminPages: (query?: Record<string, QueryValue>) =>
+		authRequest(`/admin/pages${buildQuery(query)}`),
+	getAdminPage: (id: string) =>
+		authRequest(`/admin/pages/${id}`),
+	createPage: (data: Record<string, unknown>) =>
+		authRequest('/admin/pages', { method: 'POST', body: JSON.stringify(data) }),
+	updatePage: (id: string, data: Record<string, unknown>) =>
+		authRequest(`/admin/pages/${id}`, { method: 'PATCH', body: JSON.stringify(data) }),
+	deletePage: (id: string) =>
+		authRequest(`/admin/pages/${id}`, { method: 'DELETE' }),
 };
 
 export default api;
